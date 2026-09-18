@@ -1,0 +1,140 @@
+@import 'tailwindcss';
+
+@custom-variant dark (&:where(.dark, .dark *));
+
+@source '../../vendor/laravel/framework/src/Illuminate/Pagination/resources/views/*.blade.php';
+@source '../../storage/framework/views/*.php';
+@source '../**/*.blade.php';
+@source '../**/*.js';
+
+@theme {
+    --font-sans:
+        'Instrument Sans', ui-sans-serif, system-ui, sans-serif, 'Apple Color Emoji', 'Segoe UI Emoji', 'Segoe UI Symbol', 'Noto Color Emoji';
+}
+
+[x-cloak] {
+    display: none !important;
+}
+
+/* ==========================================================================
+   ADMIN THEME — scoped re-skin
+   --------------------------------------------------------------------------
+   Everything below is scoped to `.admin-theme` so it ONLY affects the admin
+   panel. The public website (which shares this stylesheet) keeps Tailwind's
+   default tokens. Because Tailwind v4 utilities resolve `var(--color-*)`,
+   `var(--radius-*)` and `var(--text-*)` at use-site, redefining those custom
+   properties on an admin-only ancestor re-themes every utility used inside it.
+
+   Direction: monochrome / near-black accent, squared (sharp) corners,
+   smaller / denser typography.
+   ========================================================================== */
+.admin-theme {
+    /* --- Corners: sharp / squared (was 0.75rem–2rem) ---------------------- */
+    --radius-xs: 1px;
+    --radius-sm: 2px;
+    --radius-md: 2px;
+    --radius-lg: 3px;
+    --radius-xl: 4px;
+    --radius-2xl: 5px;
+    --radius-3xl: 6px;
+    --radius-4xl: 8px;
+
+    /* --- Typography: smaller & denser ------------------------------------- */
+    --text-xs: 0.6875rem; /* 11px */
+    --text-xs--line-height: 1rem;
+    --text-sm: 0.8125rem; /* 13px */
+    --text-sm--line-height: 1.15rem;
+    --text-base: 0.875rem; /* 14px */
+    --text-base--line-height: 1.35rem;
+    --text-lg: 1rem; /* 16px */
+    --text-lg--line-height: 1.5rem;
+    --text-xl: 1.125rem; /* 18px */
+    --text-xl--line-height: 1.6rem;
+    --text-2xl: 1.375rem; /* 22px */
+    --text-2xl--line-height: 1.75rem;
+    --text-3xl: 1.625rem; /* 26px */
+    --text-3xl--line-height: 2rem;
+    --text-4xl: 2rem; /* 32px */
+    --text-4xl--line-height: 2.25rem;
+    --text-5xl: 2.5rem; /* 40px */
+    --text-5xl--line-height: 1;
+
+    /* --- Accent: collapse blue / indigo / sky -> monochrome slate ---------- *
+     * The codebase uses `blue` as primary, `indigo` as a secondary accent and
+     * `sky` for the "view" action. Remapping all three to a dark-biased slate
+     * scale turns the whole panel monochrome in one place, while semantic
+     * colors (emerald = success, red / rose = danger, amber = warning) are
+     * left untouched. The 600/700 steps land near-black so primary buttons,
+     * active states and links read as the brand accent.                      */
+    --color-blue-50: #f1f5f9;
+    --color-blue-100: #e2e8f0;
+    --color-blue-200: #cbd5e1;
+    --color-blue-300: #94a3b8;
+    --color-blue-400: #94a3b8;
+    --color-blue-500: #334155;
+    --color-blue-600: #0f172a;
+    --color-blue-700: #020617;
+    --color-blue-800: #1e293b;
+    --color-blue-900: #0f172a;
+    --color-blue-950: #020617;
+
+    --color-indigo-50: #f1f5f9;
+    --color-indigo-100: #e2e8f0;
+    --color-indigo-200: #cbd5e1;
+    --color-indigo-300: #94a3b8;
+    --color-indigo-400: #94a3b8;
+    --color-indigo-500: #334155;
+    --color-indigo-600: #0f172a;
+    --color-indigo-700: #020617;
+    --color-indigo-800: #1e293b;
+    --color-indigo-900: #0f172a;
+    --color-indigo-950: #020617;
+
+    --color-sky-50: #f1f5f9;
+    --color-sky-100: #e2e8f0;
+    --color-sky-200: #cbd5e1;
+    --color-sky-300: #94a3b8;
+    --color-sky-400: #94a3b8;
+    --color-sky-500: #334155;
+    --color-sky-600: #0f172a;
+    --color-sky-700: #020617;
+    --color-sky-800: #1e293b;
+    --color-sky-900: #0f172a;
+    --color-sky-950: #020617;
+}
+
+/* Thin, squared scrollbars inside the admin panel for a tighter feel. */
+.admin-theme .custom-scrollbar,
+.admin-theme .overflow-y-auto,
+.admin-theme .overflow-x-auto {
+    scrollbar-width: thin;
+    scrollbar-color: var(--color-slate-300) transparent;
+}
+
+.admin-theme .custom-scrollbar::-webkit-scrollbar,
+.admin-theme .overflow-y-auto::-webkit-scrollbar,
+.admin-theme .overflow-x-auto::-webkit-scrollbar {
+    width: 7px;
+    height: 7px;
+}
+
+.admin-theme .custom-scrollbar::-webkit-scrollbar-thumb,
+.admin-theme .overflow-y-auto::-webkit-scrollbar-thumb,
+.admin-theme .overflow-x-auto::-webkit-scrollbar-thumb {
+    background-color: var(--color-slate-300);
+    border-radius: 2px;
+}
+
+@media (prefers-color-scheme: dark) {
+    .admin-theme .custom-scrollbar,
+    .admin-theme .overflow-y-auto,
+    .admin-theme .overflow-x-auto {
+        scrollbar-color: var(--color-slate-700) transparent;
+    }
+
+    .admin-theme .custom-scrollbar::-webkit-scrollbar-thumb,
+    .admin-theme .overflow-y-auto::-webkit-scrollbar-thumb,
+    .admin-theme .overflow-x-auto::-webkit-scrollbar-thumb {
+        background-color: var(--color-slate-700);
+    }
+}
