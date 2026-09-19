@@ -23,7 +23,7 @@
 
             <div class="flex items-center justify-end">
                 <x-admin.button>
-                    <span x-text="submitting ? 'Updating SEO...' : 'Update SEO'"></span>
+                    <span x-text="submitting ? 'Updating SEO...' : 'Update SEO'">Update SEO</span>
                 </x-admin.button>
             </div>
         </form>

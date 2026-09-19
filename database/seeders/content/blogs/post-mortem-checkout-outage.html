@@ -1,0 +1,41 @@
+<p>On a Tuesday evening during a client's seasonal sale, checkout failed for 47 minutes. Roughly 18% of payment attempts returned errors at the peak. This is our blameless post-mortem: what happened, why our safeguards didn't catch it, and what we changed so it can't happen the same way again.</p>
+
+<h2>Timeline</h2>
+<table>
+<thead>
+<tr><th>Time (UTC)</th><th>Event</th></tr>
+</thead>
+<tbody>
+<tr><td>18:02</td><td>Routine deploy of the pricing service begins.</td></tr>
+<tr><td>18:09</td><td>Checkout error rate rises from 0.2% to 4%.</td></tr>
+<tr><td>18:14</td><td>Burn-rate alert pages the on-call engineer.</td></tr>
+<tr><td>18:31</td><td>Pricing deploy rolled back. Error rate does not recover.</td></tr>
+<tr><td>18:42</td><td>Database connection pool exhaustion identified as the cause.</td></tr>
+<tr><td>18:49</td><td>Pool limits raised and stuck connections recycled. Errors return to baseline.</td></tr>
+</tbody>
+</table>
+
+<h2>Root Cause</h2>
+<p>The pricing deploy added a new query that, under sale traffic, held database connections for up to 900ms instead of 20ms. The checkout service shares the same connection pool. As connections were held longer, the pool emptied and checkout requests began timing out while waiting for a connection.</p>
+<p>Rolling back the deploy didn't immediately help because thousands of slow requests were already queued and still holding connections.</p>
+
+<h2>Why Our Safeguards Missed It</h2>
+<ul>
+<li><strong>Load tests used last month's traffic profile</strong>, which didn't include sale-level concurrency.</li>
+<li><strong>The query was fast in staging</strong>, where the relevant table had 2% of production's rows.</li>
+<li><strong>Shared connection pools</strong> meant a problem in one service became an outage in another.</li>
+</ul>
+<blockquote>
+<p>“The deploy was the trigger. The shared pool was the cause.”</p>
+</blockquote>
+
+<h2>What We Changed</h2>
+<ol>
+<li>Each service now has its own isolated connection pool with strict per-query timeouts.</li>
+<li>Load tests run against a traffic model refreshed weekly, including known peak events.</li>
+<li>Staging databases are seeded with production-scale, anonymised data for query-plan testing.</li>
+<li>Deploys during announced sale windows now require a second approver and a canary stage.</li>
+</ol>
+
+<h2>The Takeaway</h2>
+<p>No single person made a mistake here. The system allowed a routine change to cascade. Blameless post-mortems exist so we fix systems rather than look for someone to blame, and so the next team inherits the lesson instead of the outage.</p>

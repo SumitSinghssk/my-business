@@ -1,108 +1,83 @@
 @php
+    use App\Helpers\Settings;
+
+    $appName = Settings::appName();
+    $logo = Settings::logoLight();
+
     $links = [
-        ['label' => 'Home', 'url' => url('/'), 'pattern' => '/'],
-        ['label' => 'Services', 'url' => url('/services'), 'pattern' => 'services*'],
-        ['label' => 'Industries', 'url' => url('/industries'), 'pattern' => 'industries*'],
-        ['label' => 'Work', 'url' => url('/work'), 'pattern' => 'work*'],
-        ['label' => 'About', 'url' => url('/about'), 'pattern' => 'about*'],
-        ['label' => 'Blog', 'url' => url('/blog'), 'pattern' => 'blog*'],
+        ['label' => 'Services', 'url' => route('services'), 'pattern' => 'services'],
+        ['label' => 'Work', 'url' => route('home') . '#selected-work', 'pattern' => null],
+        ['label' => 'About', 'url' => route('about'), 'pattern' => 'about'],
+        ['label' => 'Insights', 'url' => route('blog.index'), 'pattern' => 'insights*'],
     ];
-
-    $currentPath = request()->path();
-
-    $isActive = function ($pattern) use ($currentPath) {
-        if ($pattern === '/') {
-            return $currentPath === '/' || $currentPath === '';
-        }
-        return request()->is($pattern);
-    };
 @endphp
 
 <header
     x-data="{ mobileMenuOpen: false }"
     x-on:keydown.escape.window="mobileMenuOpen = false"
     x-effect="document.documentElement.classList.toggle('overflow-hidden', mobileMenuOpen)"
-    class="sticky top-0 z-50 w-full border-b border-slate-100/80 bg-white/80 backdrop-blur-md transition-all duration-200"
+    class="bg-surface-container-lowest sticky top-0 z-50 w-full border-b border-[#E1E5EA]"
 >
-    <div class="custom-width mx-auto p-2">
-        <div class="flex items-center justify-between">
+    <div class="site-container gap-gutter flex items-center justify-between p-4">
+        <div class="gap-space-md flex items-center">
             <a
-                href="{{ url('/') }}"
-                class="group flex items-center gap-2 rounded-lg text-sm font-semibold tracking-tight text-slate-900 transition-opacity hover:opacity-80 focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-500"
-                aria-label="Home"
-                x-on:click="mobileMenuOpen = false"
+                href="{{ route('home') }}"
+                class="gap-space-md focus-visible:ring-primary-container flex items-center focus:outline-none focus-visible:ring-2"
+                aria-label="{{ $appName }} home"
             >
-                <div
-                    class="flex h-7 w-7 items-center justify-center rounded-lg bg-blue-600 text-xs font-bold text-white shadow-sm shadow-blue-500/30"
+                @if ($logo)
+                    <img src="{{ $logo }}" alt="{{ $appName }} logo" class="h-8 w-auto object-contain" />
+                @endif
+
+                <span class="font-headline-sm text-headline-sm text-on-surface font-semibold tracking-tight uppercase">{{ $appName }}</span>
+            </a>
+        </div>
+
+        <nav class="gap-space-xl hidden items-center md:flex" aria-label="Main Navigation">
+            @foreach ($links as $link)
+                @php($active = $link['pattern'] && request()->is($link['pattern']))
+                <a
+                    href="{{ $link['url'] }}"
+                    @if ($active) aria-current="page" @endif
+                    class="{{ $active ? 'border-primary-container text-on-surface border-b-2 font-medium' : 'text-on-surface-variant hover:text-on-surface' }} font-label-md text-label-md py-2 tracking-wider uppercase transition-colors"
                 >
-                    B
-                </div>
-                <span class="text-base font-bold text-slate-800">My Business</span>
+                    {{ $link['label'] }}
+                </a>
+            @endforeach
+        </nav>
+
+        <div class="gap-space-md flex items-center">
+            <a
+                href="{{ route('contact') }}"
+                class="px-space-lg font-label-md text-label-md text-on-primary hover:border-primary-container hover:bg-primary-container hidden items-center justify-center border border-[#0A0A0A] bg-[#0A0A0A] py-3 tracking-wider uppercase transition-all sm:inline-flex"
+            >
+                Let's Talk →
             </a>
 
-            <nav class="hidden items-center lg:flex" aria-label="Main Navigation">
-                <div class="flex items-center gap-0.5 rounded-full border border-slate-200/60 bg-slate-100/60 p-1 backdrop-blur-sm">
-                    @foreach ($links as $link)
-                        @php
-                            $active = $isActive($link['pattern']);
-                        @endphp
-
-                        <a
-                            href="{{ $link['url'] }}"
-                            @if ($active) aria-current="page" @endif
-                            class="{{
-                                $active ? 'bg-white font-semibold text-blue-600 shadow-sm' : 'text-slate-600 hover:bg-white/50 hover:text-slate-900'
-                            }} relative rounded-full px-3.5 py-1 text-sm font-medium transition-all duration-200 focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-500"
-                        >
-                            {{ $link['label'] }}
-                        </a>
-                    @endforeach
-                </div>
-            </nav>
-
-            <div class="hidden items-center lg:flex">
-                <a
-                    href="{{ url('/contact') }}"
-                    class="inline-flex items-center justify-center gap-1.5 rounded-full bg-slate-900 px-4 py-1.5 text-xs font-semibold text-white shadow-sm transition-all duration-200 hover:bg-blue-600 hover:shadow-md hover:shadow-blue-500/20 focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 active:scale-[0.97]"
-                >
-                    <span>Start a Project</span>
-                    <svg class="h-3.5 w-3.5 opacity-70" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14 5l7 7m0 0l-7 7m7-7H3" />
-                    </svg>
-                </a>
-            </div>
-
-            <div class="flex items-center lg:hidden">
-                <button
-                    type="button"
-                    x-on:click="mobileMenuOpen = !mobileMenuOpen"
-                    :aria-expanded="mobileMenuOpen.toString()"
-                    aria-controls="mobile-navigation"
-                    aria-label="Toggle navigation menu"
-                    class="inline-flex h-9 w-9 items-center justify-center rounded-lg text-slate-600 hover:bg-slate-100 hover:text-slate-900 focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-500"
-                >
-                    <svg x-show="!mobileMenuOpen" x-cloak class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16" />
-                    </svg>
-                    <svg x-show="mobileMenuOpen" x-cloak class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
-                    </svg>
-                </button>
-            </div>
+            <button
+                type="button"
+                x-on:click="mobileMenuOpen = !mobileMenuOpen"
+                :aria-expanded="mobileMenuOpen.toString()"
+                aria-controls="mobile-navigation"
+                aria-label="Toggle navigation menu"
+                class="text-on-surface focus-visible:ring-primary-container inline-flex h-10 w-10 items-center justify-center border border-[#E1E5EA] transition-colors hover:border-[#0A0A0A] focus:outline-none focus-visible:ring-2 md:hidden"
+            >
+                <svg x-show="!mobileMenuOpen" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true">
+                    <path stroke-linecap="square" stroke-width="1.75" d="M4 7h16M4 12h16M4 17h16" />
+                </svg>
+                <svg x-show="mobileMenuOpen" x-cloak class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true">
+                    <path stroke-linecap="square" stroke-width="1.75" d="M6 18L18 6M6 6l12 12" />
+                </svg>
+            </button>
         </div>
     </div>
 
     <div
         x-show="mobileMenuOpen"
         x-cloak
-        x-transition:enter="transition-opacity duration-200 ease-out"
-        x-transition:enter-start="opacity-0"
-        x-transition:enter-end="opacity-100"
-        x-transition:leave="transition-opacity duration-150 ease-in"
-        x-transition:leave-start="opacity-100"
-        x-transition:leave-end="opacity-0"
+        x-transition.opacity.duration.200ms
         x-on:click="mobileMenuOpen = false"
-        class="fixed inset-0 z-40 h-screen bg-slate-900/20 backdrop-blur-xs lg:hidden"
+        class="fixed inset-0 z-40 h-screen bg-[#0A0A0A]/40 md:hidden"
         aria-hidden="true"
     ></div>
 
@@ -116,57 +91,47 @@
         x-transition:leave="transition duration-150 ease-in"
         x-transition:leave-start="translate-x-0"
         x-transition:leave-end="translate-x-full"
-        class="fixed top-0 right-0 z-50 flex h-screen w-72 flex-col bg-white/95 shadow-xl backdrop-blur-xl lg:hidden"
+        class="bg-surface-container-lowest fixed top-0 right-0 z-50 flex h-screen w-80 max-w-[85vw] flex-col border-l border-[#E1E5EA] md:hidden"
         role="dialog"
         aria-modal="true"
         aria-label="Mobile navigation"
     >
-        <div class="flex h-14 items-center justify-between border-b border-slate-100 px-5">
-            <span class="text-xs font-bold tracking-wider text-slate-400 uppercase">Menu</span>
+        <div class="px-margin-mobile flex h-19 items-center justify-between border-b border-[#E1E5EA]">
+            <span class="font-label-sm text-label-sm text-outline tracking-widest uppercase">Menu</span>
             <button
                 type="button"
                 x-on:click="mobileMenuOpen = false"
                 aria-label="Close menu"
-                class="inline-flex h-8 w-8 items-center justify-center rounded-lg text-slate-400 hover:bg-slate-100 hover:text-slate-600 focus:outline-none"
+                class="text-on-surface inline-flex h-10 w-10 items-center justify-center border border-[#E1E5EA] hover:border-[#0A0A0A] focus:outline-none"
             >
-                <svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+                <svg class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true">
+                    <path stroke-linecap="square" stroke-width="1.75" d="M6 18L18 6M6 6l12 12" />
                 </svg>
             </button>
         </div>
 
-        <nav class="flex flex-1 flex-col gap-1 overflow-y-auto p-3" aria-label="Mobile Navigation">
+        <nav class="flex flex-1 flex-col overflow-y-auto" aria-label="Mobile Navigation">
             @foreach ($links as $link)
-                @php
-                    $active = $isActive($link['pattern']);
-                @endphp
-
+                @php($active = $link['pattern'] && request()->is($link['pattern']))
                 <a
                     href="{{ $link['url'] }}"
                     @if ($active) aria-current="page" @endif
                     x-on:click="mobileMenuOpen = false"
-                    class="{{
-                        $active ? 'bg-blue-50 font-semibold text-blue-600' : 'text-slate-600 hover:bg-slate-50 hover:text-slate-900'
-                    }} flex items-center justify-between rounded-xl px-3.5 py-2.5 text-sm font-medium transition-all focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-500"
+                    class="{{ $active ? 'border-l-primary-container bg-surface-container-low text-on-surface border-l-2' : 'text-on-surface-variant hover:text-on-surface hover:bg-[#F7F8FA]' }} px-margin-mobile py-space-md font-label-md text-label-md flex items-center justify-between border-b border-[#E1E5EA] tracking-wider uppercase transition-colors"
                 >
                     <span>{{ $link['label'] }}</span>
-                    @if ($active)
-                        <span class="h-1.5 w-1.5 rounded-full bg-blue-600"></span>
-                    @endif
+                    <span aria-hidden="true">→</span>
                 </a>
             @endforeach
         </nav>
 
-        <div class="border-t border-slate-100 p-4">
+        <div class="p-margin-mobile border-t border-[#E1E5EA]">
             <a
-                href="{{ url('/contact') }}"
+                href="{{ route('contact') }}"
                 x-on:click="mobileMenuOpen = false"
-                class="flex w-full items-center justify-center gap-1.5 rounded-xl bg-slate-900 px-4 py-2.5 text-xs font-semibold text-white shadow-sm transition-all hover:bg-blue-600 active:scale-[0.98]"
+                class="px-space-lg font-label-md text-label-md hover:bg-primary-container flex w-full items-center justify-center bg-[#0A0A0A] py-4 tracking-wider text-white uppercase transition-colors"
             >
-                <span>Start a Project</span>
-                <svg class="h-3.5 w-3.5 opacity-70" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14 5l7 7m0 0l-7 7m7-7H3" />
-                </svg>
+                Let's Talk →
             </a>
         </div>
     </div>

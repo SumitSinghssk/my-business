@@ -176,7 +176,7 @@
                     @if ($canUpdate)
                         <div class="border-t border-slate-100 bg-slate-50/50 px-6 py-4 dark:border-slate-800 dark:bg-slate-900/50">
                             <x-admin.button class="w-full">
-                                <span x-text="submitting ? 'Saving...' : 'Save Changes'"></span>
+                                <span x-text="submitting ? 'Saving...' : 'Save Changes'">Save Changes</span>
                             </x-admin.button>
                         </div>
                     @endif
@@ -243,7 +243,7 @@
 
                         <div class="border-t border-slate-100 bg-slate-50/50 px-6 py-4 dark:border-slate-800 dark:bg-slate-900/50">
                             <x-admin.button class="w-full">
-                                <span x-text="submitting ? 'Updating...' : 'Update Password'"></span>
+                                <span x-text="submitting ? 'Updating...' : 'Update Password'">Update Password</span>
                             </x-admin.button>
                         </div>
                     </form>

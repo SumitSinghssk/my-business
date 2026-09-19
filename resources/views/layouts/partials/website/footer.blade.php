@@ -1,105 +1,137 @@
-<footer class="w-full border-t border-slate-200/80 bg-slate-50 px-4 pt-16 pb-8">
-    <div class="custom-width mx-auto">
-        <div class="grid grid-cols-1 gap-8 pb-12 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-12 lg:gap-10">
-            <div class="space-y-5 lg:col-span-3">
-                <a href="#" class="block text-3xl font-extrabold tracking-tight text-slate-900 transition-opacity hover:opacity-90">Elevora</a>
-                <p class="max-w-xs text-sm leading-relaxed font-normal text-slate-500">Building digital products for a better tomorrow.</p>
-                <div class="flex items-center space-x-3.5 pt-1 text-slate-500">
+@php
+    use App\Helpers\Settings;
+    use App\Models\Blog;
+    use App\Models\Page;
+
+    $appName = Settings::appName();
+    $emails = array_values(array_filter(Settings::emails()));
+    $phones = array_values(array_filter(Settings::phones()));
+    $address = collect(Settings::addresses())->first(fn ($a) => filled($a['text'] ?? null));
+    $socialLinks = array_values(array_filter(Settings::socialLinks(), fn ($s) => filled($s['url'] ?? null)));
+
+    $columns = [
+        'Company' => [
+            ['label' => 'Home', 'url' => route('home')],
+            ['label' => 'Services', 'url' => route('services')],
+            ['label' => 'About', 'url' => route('about')],
+            ['label' => 'Insights', 'url' => route('blog.index')],
+            ['label' => 'Contact', 'url' => route('contact')],
+        ],
+        'Services' => [
+            ['label' => 'Website Development', 'url' => route('services') . '#website'],
+            ['label' => 'Web Applications', 'url' => route('services') . '#web-app'],
+            ['label' => 'Mobile Apps', 'url' => route('services') . '#mobile-app'],
+            ['label' => 'Custom Software', 'url' => route('services') . '#custom-software'],
+            ['label' => 'UI/UX Design', 'url' => route('services') . '#ui-ux'],
+            ['label' => 'Cloud & DevOps', 'url' => route('services') . '#cloud-devops'],
+        ],
+    ];
+
+    $latestPosts = Blog::published()
+        ->latestPublished()
+        ->take(4)
+        ->get(['title', 'slug']);
+    if ($latestPosts->isNotEmpty()) {
+        $columns['Latest Insights'] = $latestPosts->map(fn ($post) => ['label' => \Illuminate\Support\Str::limit($post->title, 42), 'url' => route('blog.show', $post->slug)])->all();
+    }
+
+    $legalPages = Page::published()
+        ->orderBy('title')
+        ->get(['title', 'slug']);
+@endphp
+
+<footer class="w-full border-t border-[#1C1C1C] bg-[#0A0A0A] text-white">
+    <div class="site-container pt-space-2xl pb-space-xl px-4">
+        <div class="gap-gutter pb-space-2xl grid grid-cols-1 border-b border-[#1C1C1C] lg:grid-cols-12">
+            <div class="gap-space-xl lg:pr-space-xl flex flex-col justify-between pr-0 lg:col-span-4">
+                <div class="space-y-space-md">
                     <a
-                        href="#"
-                        class="flex h-8 w-8 items-center justify-center rounded-full border border-slate-300 text-sm transition-colors hover:border-blue-600 hover:text-blue-600"
-                        aria-label="LinkedIn"
+                        href="{{ route('home') }}"
+                        class="font-headline-md text-headline-md inline-block font-semibold tracking-tight text-white uppercase"
                     >
-                        <i class="fa-brands fa-linkedin-in"></i>
+                        {{ $appName }}
                     </a>
-                    <a
-                        href="#"
-                        class="flex h-8 w-8 items-center justify-center rounded-full border border-slate-300 text-sm transition-colors hover:border-blue-600 hover:text-blue-600"
-                        aria-label="Twitter"
-                    >
-                        <i class="fa-brands fa-x-twitter"></i>
-                    </a>
-                    <a
-                        href="#"
-                        class="flex h-8 w-8 items-center justify-center rounded-full border border-slate-300 text-sm transition-colors hover:border-blue-600 hover:text-blue-600"
-                        aria-label="GitHub"
-                    >
-                        <i class="fa-brands fa-github"></i>
-                    </a>
-                    <a
-                        href="#"
-                        class="flex h-8 w-8 items-center justify-center rounded-full border border-slate-300 text-sm transition-colors hover:border-blue-600 hover:text-blue-600"
-                        aria-label="Instagram"
-                    >
-                        <i class="fa-brands fa-instagram"></i>
-                    </a>
+                    <p class="font-body-lg text-body-lg max-w-sm text-[#A0A0A0]">
+                        Designing and engineering digital products for ambitious businesses.
+                    </p>
                 </div>
-            </div>
 
-            <div class="lg:col-span-2">
-                <h3 class="mb-4 text-sm font-bold tracking-wide text-slate-900">Services</h3>
-                <ul class="space-y-2.5 text-sm font-medium text-slate-500">
-                    <li><a href="#" class="transition-colors hover:text-slate-900">Website Development</a></li>
-                    <li><a href="#" class="transition-colors hover:text-slate-900">Web Applications</a></li>
-                    <li><a href="#" class="transition-colors hover:text-slate-900">Mobile Apps</a></li>
-                    <li><a href="#" class="transition-colors hover:text-slate-900">E-commerce</a></li>
-                    <li><a href="#" class="transition-colors hover:text-slate-900">Custom Software</a></li>
-                    <li><a href="#" class="transition-colors hover:text-slate-900">UI/UX Design</a></li>
-                    <li><a href="#" class="transition-colors hover:text-slate-900">API Development</a></li>
-                </ul>
-            </div>
-
-            <div class="lg:col-span-2">
-                <h3 class="mb-4 text-sm font-bold tracking-wide text-slate-900">Company</h3>
-                <ul class="space-y-2.5 text-sm font-medium text-slate-500">
-                    <li><a href="#" class="transition-colors hover:text-slate-900">About</a></li>
-                    <li><a href="#" class="transition-colors hover:text-slate-900">Our Process</a></li>
-                    <li><a href="#" class="transition-colors hover:text-slate-900">Work</a></li>
-                    <li><a href="#" class="transition-colors hover:text-slate-900">Industries</a></li>
-                    <li><a href="#" class="transition-colors hover:text-slate-900">Blog</a></li>
-                    <li><a href="#" class="transition-colors hover:text-slate-900">Contact</a></li>
-                </ul>
-            </div>
-
-            <div class="lg:col-span-2">
-                <h3 class="mb-4 text-sm font-bold tracking-wide text-slate-900">Resources</h3>
-                <ul class="space-y-2.5 text-sm font-medium text-slate-500">
-                    <li><a href="#" class="transition-colors hover:text-slate-900">Case Studies</a></li>
-                    <li><a href="#" class="transition-colors hover:text-slate-900">FAQ</a></li>
-                    <li><a href="#" class="transition-colors hover:text-slate-900">Privacy Policy</a></li>
-                    <li><a href="#" class="transition-colors hover:text-slate-900">Terms &amp; Conditions</a></li>
-                    <li><a href="#" class="transition-colors hover:text-slate-900">Cookie Policy</a></li>
-                    <li><a href="#" class="transition-colors hover:text-slate-900">Sitemap</a></li>
-                </ul>
-            </div>
-
-            <div class="space-y-4 lg:col-span-3">
-                <h3 class="text-sm font-bold tracking-wide text-slate-900">Subscribe to our newsletter</h3>
-                <p class="text-sm font-normal text-slate-500">Get the latest insights and updates.</p>
-
-                <form onsubmit="event.preventDefault()" class="mt-2">
-                    <div class="relative flex max-w-sm items-center">
-                        <input
-                            type="email"
-                            placeholder="Your email address"
-                            required
-                            class="w-full rounded-xl border border-slate-200/90 bg-white py-3 pr-14 pl-4 text-sm text-slate-800 placeholder-slate-400 shadow-sm transition-all focus:border-transparent focus:ring-2 focus:ring-blue-500 focus:outline-none"
-                        />
-                        <button
-                            type="submit"
-                            aria-label="Subscribe"
-                            class="absolute top-1.5 right-1.5 bottom-1.5 flex items-center justify-center rounded-lg bg-blue-600 px-3.5 font-medium text-white shadow-sm transition-colors hover:bg-blue-700 focus:ring-2 focus:ring-blue-500 focus:ring-offset-1 focus:outline-none"
-                        >
-                            <i class="fa-solid fa-arrow-right text-sm"></i>
-                        </button>
+                @if ($socialLinks)
+                    <div class="flex flex-wrap gap-2">
+                        @foreach ($socialLinks as $social)
+                            <a
+                                href="{{ $social['url'] }}"
+                                target="_blank"
+                                rel="noopener noreferrer me"
+                                class="font-label-sm text-label-sm border border-[#2A2A2A] px-3 py-1.5 tracking-wider text-[#D1D5DB] uppercase transition-colors hover:border-white hover:text-white"
+                            >
+                                {{ $social['platform'] }}
+                            </a>
+                        @endforeach
                     </div>
-                </form>
+                @endif
+            </div>
+
+            <div class="gap-gutter grid grid-cols-2 md:grid-cols-4 lg:col-span-8">
+                @foreach ($columns as $heading => $items)
+                    <nav class="space-y-space-md flex flex-col" aria-label="{{ $heading }}">
+                        <span class="font-label-sm text-label-sm text-outline tracking-widest uppercase">{{ $heading }}</span>
+                        <ul class="space-y-space-xs">
+                            @foreach ($items as $item)
+                                <li class="py-1">
+                                    <a href="{{ $item['url'] }}" class="font-body-sm text-body-sm text-[#D1D5DB] transition-colors hover:text-white">
+                                        {{ $item['label'] }}
+                                    </a>
+                                </li>
+                            @endforeach
+                        </ul>
+                    </nav>
+                @endforeach
+
+                <div class="space-y-space-md flex flex-col">
+                    <span class="font-label-sm text-label-sm text-outline tracking-widest uppercase">Get in Touch</span>
+                    <ul class="space-y-space-xs font-body-sm text-body-sm text-[#D1D5DB]">
+                        @foreach (array_slice($emails, 0, 1) as $email)
+                            <li class="py-1">
+                                <a href="mailto:{{ $email }}" class="break-all transition-colors hover:text-white">{{ $email }}</a>
+                            </li>
+                        @endforeach
+
+                        @foreach (array_slice($phones, 0, 1) as $phone)
+                            <li class="py-1">
+                                <a href="tel:{{ preg_replace('/[^0-9+]/', '', $phone) }}" class="transition-colors hover:text-white">
+                                    {{ $phone }}
+                                </a>
+                            </li>
+                        @endforeach
+
+                        @if ($address)
+                            <li class="py-1 whitespace-pre-line text-[#A0A0A0]">{{ $address['text'] }}</li>
+                        @endif
+
+                        <li class="py-1">
+                            <a href="{{ route('contact') }}" class="hover:text-primary-fixed-dim font-semibold text-white transition-colors">
+                                Start a Project →
+                            </a>
+                        </li>
+                    </ul>
+                </div>
             </div>
         </div>
 
-        <div class="flex flex-col items-center justify-between gap-4 border-t border-slate-200/80 pt-8 text-xs text-slate-500 sm:flex-row">
-            <p>© 2026 Elevora. All rights reserved.</p>
-            <p class="font-medium text-slate-600">Design. Develop. Grow.</p>
+        <div class="gap-space-md pt-space-lg flex flex-col items-center justify-between md:flex-row">
+            <p class="font-label-sm text-label-sm text-outline tracking-wider uppercase">© {{ date('Y') }} {{ $appName }}. All Rights Reserved.</p>
+
+            @if ($legalPages->isNotEmpty())
+                <nav
+                    class="gap-x-space-lg gap-y-space-xs font-label-sm text-label-sm text-outline flex flex-wrap items-center justify-center tracking-wider uppercase"
+                    aria-label="Legal"
+                >
+                    @foreach ($legalPages as $legalPage)
+                        <a href="{{ route('page.show', $legalPage->slug) }}" class="transition-colors hover:text-white">{{ $legalPage->title }}</a>
+                    @endforeach
+                </nav>
+            @endif
         </div>
     </div>
 </footer>

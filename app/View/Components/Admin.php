@@ -2,6 +2,7 @@
 
 namespace App\View\Components;
 
+use App\Models\Enquiry;
 use Closure;
 use Illuminate\Contracts\View\View;
 use Illuminate\View\Component;
@@ -12,9 +13,13 @@ class Admin extends Component
 
     public function __construct()
     {
+        $unreadEnquiries = auth()->user()?->can('admin.enquiries.view')
+            ? Enquiry::whereNull('seen_at')->count()
+            : 0;
+
         $this->links = [
             [
-                'section' => 'Main',
+                'section' => 'Overview',
                 'items' => [
                     [
                         'title' => 'Dashboard',
@@ -23,37 +28,19 @@ class Admin extends Component
                         'active' => 'admin.dashboard',
                         'permission' => 'dashboard.view',
                     ],
-                ],
-            ],
-            [
-                'section' => 'CRM',
-                'items' => [
                     [
                         'title' => 'Enquiries',
                         'route' => route('admin.enquiries.index'),
                         'icon' => 'mail',
                         'active' => 'admin.enquiries.*',
                         'permission' => 'admin.enquiries.view',
+                        'badge' => $unreadEnquiries ?: null,
                     ],
                 ],
             ],
             [
                 'section' => 'Content',
                 'items' => [
-                    [
-                        'title' => 'SEO',
-                        'route' => route('admin.seo.index'),
-                        'icon' => 'seo',
-                        'active' => 'admin.seo.*',
-                        'permission' => 'admin.seo.view',
-                    ],
-                    [
-                        'title' => 'Blog Categories',
-                        'route' => route('admin.blog-categories.index'),
-                        'icon' => 'category',
-                        'active' => 'admin.blog-categories.*',
-                        'permission' => 'admin.blog-categories.view',
-                    ],
                     [
                         'title' => 'Blogs',
                         'route' => route('admin.blogs.index'),
@@ -62,11 +49,25 @@ class Admin extends Component
                         'permission' => 'admin.blogs.view',
                     ],
                     [
+                        'title' => 'Categories',
+                        'route' => route('admin.blog-categories.index'),
+                        'icon' => 'category',
+                        'active' => 'admin.blog-categories.*',
+                        'permission' => 'admin.blog-categories.view',
+                    ],
+                    [
                         'title' => 'Pages',
                         'route' => route('admin.pages.index'),
                         'icon' => 'pages',
                         'active' => 'admin.pages.*',
                         'permission' => 'admin.pages.view',
+                    ],
+                    [
+                        'title' => 'SEO',
+                        'route' => route('admin.seo.index'),
+                        'icon' => 'seo',
+                        'active' => 'admin.seo.*',
+                        'permission' => 'admin.seo.view',
                     ],
                 ],
             ],
@@ -74,18 +75,11 @@ class Admin extends Component
                 'section' => 'System',
                 'items' => [
                     [
-                        'title' => 'Settings',
-                        'route' => route('admin.settings.index'),
-                        'icon' => 'setting',
-                        'active' => 'admin.settings.*',
-                        'permission' => 'admin.settings.view',
-                    ],
-                    [
-                        'title' => 'Activity Logs',
-                        'route' => route('admin.activity-logs.index'),
-                        'icon' => 'activity',
-                        'active' => 'admin.activity-logs.*',
-                        'permission' => 'admin.activity-logs.view',
+                        'title' => 'Users',
+                        'route' => route('admin.users.index'),
+                        'icon' => 'users',
+                        'active' => 'admin.users.*',
+                        'permission' => 'admin.users.view',
                     ],
                     [
                         'title' => 'Roles & Permissions',
@@ -95,11 +89,18 @@ class Admin extends Component
                         'permission' => 'admin.roles.view',
                     ],
                     [
-                        'title' => 'Users',
-                        'route' => route('admin.users.index'),
-                        'icon' => 'users',
-                        'active' => 'admin.users.*',
-                        'permission' => 'admin.users.view',
+                        'title' => 'Activity Logs',
+                        'route' => route('admin.activity-logs.index'),
+                        'icon' => 'activity',
+                        'active' => 'admin.activity-logs.*',
+                        'permission' => 'admin.activity-logs.view',
+                    ],
+                    [
+                        'title' => 'Settings',
+                        'route' => route('admin.settings.index'),
+                        'icon' => 'setting',
+                        'active' => 'admin.settings.*',
+                        'permission' => 'admin.settings.view',
                     ],
                 ],
             ],

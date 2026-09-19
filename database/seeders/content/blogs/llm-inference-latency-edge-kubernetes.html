@@ -1,0 +1,36 @@
+<p>Running large language models close to users promises lower latency and better data residency, but GPU capacity at the edge is scarce and expensive. We profiled three popular inference runtimes on the same Kubernetes edge clusters to understand where the real trade-offs lie.</p>
+
+<h2>The Test Setup</h2>
+<p>Each runtime served the same 8B-parameter instruction-tuned model on identical nodes with a single 24GB GPU. Load was generated with a realistic mix of short chat turns and long document-summary prompts, from 1 to 64 concurrent users.</p>
+<ul>
+<li><strong>vLLM</strong> with PagedAttention and continuous batching.</li>
+<li><strong>TensorRT-LLM</strong> with an engine compiled for the target GPU.</li>
+<li><strong>Text Generation Inference (TGI)</strong> with default production settings.</li>
+</ul>
+
+<h2>Results</h2>
+<table>
+<thead>
+<tr><th>Runtime</th><th>Time to first token (P50)</th><th>Time to first token (P99)</th><th>Throughput at 32 users</th></tr>
+</thead>
+<tbody>
+<tr><td>vLLM</td><td>142 ms</td><td>610 ms</td><td>1,840 tokens/s</td></tr>
+<tr><td>TensorRT-LLM</td><td>98 ms</td><td>455 ms</td><td>2,120 tokens/s</td></tr>
+<tr><td>TGI</td><td>171 ms</td><td>780 ms</td><td>1,590 tokens/s</td></tr>
+</tbody>
+</table>
+<p>TensorRT-LLM was fastest, but it required a model-specific compilation step and a rebuild for every driver or model update. vLLM delivered about 87% of that performance with far simpler operations.</p>
+
+<h2>Quantisation Changes the Picture</h2>
+<p>Moving from FP16 to 4-bit AWQ quantisation roughly doubled the number of concurrent sessions each GPU could hold before memory pressure forced queuing. Quality loss on our evaluation suite was under 2% for summarisation tasks, but noticeably higher for structured data extraction.</p>
+<blockquote>
+<p>“Benchmark on your own prompts. Leaderboard numbers rarely survive contact with real traffic.”</p>
+</blockquote>
+
+<h2>Our Recommendations</h2>
+<ul>
+<li>Default to <strong>vLLM</strong> for most edge deployments: strong performance and simple operations.</li>
+<li>Reserve <strong>TensorRT-LLM</strong> for stable, high-volume models where every millisecond is worth the build complexity.</li>
+<li>Autoscale on <strong>GPU memory utilisation and queue depth</strong>, not CPU, or pods will scale far too late.</li>
+<li>Always keep a regional fallback to a central cluster for when edge capacity is exhausted.</li>
+</ul>

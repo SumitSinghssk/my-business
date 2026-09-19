@@ -1,0 +1,39 @@
+<p>Most teams don't lack telemetry. They drown in it. Dozens of dashboards nobody opens, alerts that fire so often they're muted, and logs that are expensive to store and impossible to search at 2am. Good observability isn't about collecting more data. It's about answering the next question quickly.</p>
+
+<h2>Start From Questions, Not Tools</h2>
+<p>Before adding a single metric, we ask the on-call engineer three questions:</p>
+<ol>
+<li>How do you know customers are having a bad time right now?</li>
+<li>How do you find which component is responsible?</li>
+<li>How do you confirm your fix worked?</li>
+</ol>
+<p>Everything we instrument must help answer one of those. If it doesn't, it's cost without value.</p>
+
+<h2>Service Level Objectives as the Anchor</h2>
+<p>Each user-facing journey gets an SLO expressed in customer terms, for example "99.5% of checkout requests complete successfully in under 800ms over 28 days". Alerts fire on <strong>error-budget burn rate</strong>, not on individual CPU spikes.</p>
+<table>
+<thead>
+<tr><th>Burn rate</th><th>Window</th><th>Action</th></tr>
+</thead>
+<tbody>
+<tr><td>14.4×</td><td>1 hour</td><td>Page on-call immediately</td></tr>
+<tr><td>6×</td><td>6 hours</td><td>Page on-call</td></tr>
+<tr><td>1×</td><td>3 days</td><td>Create a ticket for the owning team</td></tr>
+</tbody>
+</table>
+
+<h2>Traces Tie It Together</h2>
+<p>Distributed tracing with OpenTelemetry is what turns "checkout is slow" into "the tax service is waiting 600ms on a cold cache in eu-west". We propagate trace context through every HTTP call, queue message and background job, and link logs to traces by ID.</p>
+<blockquote>
+<p>“A dashboard tells you something is wrong. A trace tells you where.”</p>
+</blockquote>
+
+<h2>Keeping Costs Under Control</h2>
+<ul>
+<li><strong>Tail-based sampling</strong> keeps every slow or failed trace but only a small share of healthy ones.</li>
+<li><strong>Structured logs with retention tiers</strong>: seven days hot, ninety days cold, then deleted.</li>
+<li><strong>Cardinality budgets</strong> on metrics labels, reviewed in pull requests like any other cost.</li>
+</ul>
+
+<h2>The Result</h2>
+<p>After consolidating to SLO-based alerting, pages per on-call week dropped from 41 to 6, and median time to identify the failing component fell from 34 minutes to under 5.</p>

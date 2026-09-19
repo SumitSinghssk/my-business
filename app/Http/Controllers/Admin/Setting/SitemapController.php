@@ -4,24 +4,19 @@ namespace App\Http\Controllers\Admin\Setting;
 
 use App\Http\Controllers\Controller;
 use App\Models\Setting;
+use App\Services\SitemapBuilder;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\Facades\Validator;
 
 class SitemapController extends Controller
 {
-    public function generate(Request $request)
+    public function generate(Request $request, SitemapBuilder $sitemap)
     {
         Gate::authorize('admin.settings.sitemap.update');
 
         try {
-            $settings = [
-                'includeImages' => true,
-                'includeNews' => false,
-                'priority' => '0.8',
-            ];
-
-            $sitemapXml = $this->generateSitemapXml($settings);
+            $sitemapXml = $sitemap->toXml();
 
             if (file_put_contents(public_path('sitemap.xml'), $sitemapXml) === false) {
                 return back()->with('error', 'Failed to write sitemap.xml. Please check that the public directory is writable.');
@@ -105,49 +100,6 @@ class SitemapController extends Controller
             'Content-Type' => 'application/xml',
             'Cache-Control' => 'no-store, no-cache',
         ]);
-    }
-
-    private function generateSitemapXml(array $settings): string
-    {
-        $urls = $this->getSiteUrls();
-
-        $xml = '<?xml version="1.0" encoding="UTF-8"?>'."\n";
-        $xml .= '<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9"';
-
-        if (! empty($settings['includeImages'])) {
-            $xml .= ' xmlns:image="http://www.google.com/schemas/sitemap-image/1.1"';
-        }
-        if (! empty($settings['includeNews'])) {
-            $xml .= ' xmlns:news="http://www.google.com/schemas/sitemap-news/0.9"';
-        }
-
-        $xml .= '>'."\n";
-
-        foreach ($urls as $url) {
-            $xml .= "    <url>\n";
-            $xml .= '        <loc>'.htmlspecialchars($url['loc'], ENT_XML1)."</loc>\n";
-            $xml .= '        <lastmod>'.$url['lastmod']."</lastmod>\n";
-            $xml .= '        <priority>'.$url['priority']."</priority>\n";
-            $xml .= "    </url>\n";
-        }
-
-        $xml .= '</urlset>';
-
-        return $xml;
-    }
-
-    private function getSiteUrls(): array
-    {
-        $now = now()->toAtomString();
-        $urls = [];
-
-        $urls[] = [
-            'loc' => route('home'),
-            'lastmod' => $now,
-            'priority' => '1.0',
-        ];
-
-        return $urls;
     }
 
     private function formatBytes(int $bytes, int $precision = 2): string

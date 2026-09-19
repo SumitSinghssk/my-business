@@ -1,0 +1,44 @@
+<p>Migrating a 42TB transactional PostgreSQL estate is rarely the hard part. Doing it while 4.8 million operations per second keep flowing, without dropping a single active customer session, is. This is the playbook our engineering pods used to move a tier-one payments platform onto a new cluster topology with zero customer-visible downtime.</p>
+
+<h2>Why "Maintenance Windows" Were Off the Table</h2>
+<p>The platform processes card authorisations for merchants across 31 time zones. There is no quiet hour. A traditional dump-and-restore would have required an estimated 19 hours of write freeze, and even a short read-only window would have declined live transactions.</p>
+<p>So the constraint became the design brief: <strong>the old and new clusters must both be authoritative for a period of time</strong>, and the application must never know which one it is talking to.</p>
+
+<h2>The Expand–Migrate–Contract Pattern</h2>
+<p>Every schema and topology change followed the same three phases:</p>
+<ol>
+<li><strong>Expand.</strong> Add the new structures alongside the old ones. New columns are nullable, new tables are empty, nothing is removed.</li>
+<li><strong>Migrate.</strong> Dual-write from the application, backfill historical rows in throttled batches, and continuously verify parity with checksums.</li>
+<li><strong>Contract.</strong> Only once reads have been served from the new path for a full business cycle do we remove the legacy structures.</li>
+</ol>
+<blockquote>
+<p>“A migration you can't roll back at every step isn't a migration plan. It's a bet.”</p>
+</blockquote>
+
+<h2>Logical Replication as the Backbone</h2>
+<p>We used PostgreSQL logical replication to stream every committed change from the source cluster to the target. Unlike physical replication, it let us change partitioning, indexes and even column types on the destination while staying in sync.</p>
+<pre><code>-- On the source cluster
+CREATE PUBLICATION payments_pub FOR TABLE ledger_entries, authorisations, settlements;
+
+-- On the target cluster
+CREATE SUBSCRIPTION payments_sub
+  CONNECTION 'host=source-primary dbname=payments user=replicator'
+  PUBLICATION payments_pub
+  WITH (copy_data = true, streaming = on);</code></pre>
+<p>Replication lag was exported to our observability stack and gated every subsequent step: if lag exceeded 250ms, automation paused the cutover pipeline.</p>
+
+<h2>The Cutover Itself</h2>
+<p>The final switch took 38 seconds and was entirely automated:</p>
+<ul>
+<li>Connection poolers (PgBouncer) were placed in pause mode, queuing new transactions instead of rejecting them.</li>
+<li>The pipeline waited for replication lag to reach zero and verified row-count and checksum parity on the hottest tables.</li>
+<li>Pooler targets were flipped to the new primary and resumed. Queued transactions drained in under two seconds.</li>
+</ul>
+<p>Customers saw a single P99 latency blip of 1.4 seconds. Not one transaction was declined.</p>
+
+<h2>What We'd Tell Any Team Attempting This</h2>
+<ul>
+<li><strong>Rehearse the cutover on production-sized data.</strong> We ran it eleven times against a restored snapshot before the real thing.</li>
+<li><strong>Make parity checks boring and continuous.</strong> Checksums that only run at the end discover problems too late.</li>
+<li><strong>Keep the old cluster warm for a week.</strong> Reverse replication gave us a genuine rollback path we fortunately never needed.</li>
+</ul>

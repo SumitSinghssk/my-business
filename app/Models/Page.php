@@ -3,6 +3,7 @@
 namespace App\Models;
 
 use App\Enums\CommonStatusEnum;
+use App\Support\ContentToc;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
 
@@ -36,9 +37,30 @@ class Page extends Model
         return $this->hasOne(Seo::class, 'slug', 'slug');
     }
 
+    /**
+     * Pages visible on the public website: active, and published now or earlier
+     * (a null published_at counts as published, same as blog posts).
+     */
     public function scopePublished($query)
     {
-        return $query->where('status', CommonStatusEnum::ACTIVE->value)->whereNotNull('published_at')->where('published_at', '<=', now());
+        return $query
+            ->where('status', CommonStatusEnum::ACTIVE->value)
+            ->where(fn ($q) => $q->whereNull('published_at')->orWhere('published_at', '<=', now()));
+    }
+
+    /**
+     * Slugs a CMS page may not use because a built-in route already owns them.
+     */
+    public const RESERVED_SLUGS = ['about', 'contact', 'services', 'insights', 'admin', 'sitemap', 'sitemap-xml', 'robots', 'storage', 'build', 'images', 'plugins', 'login', 'logout', 'up'];
+
+    public function getFeaturedImageUrlAttribute(): ?string
+    {
+        return $this->featured_image ? asset('storage/'.$this->featured_image) : null;
+    }
+
+    public function contentWithToc(): array
+    {
+        return ContentToc::build($this->content);
     }
 
     protected static function booted(): void

@@ -1,0 +1,41 @@
+<p>Our API gateway handles more than 10 billion invocations a month. The original implementation, a Node.js reverse proxy with a stack of middleware, had served us well, but tail latency and infrastructure cost were climbing faster than traffic. Rewriting the hot path in Rust with Tokio and Hyper cut our gateway cloud spend by 64% and pinned P99 latency.</p>
+
+<h2>Why Not Just Tune the Existing Gateway?</h2>
+<p>We tried. Garbage-collection pauses were the dominant source of P99 spikes, and every optimisation we made bought a few percent at the cost of increasingly fragile code. The gateway's job is narrow: authenticate, rate limit, route and observe. That makes it an ideal candidate for a small, focused rewrite.</p>
+
+<h2>Scope Discipline</h2>
+<p>The rewrite succeeded largely because of what we left out:</p>
+<ul>
+<li><strong>No business logic.</strong> The gateway only knows about routes, tokens and quotas.</li>
+<li><strong>Configuration as data.</strong> Routes are loaded from a versioned config file and hot-reloaded without restarts.</li>
+<li><strong>Plugins through WebAssembly.</strong> Team-specific transforms run in sandboxed Wasm modules instead of the core binary.</li>
+</ul>
+<pre><code>async fn handle(req: Request&lt;Body&gt;, state: Arc&lt;GatewayState&gt;) -&gt; Result&lt;Response&lt;Body&gt;, GatewayError&gt; {
+    let claims = state.auth.verify(&amp;req).await?;
+    state.limiter.check(&amp;claims.tenant_id)?;
+
+    let route = state.router.resolve(req.uri().path())?;
+    let response = state.upstreams.forward(route, req).await?;
+
+    state.metrics.record(&amp;route, response.status());
+    Ok(response)
+}</code></pre>
+
+<h2>Shadow Traffic Before Cutover</h2>
+<p>For four weeks the new gateway received a mirrored copy of all production traffic. Responses were compared with the live gateway and discarded, which surfaced 23 behavioural differences, mostly around header casing and edge-case redirects, before a single customer was affected.</p>
+
+<h2>The Numbers</h2>
+<table>
+<thead>
+<tr><th>Metric</th><th>Node.js Gateway</th><th>Rust Gateway</th></tr>
+</thead>
+<tbody>
+<tr><td>P50 added latency</td><td>3.8 ms</td><td>0.6 ms</td></tr>
+<tr><td>P99 added latency</td><td>41 ms</td><td>2.9 ms</td></tr>
+<tr><td>Instances at peak</td><td>96</td><td>28</td></tr>
+<tr><td>Memory per instance</td><td>1.4 GB</td><td>90 MB</td></tr>
+</tbody>
+</table>
+
+<h2>Would We Do It Again?</h2>
+<p>Yes, for this component. Rust's learning curve is real, and we wouldn't rewrite business services this way. But for a small, performance-critical piece of infrastructure with a stable scope, it paid for itself within a quarter.</p>

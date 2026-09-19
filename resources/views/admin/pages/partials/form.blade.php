@@ -35,7 +35,7 @@
                 x-model="slug"
                 x-on:input="onSlugInput"
                 :value="old('slug', $page->slug ?? '')"
-                placeholder="e.g. about-us"
+                placeholder="e.g. privacy-policy"
                 :error="$errors->first('slug')"
             >
                 <x-slot:leftIcon>
@@ -43,6 +43,13 @@
                 </x-slot>
             </x-admin.form-input>
             <x-admin.form-error for="slug" />
+            <p class="mt-1.5 text-xs text-slate-500 dark:text-slate-400">
+                Public URL:
+                <span class="font-mono text-slate-700 dark:text-slate-300">
+                    {{ url('/') }}/
+                    <span x-text="slug || 'your-slug'"></span>
+                </span>
+            </p>
         </div>
     </div>
 

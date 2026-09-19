@@ -1,0 +1,40 @@
+<p>Most production incidents between services aren't caused by bugs inside a service. They happen at the boundary: a field renamed in one place and not another, a nullable value that wasn't, a date sent as a string. We eliminated that whole class of failure by making API contracts the single source of truth and generating everything else from them.</p>
+
+<h2>Contract First, Code Second</h2>
+<p>Every service interface is defined before implementation begins, in one of two formats:</p>
+<ul>
+<li><strong>OpenAPI 3.1</strong> for public and browser-facing HTTP APIs.</li>
+<li><strong>Protocol Buffers</strong> for internal gRPC service-to-service calls.</li>
+</ul>
+<p>The contract lives in a shared repository and is reviewed like code. Server stubs, client SDKs and validation schemas are all generated from it in CI.</p>
+
+<h2>Runtime Validation at the Edges</h2>
+<p>Static types disappear at runtime, and data from outside your process is always untrusted. We generate Zod schemas from the OpenAPI spec and validate every inbound request and every response from third parties.</p>
+<pre><code>import { z } from 'zod';
+
+export const Invoice = z.object({
+  id: z.string().uuid(),
+  amountMinor: z.number().int().nonnegative(),
+  currency: z.string().length(3),
+  issuedAt: z.string().datetime(),
+});
+
+export type Invoice = z.infer&lt;typeof Invoice&gt;;
+
+const invoice = Invoice.parse(await response.json());</code></pre>
+
+<h2>Breaking Changes Are Caught in CI</h2>
+<p>A contract diff runs on every pull request. Removing a field, narrowing a type, or making an optional field required fails the build unless the change is explicitly versioned.</p>
+<blockquote>
+<p>“If two services can disagree about a payload, eventually they will, usually at 3am.”</p>
+</blockquote>
+
+<h2>Consumer-Driven Contract Tests</h2>
+<p>Providers run the recorded expectations of every consumer as part of their test suite. A provider can't deploy a change that would break a consumer, even one they didn't know existed.</p>
+
+<h2>Outcome</h2>
+<ul>
+<li>Integration incidents between services fell by 81% over two quarters.</li>
+<li>New client SDKs are available minutes after a contract merges, not days.</li>
+<li>Onboarding engineers read the contract repository to understand the whole system.</li>
+</ul>

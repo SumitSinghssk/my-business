@@ -39,7 +39,7 @@
                 class="sticky bottom-0 z-10 -mx-4 mt-8 flex items-center justify-end border-t border-slate-100 bg-white/80 p-4 backdrop-blur-md sm:mx-0 dark:border-slate-800 dark:bg-slate-900/80"
             >
                 <x-admin.button>
-                    <span x-text="submitting ? 'Updating Post...' : 'Update Post'"></span>
+                    <span x-text="submitting ? 'Updating Post...' : 'Update Post'">Update Post</span>
                 </x-admin.button>
             </div>
         </form>

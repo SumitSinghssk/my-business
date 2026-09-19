@@ -5,7 +5,7 @@
 ])
 
 <div
-    {{ $attributes->merge(['class' => 'bg-white dark:bg-slate-900 p-4 sm:p-6 sm:rounded-lg sm:border border-slate-200 dark:border-slate-800 shadow-xs transition-all']) }}
+    {{ $attributes->merge(['class' => 'rounded-xl border border-slate-200/80 bg-white p-4 shadow-xs sm:p-5 dark:border-slate-800 dark:bg-slate-900']) }}
 >
     @php
         $hasTitle = isset($title) && (is_object($title) ? (string) $title !== '' : $title !== '');
@@ -13,22 +13,24 @@
     @endphp
 
     @if ($hasHeader)
-        <div class="mb-8 flex flex-wrap items-center justify-between gap-5">
+        <div class="mb-4 flex flex-wrap items-center justify-between gap-3 border-b border-slate-100 pb-3.5 dark:border-slate-800">
             <div class="min-w-0">
                 @if ($hasTitle)
                     @if (is_object($title))
                         {{ $title }}
                     @else
-                        <h2 class="text-xl font-bold tracking-tight text-slate-900 sm:text-2xl dark:text-white">
+                        <h2 class="text-base font-bold tracking-tight text-slate-900 sm:text-lg dark:text-white">
                             {{ $title }}
                         </h2>
                     @endif
                 @endif
 
                 @if ($subtitle || $text)
-                    <div class="mt-2 flex flex-wrap items-center gap-2">
+                    <div class="mt-1 flex flex-wrap items-center gap-2">
                         @if ($subtitle)
-                            <span class="rounded-lg bg-blue-50 px-2 py-0.5 text-xs font-bold text-blue-700 dark:bg-blue-500/10 dark:text-blue-400">
+                            <span
+                                class="rounded-full bg-blue-50 px-2 py-0.5 text-[11px] font-semibold text-blue-700 dark:bg-blue-500/10 dark:text-blue-400"
+                            >
                                 {{ $subtitle }}
                             </span>
                         @endif
@@ -38,7 +40,7 @@
                         @endif
 
                         @if ($text)
-                            <p class="text-sm font-medium text-slate-500 dark:text-slate-400">
+                            <p class="text-xs text-slate-500 dark:text-slate-400">
                                 {{ $text }}
                             </p>
                         @endif
@@ -62,7 +64,7 @@
                         <div x-data="{ open: false }" class="relative lg:hidden">
                             <button
                                 x-on:click="open = !open"
-                                class="flex h-10 w-10 cursor-pointer items-center justify-center rounded-xl border border-slate-200 bg-white text-slate-600 shadow-sm hover:bg-slate-50 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-400 dark:hover:bg-slate-700"
+                                class="flex h-8 w-8 cursor-pointer items-center justify-center rounded-lg border border-slate-200 bg-white text-slate-600 shadow-sm hover:bg-slate-50 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-400 dark:hover:bg-slate-700"
                             >
                                 <svg class="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                     <path

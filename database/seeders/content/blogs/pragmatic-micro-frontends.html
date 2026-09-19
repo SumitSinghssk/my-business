@@ -1,0 +1,35 @@
+<p>Micro-frontends are one of the most over-prescribed patterns in modern web engineering. They solve a real organisational problem, but they introduce real runtime costs. Here is how we decide when independent deployability is worth the complexity, and how we implement it when it is.</p>
+
+<h2>Start With the Org Chart, Not the Bundle</h2>
+<p>Micro-frontends are a response to Conway's Law. If a single team owns the whole product, a well-structured monolith with clear module boundaries will beat a distributed frontend on every metric that matters: performance, consistency and developer experience.</p>
+<p>We only recommend splitting when at least two of these are true:</p>
+<ul>
+<li>More than four autonomous teams ship to the same user-facing surface.</li>
+<li>Teams need genuinely different release cadences, such as daily versus quarterly.</li>
+<li>Parts of the product have different compliance or security boundaries.</li>
+</ul>
+
+<h2>Module Federation vs. Isolated Sub-Apps</h2>
+<p>We've shipped both approaches in production and each has a clear sweet spot.</p>
+<table>
+<thead>
+<tr><th>Concern</th><th>Module Federation</th><th>Isolated Sub-Apps</th></tr>
+</thead>
+<tbody>
+<tr><td>Shared dependencies</td><td>Shared at runtime, smaller payload</td><td>Duplicated per app</td></tr>
+<tr><td>Failure isolation</td><td>Weaker, one bad remote can break the shell</td><td>Strong, crashes stay contained</td></tr>
+<tr><td>State sharing</td><td>Straightforward</td><td>Requires explicit contracts</td></tr>
+<tr><td>Best for</td><td>Teams on a shared stack</td><td>Mixed stacks or strict isolation</td></tr>
+</tbody>
+</table>
+
+<h2>The Contracts That Keep It Sane</h2>
+<p>Whichever approach we choose, three contracts are non-negotiable:</p>
+<ol>
+<li><strong>A shared design system</strong> consumed as a versioned package, so every slice looks like one product.</li>
+<li><strong>A typed event bus</strong> for cross-slice communication, instead of reaching into each other's state.</li>
+<li><strong>A performance budget per slice</strong>, enforced in CI, so no team can quietly add 400KB to the shell.</li>
+</ol>
+
+<h2>Our Rule of Thumb</h2>
+<p>If the main problem you're solving is <em>deployment coupling</em>, micro-frontends are a strong option. If it's <em>code organisation</em>, invest in a modular monolith first. It's far easier to split a well-modularised app later than to reassemble a fragmented one.</p>

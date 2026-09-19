@@ -22,8 +22,8 @@
 @php
     $isSmall = $size === 'sm';
     $baseClass = $isSmall
-        ? 'inline-flex h-10 w-10 items-center justify-center rounded-xl border shadow-sm transition-all duration-200 active:scale-90'
-        : 'inline-flex h-11 items-center gap-2 rounded-xl border px-5 text-sm font-bold shadow-sm transition-all duration-200 active:scale-95';
+        ? 'inline-flex h-7.5 w-7.5 items-center justify-center rounded-lg border shadow-xs transition-all duration-200 active:scale-90'
+        : 'inline-flex h-8.5 items-center gap-1.5 rounded-lg border px-3 text-xs font-semibold shadow-sm transition-all duration-200 active:scale-95';
 
     $viewStyles = "$baseClass border-slate-200 bg-white text-slate-600 hover:border-sky-200 hover:bg-sky-50 hover:text-sky-600 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-400 dark:hover:bg-sky-500/10 dark:hover:text-sky-400 cursor-pointer";
     $editStyles = "$baseClass border-slate-200 bg-white text-slate-600 hover:border-indigo-200 hover:bg-indigo-50 hover:text-indigo-600 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-400 dark:hover:bg-indigo-500/10 dark:hover:text-indigo-400 cursor-pointer";
@@ -34,7 +34,7 @@
     @if ($viewRoute && $canView)
         <x-admin.tooltip text="View">
             <a href="{{ $viewRoute }}" class="{{ $viewStyles }}">
-                <svg class="h-4.5 w-4.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                <svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
                     <path stroke-linecap="round" stroke-linejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
                     <path
                         stroke-linecap="round"
@@ -52,7 +52,7 @@
     @if ($viewClick && $canView)
         <x-admin.tooltip text="View">
             <button type="button" x-on:click="{{ $viewClick }}" class="{{ $viewStyles }}">
-                <svg class="h-4.5 w-4.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                <svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
                     <path stroke-linecap="round" stroke-linejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
                     <path
                         stroke-linecap="round"
@@ -71,7 +71,7 @@
     @if ($editRoute && $canEdit)
         <x-admin.tooltip text="Edit">
             <a href="{{ $editRoute }}" class="{{ $editStyles }}">
-                <svg class="h-4.5 w-4.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                <svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
                     <path
                         stroke-linecap="round"
                         stroke-linejoin="round"
@@ -106,7 +106,7 @@
                 @endif
 
                 <button type="submit" class="{{ $deleteFormStyles }}">
-                    <svg class="h-4.5 w-4.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                    <svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
                         <path
                             stroke-linecap="round"
                             stroke-linejoin="round"

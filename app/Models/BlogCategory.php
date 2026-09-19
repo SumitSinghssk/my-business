@@ -3,6 +3,7 @@
 namespace App\Models;
 
 use App\Enums\CommonStatusEnum;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
 
@@ -42,6 +43,11 @@ class BlogCategory extends Model
     public function blogs()
     {
         return $this->belongsToMany(Blog::class, 'blog_category_blog');
+    }
+
+    public function scopeActive(Builder $query): Builder
+    {
+        return $query->where('status', CommonStatusEnum::ACTIVE);
     }
 
     protected static function booted(): void

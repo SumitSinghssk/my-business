@@ -13,8 +13,8 @@
     $isSmall = $size === 'sm';
 
     $defaultClass = $isSmall
-        ? 'inline-flex h-10 w-10 cursor-pointer items-center justify-center rounded-xl border border-slate-200 bg-white text-slate-500 shadow-sm transition-all duration-200 hover:border-red-200 hover:bg-red-50 hover:text-red-600 active:scale-90 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-400 dark:hover:bg-red-500/10 dark:hover:text-red-400'
-        : 'inline-flex h-11 cursor-pointer items-center gap-2 rounded-xl border border-red-100 bg-red-50 px-5 text-sm font-bold text-red-600 transition-all hover:bg-red-600 hover:text-white active:scale-95 dark:border-red-900/30 dark:bg-red-900/20 dark:text-red-400 dark:hover:bg-red-600 dark:hover:text-white';
+        ? 'inline-flex h-7.5 w-7.5 cursor-pointer items-center justify-center rounded-lg border border-slate-200 bg-white text-slate-500 shadow-xs transition-all duration-200 hover:border-red-200 hover:bg-red-50 hover:text-red-600 active:scale-90 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-400 dark:hover:bg-red-500/10 dark:hover:text-red-400'
+        : 'inline-flex h-8.5 cursor-pointer items-center gap-1.5 rounded-lg border border-red-100 bg-red-50 px-3 text-xs font-semibold text-red-600 transition-all hover:bg-red-600 hover:text-white active:scale-95 dark:border-red-900/30 dark:bg-red-900/20 dark:text-red-400 dark:hover:bg-red-600 dark:hover:text-white';
 @endphp
 
 <div class="inline-block">
@@ -24,7 +24,7 @@
             x-on:click="$dispatch('open-modal', '{{ $name }}')"
             {{ $attributes->merge(['class' => $buttonClass ?: $defaultClass]) }}
         >
-            <svg class="h-4.5 w-4.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+            <svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
                 <path
                     stroke-linecap="round"
                     stroke-linejoin="round"
@@ -60,7 +60,7 @@
                     @method('DELETE')
                     <button
                         type="submit"
-                        class="w-full cursor-pointer rounded-xl bg-red-500 py-3.5 text-sm font-semibold text-white shadow-md shadow-red-500/20 transition-all hover:bg-red-600 active:scale-95"
+                        class="w-full cursor-pointer rounded-lg bg-red-500 py-2.5 text-sm font-semibold text-white shadow-md shadow-red-500/20 transition-all hover:bg-red-600 active:scale-95"
                     >
                         Confirm Permanent Deletion
                     </button>
@@ -69,7 +69,7 @@
                 <button
                     type="button"
                     x-on:click="$dispatch('close-modal', '{{ $name }}')"
-                    class="w-full cursor-pointer rounded-xl bg-slate-100 py-3.5 text-sm font-bold text-slate-600 transition-all hover:bg-slate-200 dark:bg-slate-800 dark:text-slate-300 dark:hover:bg-slate-700"
+                    class="w-full cursor-pointer rounded-lg bg-slate-100 py-2.5 text-sm font-semibold text-slate-600 transition-all hover:bg-slate-200 dark:bg-slate-800 dark:text-slate-300 dark:hover:bg-slate-700"
                 >
                     No, Go Back
                 </button>

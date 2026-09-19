@@ -1,0 +1,35 @@
+<p>The dual-write problem is one of the oldest traps in distributed systems. A service saves an order to its database and then publishes an "order created" event. If the process crashes between those two steps, the database and the rest of the system now disagree, silently. The transactional outbox pattern, powered by change data capture, removes that gap entirely.</p>
+
+<h2>Why Dual Writes Fail</h2>
+<p>You cannot atomically commit to a database and a message broker in one transaction without heavyweight distributed transactions. Every "write then publish" implementation eventually loses or duplicates events under crashes, deploys, or network partitions.</p>
+
+<h2>The Transactional Outbox</h2>
+<p>Instead of publishing directly, the service writes the event to an <code>outbox</code> table <em>in the same database transaction</em> as the business change. Either both are committed or neither is.</p>
+<pre><code>BEGIN;
+  INSERT INTO orders (id, customer_id, total_minor, status)
+  VALUES ('9f1c...', 'c-2041', 12900, 'placed');
+
+  INSERT INTO outbox (aggregate_type, aggregate_id, event_type, payload)
+  VALUES ('order', '9f1c...', 'OrderPlaced', '{"totalMinor":12900}');
+COMMIT;</code></pre>
+
+<h2>Change Data Capture With Debezium</h2>
+<p>Debezium tails the database's transaction log and streams every committed insert into the outbox table onto Kafka. Because it reads the log rather than polling, it adds almost no load and preserves commit order per aggregate.</p>
+<ul>
+<li>The Debezium outbox event router maps each row to the correct Kafka topic.</li>
+<li>The aggregate ID becomes the message key, keeping events for one order in order.</li>
+<li>Outbox rows are deleted after capture, so the table stays small.</li>
+</ul>
+
+<h2>Designing for At-Least-Once Delivery</h2>
+<p>CDC guarantees every event is delivered <em>at least</em> once, which means consumers must be idempotent. Each event carries a unique ID, and consumers record processed IDs in the same transaction as their own side effects.</p>
+<blockquote>
+<p>“Exactly-once delivery is a property of your consumers, not your broker.”</p>
+</blockquote>
+
+<h2>Operational Lessons</h2>
+<ul>
+<li><strong>Monitor connector lag as a first-class SLO.</strong> A stalled connector looks like a quiet system until it isn't.</li>
+<li><strong>Version event schemas</strong> in a schema registry, and only make backward-compatible changes.</li>
+<li><strong>Replay is a feature.</strong> Retaining topics lets new services bootstrap their state from history.</li>
+</ul>

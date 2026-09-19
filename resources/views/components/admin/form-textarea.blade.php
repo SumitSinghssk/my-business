@@ -12,17 +12,17 @@
     $hasLeftIcon = isset($leftIcon);
     $hasRightIcon = isset($rightIcon);
 
-    $paddingClasses = ($hasLeftIcon ? 'pl-11 ' : 'pl-4 ') . ($hasRightIcon ? 'pr-11 ' : 'pr-4 ');
+    $paddingClasses = ($hasLeftIcon ? 'pl-9 ' : 'pl-3 ') . ($hasRightIcon ? 'pr-9 ' : 'pr-3 ');
 
     $stateClasses = ! $disabled
-        ? 'bg-slate-50/50 border-slate-200 text-slate-900 placeholder:text-slate-400 focus:bg-white focus:border-blue-500 focus:ring-4 focus:ring-blue-500/10 focus:outline-none dark:bg-slate-800 dark:border-slate-700 dark:text-white dark:focus:bg-slate-900 '
+        ? 'bg-white border-slate-200 text-slate-900 placeholder:text-slate-400 focus:border-blue-400 focus:ring-3 focus:ring-blue-500/15 focus:outline-none dark:bg-slate-800 dark:border-slate-700 dark:text-white dark:focus:bg-slate-900 '
         : 'bg-slate-100 border-slate-200 text-slate-400 cursor-not-allowed dark:bg-slate-800/50 dark:border-slate-700 ';
 @endphp
 
 <div class="w-full">
     <div class="relative">
         @if ($hasLeftIcon)
-            <div class="{{ $disabled ? 'text-slate-300 dark:text-slate-600' : 'text-slate-400' }} pointer-events-none absolute top-4 left-4 z-10">
+            <div class="{{ $disabled ? 'text-slate-300 dark:text-slate-600' : 'text-slate-400' }} pointer-events-none absolute top-2.5 left-3 z-10">
                 {{ $leftIcon }}
             </div>
         @endif
@@ -37,7 +37,7 @@
             {{
                 $attributes->merge([
                     'class' =>
-                        'w-full rounded-xl border py-3 text-sm transition-all sm:text-base resize-none ' .
+                        'w-full rounded-lg border py-2 text-sm transition-all resize-none ' .
                         $paddingClasses .
                         $stateClasses .
                         ($editor ? ' tinymce' : ''),
@@ -48,7 +48,7 @@
         >
 
         @if ($hasRightIcon)
-            <div class="pointer-events-none absolute top-4 right-4 z-10 text-slate-400">
+            <div class="pointer-events-none absolute top-2.5 right-3 z-10 text-slate-400">
                 {{ $rightIcon }}
             </div>
         @endif

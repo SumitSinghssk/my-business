@@ -16,6 +16,7 @@
     @endpush
 
     @push('head-scripts')
+        <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
         @vite(['resources/css/app.css', 'resources/js/admin.js'])
     @endpush
 
@@ -24,30 +25,30 @@
             {{ $slot }}
         </div>
     @else
-        <div x-data="{ sidebarOpen: false }" class="admin-theme relative min-h-screen bg-slate-50 dark:bg-slate-950">
+        <div
+            x-data="{ sidebarOpen: false }"
+            class="admin-theme relative min-h-screen bg-slate-50 text-slate-700 dark:bg-slate-950 dark:text-slate-300"
+        >
             <div
                 x-show="sidebarOpen"
-                x-transition:enter="transition-opacity duration-300"
-                x-transition:enter-start="opacity-0"
-                x-transition:enter-end="opacity-100"
-                x-transition:leave="transition-opacity duration-300"
-                x-transition:leave-start="opacity-100"
-                x-transition:leave-end="opacity-0"
+                x-cloak
+                x-transition.opacity.duration.200ms
                 x-on:click="sidebarOpen = false"
-                class="fixed inset-0 z-40 bg-slate-900/50 backdrop-blur-sm lg:hidden"
+                class="fixed inset-0 z-40 bg-slate-900/40 backdrop-blur-[2px] lg:hidden"
             ></div>
 
             @include('layouts.partials.admin.sidebar')
 
-            <div class="flex flex-col transition-all duration-300 lg:pl-64">
-                <div class="sticky top-0 z-30">
-                    @include('layouts.partials.admin.header')
-                    @include('layouts.partials.admin.breadcrumb', ['breadcrumb' => $breadcrumb ?? []])
-                </div>
+            <div class="flex min-h-screen flex-col lg:pl-60">
+                @include('layouts.partials.admin.header', ['breadcrumb' => $breadcrumb ?? []])
 
-                <main class="min-h-[calc(100vh-120px)] sm:p-6 lg:p-8">
+                <main class="mx-auto w-full max-w-[1600px] flex-1 p-3 sm:p-5 lg:p-6">
                     {{ $slot }}
                 </main>
+
+                <footer class="px-3 pb-4 text-center text-xs text-slate-400 sm:px-5 lg:px-6 dark:text-slate-500">
+                    © {{ date('Y') }} {{ \App\Helpers\Settings::appName() }} · Admin
+                </footer>
             </div>
         </div>
 

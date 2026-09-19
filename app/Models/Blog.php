@@ -3,8 +3,11 @@
 namespace App\Models;
 
 use App\Enums\CommonStatusEnum;
+use App\Support\ContentToc;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
+use Illuminate\Support\Carbon;
 
 class Blog extends Model
 {
@@ -40,6 +43,46 @@ class Blog extends Model
     public function seo()
     {
         return $this->hasOne(Seo::class, 'slug', 'slug');
+    }
+
+    /**
+     * Posts visible on the public website: active, and published now or earlier
+     * (a null published_at counts as published).
+     */
+    public function scopePublished(Builder $query): Builder
+    {
+        return $query
+            ->where('status', CommonStatusEnum::ACTIVE)
+            ->where(fn (Builder $q) => $q->whereNull('published_at')->orWhere('published_at', '<=', now()));
+    }
+
+    public function scopeLatestPublished(Builder $query): Builder
+    {
+        return $query->orderByRaw('COALESCE(published_at, created_at) DESC')->orderByDesc('id');
+    }
+
+    public function getFeaturedImageUrlAttribute(): ?string
+    {
+        return $this->featured_image ? asset('storage/'.$this->featured_image) : null;
+    }
+
+    public function getPublishedDateAttribute(): Carbon
+    {
+        return $this->published_at ?? $this->created_at;
+    }
+
+    public function getReadingTimeAttribute(): int
+    {
+        return max(1, (int) ceil(str_word_count(strip_tags((string) $this->content)) / 200));
+    }
+
+    /**
+     * Content with an id on every <h2> (for anchor links) plus the matching
+     * table of contents: ['html' => string, 'toc' => [['id', 'title'], ...]].
+     */
+    public function contentWithToc(): array
+    {
+        return ContentToc::build($this->content);
     }
 
     protected static function booted(): void

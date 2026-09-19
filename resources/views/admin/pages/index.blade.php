@@ -105,6 +105,7 @@
                         <td class="px-6 py-4">
                             <x-admin.row-actions
                                 size="sm"
+                                :viewRoute="$page->slug ? route('page.show', $page->slug) : null"
                                 :editRoute="route('admin.pages.edit', $page)"
                                 :canEdit="$canEdit"
                                 :deleteRoute="route('admin.pages.destroy', $page)"

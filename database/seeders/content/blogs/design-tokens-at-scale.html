@@ -1,0 +1,41 @@
+<p>Handoff drift is the quiet tax on every product team. A designer nudges a colour in Figma, an engineer hard-codes the old hex value, and six months later the product ships four slightly different blues. We eliminated that drift by treating design tokens as compiled, versioned source code rather than a shared spreadsheet.</p>
+
+<h2>Tokens Are an API, Not a Palette</h2>
+<p>The mental shift that mattered most: a token is a contract between design and engineering. That means it needs a schema, versioning, and a deprecation policy, exactly like a public API.</p>
+<p>We organise tokens into three tiers:</p>
+<ul>
+<li><strong>Primitive tokens</strong> — raw values such as <code>blue-600: #155eef</code>. Never used directly in components.</li>
+<li><strong>Semantic tokens</strong> — intent-based aliases such as <code>color.action.primary</code> that point at primitives.</li>
+<li><strong>Component tokens</strong> — scoped overrides such as <code>button.primary.background</code> for the rare case a component needs to diverge.</li>
+</ul>
+
+<h2>One Source, Many Targets</h2>
+<p>Tokens live as JSON in their own repository. A build step exports them from Figma Variables, validates them against a schema, and compiles them into every platform format we ship:</p>
+<pre><code>{
+  "color": {
+    "action": {
+      "primary": { "$type": "color", "$value": "{blue.600}" },
+      "primary-hover": { "$type": "color", "$value": "{blue.700}" }
+    }
+  },
+  "radius": {
+    "control": { "$type": "dimension", "$value": "4px" }
+  }
+}</code></pre>
+<p>The same source produces CSS custom properties for the web, a typed TypeScript module for application code, and native resource files for iOS and Android.</p>
+
+<h2>Type Safety Closes the Loop</h2>
+<p>Because the TypeScript output is a union of literal token names, referencing a token that doesn't exist is a compile error, not a visual bug found in QA. Renaming a token in Figma breaks the build in every consuming repository until the change is adopted.</p>
+<blockquote>
+<p>“If a design decision can't fail a build, it will eventually fail a customer.”</p>
+</blockquote>
+
+<h2>Visual Regression as the Safety Net</h2>
+<p>Every token release runs a visual regression suite across our component library. Screenshots are diffed per component and per theme, and any change above a 0.1% pixel threshold requires explicit design sign-off before the package is published.</p>
+
+<h2>Results After Twelve Months</h2>
+<ul>
+<li>Hard-coded colour values in application code dropped from 1,140 to zero.</li>
+<li>Theme changes that used to take a two-week sprint now ship in a single release.</li>
+<li>Design and engineering review the same artefact, so "that's not what the mockup says" conversations have all but disappeared.</li>
+</ul>

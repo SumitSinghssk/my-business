@@ -16,7 +16,7 @@
 
             <div class="flex justify-end">
                 <x-admin.button>
-                    <span x-text="submitting ? 'Creating SEO...' : 'Create SEO'"></span>
+                    <span x-text="submitting ? 'Creating SEO...' : 'Create SEO'">Create SEO</span>
                 </x-admin.button>
             </div>
         </form>

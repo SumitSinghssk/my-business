@@ -514,7 +514,7 @@
         >
             <div class="flex w-full items-center justify-end gap-4">
                 <x-admin.button>
-                    <span x-text="submitting ? 'Saving…' : 'Save Settings'"></span>
+                    <span x-text="submitting ? 'Saving…' : 'Save Settings'">Save Settings</span>
                 </x-admin.button>
             </div>
         </div>

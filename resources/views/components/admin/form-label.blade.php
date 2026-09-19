@@ -2,7 +2,7 @@
 
 <label
     @if(!$dynamic && $for) for="{{ $for }}" @endif
-    {{ $attributes->merge(['class' => 'mb-2.5 block text-[11px] font-bold tracking-widest text-slate-500 uppercase dark:text-slate-400 ' . $class]) }}
+    {{ $attributes->merge(['class' => 'mb-1.5 block text-xs font-semibold text-slate-700 dark:text-slate-300 ' . $class]) }}
 >
     {{ $label ?: $slot }}
     @if ($required)

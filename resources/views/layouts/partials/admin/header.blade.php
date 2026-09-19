@@ -1,89 +1,128 @@
+@php
+    $user = auth('web')->user();
+    $crumbs = $breadcrumb ?? [];
+    $role = $user->getRoleNames()->first();
+@endphp
+
 <header
-    class="sticky top-0 z-40 flex h-16 shrink-0 items-center justify-between border-b border-slate-200 bg-white/80 px-4 backdrop-blur-md sm:px-6 lg:pl-68 dark:border-slate-800 dark:bg-slate-900/80"
+    class="sticky top-0 z-40 flex h-14 shrink-0 items-center justify-between gap-3 border-b border-slate-200/80 bg-white/85 px-3 backdrop-blur-md sm:px-5 lg:px-6 dark:border-slate-800 dark:bg-slate-900/85"
 >
-    <div class="flex items-center">
+    {{-- Left: menu + breadcrumb --}}
+    <div class="flex min-w-0 items-center gap-2">
         <button
+            type="button"
             x-on:click="sidebarOpen = !sidebarOpen"
-            class="mr-4 inline-flex h-10 w-10 cursor-pointer items-center justify-center rounded-xl border border-slate-200 text-slate-500 transition hover:bg-slate-50 lg:hidden dark:border-slate-700 dark:hover:bg-slate-800"
+            class="inline-flex h-8 w-8 shrink-0 cursor-pointer items-center justify-center rounded-lg text-slate-500 transition hover:bg-slate-100 lg:hidden dark:hover:bg-slate-800"
+            aria-label="Open menu"
         >
-            <x-icons.menu class="h-5 w-5" />
+            <x-icons.menu class="h-4.5 w-4.5" />
         </button>
+
+        <nav class="flex min-w-0 items-center gap-1.5 overflow-hidden text-sm whitespace-nowrap" aria-label="Breadcrumb">
+            <a
+                href="{{ route('admin.dashboard') }}"
+                class="{{ count($crumbs) ? 'text-slate-400 hover:text-blue-600' : 'font-semibold text-slate-900 dark:text-white' }} shrink-0 transition-colors"
+            >
+                Dashboard
+            </a>
+            @foreach ($crumbs as $item)
+                <x-icons.chevron-forward class="h-3 w-3 shrink-0 text-slate-300 dark:text-slate-600" />
+
+                @if ($loop->last)
+                    <span class="truncate font-semibold text-slate-900 dark:text-white">{{ $item['label'] }}</span>
+                @else
+                    <a href="{{ $item['url'] ?? '#' }}" class="truncate text-slate-400 transition-colors hover:text-blue-600">
+                        {{ $item['label'] }}
+                    </a>
+                @endif
+            @endforeach
+        </nav>
     </div>
 
-    <div class="flex items-center gap-3">
+    {{-- Right: actions --}}
+    <div class="flex shrink-0 items-center gap-1.5">
+        <a
+            href="{{ route('home') }}"
+            target="_blank"
+            rel="noopener"
+            class="hidden h-8 items-center gap-1.5 rounded-lg border border-slate-200 px-2.5 text-xs font-semibold text-slate-600 transition hover:border-blue-200 hover:bg-blue-50 hover:text-blue-700 sm:inline-flex dark:border-slate-700 dark:text-slate-300 dark:hover:bg-blue-500/10"
+        >
+            <x-icons.desktop class="h-3.5 w-3.5" />
+            View site
+        </a>
+
         <button
             type="button"
             x-data
             x-on:click="$store.theme.toggle()"
             x-bind:aria-label="$store.theme.isDark ? 'Switch to light theme' : 'Switch to dark theme'"
             x-bind:title="$store.theme.isDark ? 'Switch to light theme' : 'Switch to dark theme'"
-            class="relative flex h-10 w-10 cursor-pointer items-center justify-center rounded-xl border border-slate-200 text-slate-500 transition hover:bg-slate-50 dark:border-slate-700 dark:text-slate-400 dark:hover:bg-slate-800"
+            class="flex h-8 w-8 cursor-pointer items-center justify-center rounded-lg text-slate-500 transition hover:bg-slate-100 dark:text-slate-400 dark:hover:bg-slate-800"
         >
-            <x-icons.moon x-show="!$store.theme.isDark" x-cloak class="h-5 w-5" />
-            <x-icons.sun x-show="$store.theme.isDark" x-cloak class="h-5 w-5" />
+            <x-icons.moon x-show="!$store.theme.isDark" x-cloak class="h-4.5 w-4.5" />
+            <x-icons.sun x-show="$store.theme.isDark" x-cloak class="h-4.5 w-4.5" />
         </button>
 
         @can('admin.notifications.view')
             <div class="relative" x-data="{ open: false }" @click.outside="open = false; $store.notif.close()">
                 <button
+                    type="button"
                     x-on:click="window.innerWidth < 768 ? $store.notif.toggle() : (open = ! open)"
+                    aria-label="Notifications"
                     class="{{
                         request()->routeIs('admin.notifications.*')
-                            ? 'border-blue-500 bg-blue-50 text-blue-600 dark:bg-blue-500/10 dark:text-blue-400'
-                            : 'border-slate-200 text-slate-500 hover:bg-slate-50 dark:border-slate-700 dark:text-slate-400 dark:hover:bg-slate-800'
-                    }} relative flex h-10 w-10 cursor-pointer items-center justify-center rounded-xl border transition"
+                            ? 'bg-blue-50 text-blue-600 dark:bg-blue-500/10 dark:text-blue-400'
+                            : 'text-slate-500 hover:bg-slate-100 dark:text-slate-400 dark:hover:bg-slate-800'
+                    }} relative flex h-8 w-8 cursor-pointer items-center justify-center rounded-lg transition"
                 >
-                    <x-icons.notification class="bell-infinite h-5 w-5" />
-                    <span x-cloak x-show="$store.notif.unread > 0" x-transition class="absolute top-1.5 right-2.5 flex h-2 w-2">
+                    <x-icons.notification class="h-4.5 w-4.5" />
+                    <span x-cloak x-show="$store.notif.unread > 0" x-transition class="absolute top-1 right-1 flex h-2 w-2">
                         <span class="absolute inline-flex h-full w-full animate-ping rounded-full bg-blue-400 opacity-75"></span>
-                        <span class="relative inline-flex h-2 w-2 rounded-full bg-blue-500"></span>
+                        <span class="relative inline-flex h-2 w-2 rounded-full bg-blue-500 ring-2 ring-white dark:ring-slate-900"></span>
                     </span>
                 </button>
 
                 <div
                     x-show="open && window.innerWidth >= 768"
-                    x-transition:enter="transition duration-200 ease-out"
-                    x-transition:enter-start="translate-y-1 scale-95 opacity-0"
-                    x-transition:enter-end="translate-y-0 scale-100 opacity-100"
+                    x-transition:enter="transition duration-150 ease-out"
+                    x-transition:enter-start="translate-y-1 opacity-0"
+                    x-transition:enter-end="translate-y-0 opacity-100"
                     x-cloak
-                    class="absolute right-0 z-100 mt-3 hidden w-80 overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-2xl md:block dark:border-slate-700 dark:bg-slate-900"
+                    class="absolute right-0 z-100 mt-2 hidden w-80 overflow-hidden rounded-xl border border-slate-200 bg-white shadow-xl md:block dark:border-slate-700 dark:bg-slate-900"
                 >
                     @include('layouts.partials.admin.notifications-content')
                 </div>
             </div>
-
-            <div class="h-6 w-px bg-slate-200 dark:bg-slate-700"></div>
         @endcan
+
+        <div class="mx-1 h-5 w-px bg-slate-200 dark:bg-slate-700"></div>
 
         <div class="relative" x-data="{ open: false }">
             <button
+                type="button"
                 x-on:click="open = !open"
-                class="flex cursor-pointer items-center gap-3 rounded-xl p-1 pr-3 transition hover:bg-slate-50 dark:hover:bg-slate-800"
+                class="flex cursor-pointer items-center gap-2 rounded-lg p-1 pr-1.5 transition hover:bg-slate-100 dark:hover:bg-slate-800"
             >
-                <div
-                    class="flex h-9 w-9 items-center justify-center rounded-md bg-linear-to-tr from-slate-700 to-slate-900 text-sm font-bold text-white shadow-sm ring-1 ring-slate-900/10 dark:from-slate-600 dark:to-slate-800 dark:ring-white/10"
-                >
-                    {{ strtoupper(substr(auth('web')->user()->name ?? 'A', 0, 2)) }}
-                </div>
-                <div class="hidden text-left sm:block">
-                    <p class="text-xs font-semibold text-slate-900 dark:text-white">{{ auth('web')->user()->name }}</p>
-                    <p class="text-[10px] text-slate-500 dark:text-slate-400">Administrator</p>
-                </div>
-                <x-icons.chevron-forward class="h-3 w-3 rotate-90 text-slate-400" />
+                <img src="{{ $user->avatar_url }}" alt="" class="h-7 w-7 rounded-lg object-cover" />
+                <span class="hidden text-left sm:block">
+                    <span class="block text-xs leading-tight font-semibold text-slate-900 dark:text-white">{{ $user->name }}</span>
+                    <span class="block text-[10px] leading-tight text-slate-400">{{ $role ? ucwords($role) : 'Administrator' }}</span>
+                </span>
+                <x-icons.chevron-down class="h-3.5 w-3.5 text-slate-400" />
             </button>
 
             <div
                 x-show="open"
                 x-on:click.outside="open = false"
-                x-transition:enter="transition duration-200 ease-out"
-                x-transition:enter-start="translate-y-1 scale-95 opacity-0"
-                x-transition:enter-end="translate-y-0 scale-100 opacity-100"
+                x-transition:enter="transition duration-150 ease-out"
+                x-transition:enter-start="translate-y-1 opacity-0"
+                x-transition:enter-end="translate-y-0 opacity-100"
                 x-cloak
-                class="absolute right-0 z-100 mt-3 w-60 rounded-2xl border border-slate-200 bg-white p-2 shadow-2xl dark:border-slate-700 dark:bg-slate-900"
+                class="absolute right-0 z-100 mt-2 w-56 rounded-xl border border-slate-200 bg-white p-1.5 shadow-xl dark:border-slate-700 dark:bg-slate-900"
             >
-                <div class="px-3 py-3">
-                    <p class="text-sm font-semibold text-slate-900 dark:text-white">{{ auth('web')->user()->name }}</p>
-                    <p class="truncate text-xs text-slate-500 dark:text-slate-400">{{ auth('web')->user()->email }}</p>
+                <div class="px-2.5 py-2">
+                    <p class="truncate text-sm font-semibold text-slate-900 dark:text-white">{{ $user->name }}</p>
+                    <p class="truncate text-xs text-slate-500 dark:text-slate-400">{{ $user->email }}</p>
                 </div>
 
                 <div class="my-1 h-px bg-slate-100 dark:bg-slate-800"></div>
@@ -91,20 +130,20 @@
                 @can('profile.view')
                     <a
                         href="{{ route('admin.profile.edit') }}"
-                        class="flex items-center gap-3 rounded-lg px-3 py-2 text-sm text-slate-700 transition hover:bg-slate-50 dark:text-slate-300 dark:hover:bg-slate-800"
+                        class="flex items-center gap-2.5 rounded-lg px-2.5 py-1.5 text-sm text-slate-700 transition hover:bg-slate-50 dark:text-slate-300 dark:hover:bg-slate-800"
                     >
                         <x-icons.account-circle class="h-4 w-4 text-slate-400" />
-                        Profile Settings
+                        My Profile
                     </a>
                 @endcan
 
-                @can('settings.view')
+                @can('admin.settings.view')
                     <a
                         href="{{ route('admin.settings.index') }}"
-                        class="flex items-center gap-3 rounded-lg px-3 py-2 text-sm text-slate-700 transition hover:bg-slate-50 dark:text-slate-300 dark:hover:bg-slate-800"
+                        class="flex items-center gap-2.5 rounded-lg px-2.5 py-1.5 text-sm text-slate-700 transition hover:bg-slate-50 dark:text-slate-300 dark:hover:bg-slate-800"
                     >
                         <x-icons.setting class="h-4 w-4 text-slate-400" />
-                        System Settings
+                        Settings
                     </a>
                 @endcan
 
@@ -114,10 +153,10 @@
                     @csrf
                     <button
                         type="submit"
-                        class="flex w-full cursor-pointer items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium text-red-600 transition hover:bg-red-50 dark:text-red-400 dark:hover:bg-red-900/20"
+                        class="flex w-full cursor-pointer items-center gap-2.5 rounded-lg px-2.5 py-1.5 text-sm font-medium text-red-600 transition hover:bg-red-50 dark:text-red-400 dark:hover:bg-red-900/20"
                     >
                         <x-icons.logout class="h-4 w-4" />
-                        Logout
+                        Log out
                     </button>
                 </form>
             </div>

@@ -1,0 +1,40 @@
+<p>Warehouses and freight corridors are hostile environments for software. Steel racking blocks Wi-Fi, rural routes drop cellular coverage for hours, and yet a driver still needs to confirm a delivery and a picker still needs to scan a pallet. Our answer is an offline-first architecture where the device, not the server, is the primary source of truth for the user in front of it.</p>
+
+<h2>Why "Retry Later" Doesn't Work</h2>
+<p>The naive approach queues failed requests and replays them when the connection returns. In practice that produces duplicate scans, lost updates when two devices edit the same shipment, and drivers staring at spinners in a loading bay.</p>
+<p>We needed three guarantees:</p>
+<ul>
+<li>Every action completes instantly on the device, with or without a network.</li>
+<li>Concurrent edits from different devices merge without silent data loss.</li>
+<li>The final state is identical on every device once they reconnect.</li>
+</ul>
+
+<h2>Conflict-Free Replicated Data Types</h2>
+<p>CRDTs are data structures designed to merge deterministically. Two replicas that have seen the same set of operations always converge to the same state, regardless of the order those operations arrived in.</p>
+<p>For shipment state we combine a few simple types:</p>
+<ul>
+<li><strong>Last-writer-wins registers</strong> for fields like the assigned driver, using hybrid logical clocks to order writes.</li>
+<li><strong>Grow-only sets</strong> for scan events, which can never be "un-scanned".</li>
+<li><strong>Observed-remove sets</strong> for exception flags that can be raised and later cleared.</li>
+</ul>
+<pre><code>type ShipmentState = {
+  driver: LWWRegister&lt;DriverId&gt;;
+  scans: GSet&lt;ScanEvent&gt;;
+  exceptions: ORSet&lt;ExceptionCode&gt;;
+};
+
+// Merging is commutative, associative and idempotent
+const merged = mergeShipment(localState, remoteState);</code></pre>
+
+<h2>An Event-Sourced Local Ledger</h2>
+<p>Each device keeps an append-only ledger of operations in local SQLite. The UI reads from a materialised view of that ledger, so it never waits on the network. A background sync worker exchanges operations with the server whenever any connectivity appears, even briefly.</p>
+<blockquote>
+<p>“The network is an optimisation, not a dependency.”</p>
+</blockquote>
+
+<h2>Results in the Field</h2>
+<ul>
+<li>Delivery confirmations complete in under 80ms on-device, down from 2–9 seconds.</li>
+<li>Duplicate scan incidents fell to zero after rollout across 6,000 vehicles.</li>
+<li>Operations kept running through a 14-hour regional carrier outage with no manual reconciliation.</li>
+</ul>
