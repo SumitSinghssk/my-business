@@ -1,7 +1,4 @@
 @php
-    $sidebarServices = \App\Models\Service::active()
-        ->ordered()
-        ->get(["title", "slug"]);
     $primaryCategory = $blog->categories->first();
     $shareUrl = urlencode(route("blog.show", $blog->slug));
     $shareTitle = urlencode($blog->title);
@@ -206,24 +203,6 @@
                             </a>
                         </div>
                     </div>
-                    @if ($sidebarServices->isNotEmpty())
-                        <nav class="bg-surface-container-lowest rounded-lg p-4 shadow-sm" aria-label="Our services">
-                            <span class="font-label-sm text-label-sm text-outline tracking-widest uppercase">How we can help</span>
-                            <ul class="mt-space-sm space-y-1">
-                                @foreach ($sidebarServices as $sidebarService)
-                                    <li>
-                                        <a
-                                            href="{{ route("services.show", $sidebarService->slug) }}"
-                                            class="font-body-sm text-body-sm text-on-surface-variant hover:text-primary flex items-center justify-between gap-2 py-1 transition-colors"
-                                        >
-                                            <span>{{ $sidebarService->title }}</span>
-                                            <span aria-hidden="true">→</span>
-                                        </a>
-                                    </li>
-                                @endforeach
-                            </ul>
-                        </nav>
-                    @endif
                 </div>
             </aside>
         </div>

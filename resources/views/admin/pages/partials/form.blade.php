@@ -84,17 +84,6 @@
         </div>
     </div>
 
-    <div class="space-y-4">
-        <div>
-            <x-admin.image-upload
-                name="featured_image"
-                preset="page"
-                label="Page banner"
-                :current="isset($page) && $page->featured_image ? asset('storage/' . $page->featured_image) : null"
-            />
-        </div>
-    </div>
-
     <div class="mb-4">
         <x-admin.form-label for="content" label="Content" required />
         <x-admin.form-textarea name="content" id="content" rows="12" editor placeholder="Write your page content here...">

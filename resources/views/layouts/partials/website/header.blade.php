@@ -34,9 +34,9 @@
                         @if ($logoWidth) width="{{ $logoWidth }}" height="{{ $logoHeight }}" @endif
                         class="h-8 w-auto object-contain"
                     />
+                @else
+                    <span class="font-headline-sm text-headline-sm text-on-surface font-semibold tracking-tight uppercase">{{ $appName }}</span>
                 @endif
-
-                <span class="font-headline-sm text-headline-sm text-on-surface font-semibold tracking-tight uppercase">{{ $appName }}</span>
             </a>
         </div>
 

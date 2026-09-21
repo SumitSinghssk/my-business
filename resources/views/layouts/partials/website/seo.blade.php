@@ -4,14 +4,9 @@
 
     $path = request()->path();
 
-    // Priority: an admin SEO record for this exact URL > the page's own defaults
-    // (passed via <x-website title/description/image>) > the site-wide `default-seo` record.
     $pageSeo = Seo::forPath($path);
     $defaultSeo = Seo::forPath('default-seo');
 
-    // A filtered or paginated listing (?category=…, ?service=…, ?page=2) is a different page from the
-    // plain URL, so it keeps its own specific title/description instead of the record for the plain URL.
-    // Tracking parameters (utm_*, gclid…) do not count.
     $isVariantUrl = collect(request()->query())
         ->reject(fn ($value, $key) => str_starts_with((string) $key, 'utm_') || in_array($key, ['gclid', 'fbclid', 'msclkid', 'ref'], true))
         ->isNotEmpty();
@@ -26,11 +21,9 @@
         (bool) $pageSeo?->og_image => asset('storage/' . $pageSeo->og_image),
         (bool) ($image ?? null) => $image,
         (bool) $fallbackOgImage => asset('storage/' . $fallbackOgImage),
-        // Last resort so shared links always have a preview image.
         default => asset('images/website/hero/dashboard.jpg'),
     };
 
-    // Canonical: explicit prop, else the clean path (keeping ?page=N so paginated pages are distinct).
     $page = (int) request()->query('page', 1);
     $canonicalUrl = $canonical ?? null ?: url()->to($path === '/' ? '' : $path) . ($page > 1 ? '?page=' . $page : '');
 
@@ -39,7 +32,6 @@
     $favicon = Settings::favicon() ?? asset('favicon.ico');
     $scriptSettings = settings('script_settings') ?? [];
 
-    // Organization + WebSite structured data (all pages).
     $logo = Settings::logoLight();
     $organization = array_filter([
         '@context' => 'https://schema.org',
@@ -69,7 +61,6 @@
 
 @push('heads')
     <title>{{ $metaTitle }}</title>
-    {{-- No canonical on noindex pages (404s, excluded pages): the two signals would contradict each other. --}}
     @if ($isIndexable)
         <link rel="canonical" href="{{ $canonicalUrl }}" />
     @endif
@@ -106,14 +97,12 @@
         {!! json_encode([$organization, $website], JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE | JSON_HEX_TAG) !!}
     </script>
 
-    {{-- Admin → SEO "Schema" for this URL, always output as valid JSON-LD. --}}
     @if ($schemaJson = $pageSeo?->schemaJson())
         <script type="application/ld+json">
             {!! $schemaJson !!}
         </script>
     @endif
 
-    {{-- Page-specific CSS/scripts come only from this URL's own record; site-wide code lives in Settings → Scripts. --}}
     @if ($pageSeo?->custom_css)
         <style>
             {!! $pageSeo->custom_css !!}
