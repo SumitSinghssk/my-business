@@ -9,8 +9,6 @@
         "format:check": "prettier --check \"resources/**/*.{js,jsx,ts,tsx,css,vue,blade.php}\""
     },
     "devDependencies": {
-        "@fontsource/geist": "^5.3.0",
-        "@fontsource/hanken-grotesk": "^5.3.0",
         "@tailwindcss/vite": "^4.0.0",
         "alpinejs": "^3.4.2",
         "axios": "^1.11.0",
