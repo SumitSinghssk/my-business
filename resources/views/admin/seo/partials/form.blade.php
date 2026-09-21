@@ -115,7 +115,7 @@
                 name="meta_title"
                 id="meta_title"
                 :value="old('meta_title', $seo->meta_title ?? '')"
-                placeholder="SEO page title (50–60 chars recommended)"
+                placeholder="SEO page title (50–60 chars). Use {site_name} for your site name."
                 :error="$errors->first('meta_title')"
             >
                 <x-slot:leftIcon>
@@ -183,51 +183,14 @@
         class="space-y-5"
     >
         <div>
-            <x-admin.form-label label="OG / Social Share Image" />
-            <p class="mb-3 text-xs text-slate-500 dark:text-slate-400">
-                Recommended size: 1200 × 630 px. Used when the page is shared on social media.
-            </p>
-
-            <input type="file" name="og_image" accept="image/*" class="hidden" x-ref="ogFile" x-on:change="handleFileChange" />
-            <input type="hidden" name="remove_og_image" :value="removeOgImage ? 1 : 0" />
-
-            <div
-                x-on:click="$refs.ogFile.click()"
-                class="group hover:border-primary-400 hover:bg-primary-50/30 dark:hover:border-primary-500 relative flex cursor-pointer flex-col items-center justify-center overflow-hidden rounded-xl border-2 border-dashed border-slate-300 bg-slate-50 transition-colors dark:border-slate-700 dark:bg-slate-800/50"
-                style="min-height: 200px"
-            >
-                <template x-if="preview">
-                    <img :src="preview" class="h-full w-full object-contain" style="max-height: 300px" />
-                </template>
-
-                <template x-if="!preview">
-                    <div class="flex flex-col items-center gap-2 p-8 text-center text-slate-400">
-                        <x-icons.gallery class="h-12 w-12" />
-
-                        <p class="text-sm font-medium">Click to upload OG image</p>
-                        <p class="text-xs">JPG, PNG, WebP supported</p>
-                    </div>
-                </template>
-
-                <template x-if="preview">
-                    <div class="absolute inset-0 flex items-center justify-center bg-black/40 opacity-0 transition-opacity group-hover:opacity-100">
-                        <span class="rounded-lg bg-white/20 px-4 py-2 text-sm font-medium text-white backdrop-blur-sm">Change Image</span>
-                    </div>
-                </template>
-            </div>
-
-            <template x-if="preview">
-                <button
-                    type="button"
-                    x-on:click="clearPreview()"
-                    class="mt-2 inline-flex cursor-pointer items-center gap-1.5 text-sm text-red-500 hover:text-red-600"
-                >
-                    <x-icons.delete class="w- h-4" />
-                    Remove image
-                </button>
-            </template>
-
-            <x-admin.form-error for="og_image" />
+            <x-admin.image-upload
+                name="og_image"
+                preset="og"
+                remove-name="remove_og_image"
+                label="Social share image (Open Graph)"
+                help="Shown when this page is shared on social media, WhatsApp or Slack."
+                :current="isset($seo) && $seo->og_image ? asset('storage/' . $seo->og_image) : null"
+            />
         </div>
     </div>
 
@@ -235,18 +198,20 @@
         <div>
             <x-admin.form-label for="schema" label="JSON-LD Schema Markup" />
             <p class="mb-2 text-xs text-slate-500 dark:text-slate-400">
-                Paste valid JSON-LD structured data (e.g. Organization, Article, BreadcrumbList).
+                Paste JSON-LD structured data (e.g. LocalBusiness, Product, Event). Plain JSON is enough; it is added to this page inside a
+                <code>&lt;script type="application/ld+json"&gt;</code>
+                tag automatically. FAQs from the FAQs tab are added separately.
             </p>
             <x-admin.form-textarea
                 name="schema"
                 id="schema"
                 rows="14"
-                placeholder='<script>{
+                placeholder='{
                     "@context": "https://schema.org",
-                    "@type": "Organization",
+                    "@type": "LocalBusiness",
                     "name": "Your Company",
                     "url": "https://example.com"
-                }</script>'
+                }'
                 class="font-mono text-sm"
             >
                 {{ old('schema', $seo->schema ?? '') }}
@@ -314,7 +279,9 @@
         <div class="flex items-center justify-between">
             <div>
                 <p class="text-sm font-medium text-slate-700 dark:text-slate-300">FAQ Items</p>
-                <p class="text-xs text-slate-500 dark:text-slate-400">Added FAQs will be included in the page's structured FAQ schema.</p>
+                <p class="text-xs text-slate-500 dark:text-slate-400">
+                    Shown in the FAQ section of this page (matched by its slug/URL path) and added to its FAQ structured data.
+                </p>
             </div>
         </div>
 
@@ -379,9 +346,7 @@
                 x-on:click="addFaq()"
                 class="inline-flex cursor-pointer items-center gap-1.5 rounded-lg border border-slate-300 bg-slate-50 px-3 py-1.5 text-sm font-medium text-slate-900 transition-colors hover:bg-slate-100 dark:border-slate-700 dark:bg-slate-800 dark:text-white dark:hover:bg-slate-700"
             >
-                <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" />
-                </svg>
+                <x-icons.plus class="h-4 w-4" />
                 Add FAQ
             </button>
         </div>

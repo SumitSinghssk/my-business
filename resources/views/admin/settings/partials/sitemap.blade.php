@@ -198,12 +198,7 @@
 
                         <template x-if="file">
                             <div class="flex flex-col items-center gap-2">
-                                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" class="h-8 w-8 text-blue-500">
-                                    <path
-                                        fill-rule="evenodd"
-                                        d="M4 4a2 2 0 0 1 2-2h4.586A2 2 0 0 1 12 2.586L15.414 6A2 2 0 0 1 16 7.414V16a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V4Zm2 6a.75.75 0 0 1 .75-.75h6.5a.75.75 0 0 1 0 1.5h-6.5A.75.75 0 0 1 6 10Zm.75 2.75a.75.75 0 0 0 0 1.5h6.5a.75.75 0 0 0 0-1.5h-6.5Z"
-                                    />
-                                </svg>
+                                <x-icons.document-text class="h-8 w-8 text-blue-500" />
                                 <p class="text-sm font-medium text-slate-700 dark:text-slate-300" x-text="file.name"></p>
                                 <button
                                     type="button"

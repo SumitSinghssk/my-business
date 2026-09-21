@@ -13,7 +13,7 @@
             'failed_login' => 'icons.close',
             'viewed' => 'icons.visibility',
             'created' => 'icons.add',
-            'updated' => 'icons.updated',
+            'updated' => 'icons.update',
             'deleted' => 'icons.delete',
         ];
 

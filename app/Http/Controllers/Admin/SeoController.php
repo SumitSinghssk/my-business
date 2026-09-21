@@ -8,7 +8,10 @@ use App\Http\Requests\Admin\SeoUpdateRequest;
 use App\Models\Blog;
 use App\Models\BlogCategory;
 use App\Models\Page;
+use App\Models\Project;
 use App\Models\Seo;
+use App\Models\Service;
+use App\Services\ImageProcessor;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\Facades\Storage;
@@ -70,7 +73,7 @@ class SeoController extends Controller
             if ($blog) {
                 $defaultData = [
                     'page' => $blog->title,
-                    'slug' => $blog->slug,
+                    'slug' => $blog->seo_path,
                 ];
             }
         }
@@ -86,6 +89,28 @@ class SeoController extends Controller
             }
         }
 
+        if ($modelType === 'project' && $modelId) {
+            $project = Project::find($modelId);
+
+            if ($project) {
+                $defaultData = [
+                    'page' => $project->title,
+                    'slug' => $project->seo_path,
+                ];
+            }
+        }
+
+        if ($modelType === 'service' && $modelId) {
+            $service = Service::find($modelId);
+
+            if ($service) {
+                $defaultData = [
+                    'page' => $service->title,
+                    'slug' => $service->seo_path,
+                ];
+            }
+        }
+
         return view('admin.seo.create', compact('defaultData', 'modelType', 'modelId'));
     }
 
@@ -96,7 +121,7 @@ class SeoController extends Controller
         $data = $request->validated();
 
         if ($request->hasFile('og_image')) {
-            $data['og_image'] = $request->file('og_image')->store('seo', 'public');
+            $data['og_image'] = app(ImageProcessor::class)->store($request->file('og_image'), 'og', $request->input('og_image_crop'));
         }
 
         // Only touch faqs when the field is actually submitted, so a partial
@@ -141,10 +166,8 @@ class SeoController extends Controller
         $data = $request->validated();
 
         if ($request->hasFile('og_image')) {
-            if ($seo->og_image) {
-                Storage::disk('public')->delete($seo->og_image);
-            }
-            $data['og_image'] = $request->file('og_image')->store('seo', 'public');
+            // The old file is only removed once the new one has been saved.
+            $data['og_image'] = app(ImageProcessor::class)->store($request->file('og_image'), 'og', $request->input('og_image_crop'), $seo->og_image);
 
         } elseif ($request->boolean('remove_og_image')) {
             if ($seo->og_image) {

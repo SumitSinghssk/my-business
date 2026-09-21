@@ -4,7 +4,9 @@ namespace App\Services;
 
 use App\Models\Blog;
 use App\Models\Page;
+use App\Models\Project;
 use App\Models\Seo;
+use App\Models\Service;
 use Illuminate\Support\Carbon;
 
 /**
@@ -24,6 +26,7 @@ class SitemapBuilder
         $urls = [
             $this->entry(route('home'), $siteUpdated, 'weekly', '1.0'),
             $this->entry(route('services'), $siteUpdated, 'monthly', '0.9'),
+            $this->entry(route('work.index'), $siteUpdated, 'monthly', '0.8'),
             $this->entry(route('blog.index'), $siteUpdated, 'daily', '0.8'),
             $this->entry(route('about'), $siteUpdated, 'monthly', '0.7'),
             $this->entry(route('contact'), $siteUpdated, 'yearly', '0.6'),
@@ -33,6 +36,18 @@ class SitemapBuilder
             ->each(function (Blog $blog) use (&$urls) {
                 $images = $blog->featured_image_url ? [['loc' => $blog->featured_image_url, 'title' => $blog->title]] : [];
                 $urls[] = $this->entry(route('blog.show', $blog->slug), $blog->updated_at, 'monthly', '0.7', $images);
+            });
+
+        Service::active()->ordered()->get(['slug', 'title', 'featured_image', 'updated_at'])
+            ->each(function (Service $service) use (&$urls) {
+                $images = $service->featured_image_url ? [['loc' => $service->featured_image_url, 'title' => $service->title]] : [];
+                $urls[] = $this->entry(route('services.show', $service->slug), $service->updated_at, 'monthly', '0.8', $images);
+            });
+
+        Project::active()->ordered()->get(['slug', 'title', 'featured_image', 'updated_at'])
+            ->each(function (Project $project) use (&$urls) {
+                $images = $project->featured_image_url ? [['loc' => $project->featured_image_url, 'title' => $project->title]] : [];
+                $urls[] = $this->entry(route('work.show', $project->slug), $project->updated_at, 'monthly', '0.7', $images);
             });
 
         Page::published()->orderBy('title')->get(['slug', 'updated_at'])

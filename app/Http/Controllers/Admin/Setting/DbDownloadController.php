@@ -5,60 +5,61 @@ namespace App\Http\Controllers\Admin\Setting;
 use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Gate;
+use Illuminate\Support\Facades\Log;
+use Symfony\Component\Process\Process;
 
 class DbDownloadController extends Controller
 {
     public function __invoke(Request $request)
     {
-        try {
-            Gate::authorize('admin.settings.download-db');
+        // Outside the try: an unauthorised user must get a 403, not a friendly redirect.
+        Gate::authorize('admin.settings.download-db');
 
+        try {
             $connection = config('database.default');
             $config = config("database.connections.{$connection}");
 
-            $host = $config['host'];
-            $port = $config['port'] ?? 3306;
-            $database = $config['database'];
-            $username = $config['username'];
-            $password = $config['password'];
-
-            $filename = $database.'_backup_'.now()->format('Y-m-d_H-i-s').'.sql';
+            $filename = $config['database'].'_backup_'.now()->format('Y-m-d_H-i-s').'.sql';
             $filePath = storage_path('app/'.$filename);
 
             $mysqldump = $this->findMysqldump();
 
             if (! $mysqldump) {
-                return back()->with('error', 'mysqldump not found on server. Please contact your hosting provider.');
+                return $this->fail($request, 'mysqldump not found on server. Please contact your hosting provider.');
             }
 
-            $passwordArg = $password ? '--password='.escapeshellarg($password) : '';
+            // Arguments are passed as an array (no shell quoting problems on Windows), the
+            // password travels in MYSQL_PWD instead of the process list, and --result-file
+            // keeps mysqldump's warnings out of the .sql file.
+            $process = new Process([
+                $mysqldump,
+                '--user='.$config['username'],
+                '--host='.$config['host'],
+                '--port='.($config['port'] ?? 3306),
+                '--single-transaction',
+                '--routines',
+                '--triggers',
+                '--result-file='.$filePath,
+                $config['database'],
+            ], null, ['MYSQL_PWD' => (string) ($config['password'] ?? '')], null, 300);
 
-            $command = sprintf(
-                '%s --user=%s %s --host=%s --port=%s --single-transaction --routines --triggers %s > %s 2>&1',
-                escapeshellarg($mysqldump),
-                escapeshellarg($username),
-                $passwordArg,
-                escapeshellarg($host),
-                escapeshellarg((string) $port),
-                escapeshellarg($database),
-                escapeshellarg($filePath)
-            );
+            $process->run();
 
-            exec($command, $output, $result);
-
-            if ($result !== 0 || ! file_exists($filePath) || filesize($filePath) === 0) {
+            if (! $process->isSuccessful() || ! file_exists($filePath) || filesize($filePath) === 0) {
                 if (file_exists($filePath)) {
                     @unlink($filePath);
                 }
 
-                return back()->with('error', 'Backup failed. Check logs for details.');
+                Log::error('Database backup failed.', ['output' => $process->getErrorOutput()]);
+
+                return $this->fail($request, 'Backup failed. Check logs for details.');
             }
 
             $firstBytes = file_get_contents($filePath, false, null, 0, 200);
             if (stripos($firstBytes, '<html') !== false || stripos($firstBytes, '<!DOCTYPE') !== false) {
                 unlink($filePath);
 
-                return back()->with('error', 'Backup failed: received HTML instead of SQL.');
+                return $this->fail($request, 'Backup failed: received HTML instead of SQL.');
             }
 
             $fileSize = filesize($filePath);
@@ -99,8 +100,21 @@ class DbDownloadController extends Controller
             ]);
 
         } catch (\Throwable $e) {
-            return back()->with('error', 'Something went wrong: '.$e->getMessage());
+            report($e);
+
+            return $this->fail($request, 'Something went wrong while creating the backup. Check logs for details.');
         }
+    }
+
+    /**
+     * The settings page downloads the backup with fetch(), so errors must come back
+     * as JSON (a redirect would be followed and saved as the "backup" file).
+     */
+    private function fail(Request $request, string $message)
+    {
+        return $request->expectsJson() || $request->ajax()
+            ? response()->json(['message' => $message], 500)
+            : back()->with('error', $message);
     }
 
     private function findMysqldump(): ?string

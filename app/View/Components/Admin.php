@@ -56,6 +56,20 @@ class Admin extends Component
                         'permission' => 'admin.blog-categories.view',
                     ],
                     [
+                        'title' => 'Services',
+                        'route' => route('admin.services.index'),
+                        'icon' => 'desktop',
+                        'active' => 'admin.services.*',
+                        'permission' => 'admin.services.view',
+                    ],
+                    [
+                        'title' => 'Work',
+                        'route' => route('admin.projects.index'),
+                        'icon' => 'gallery',
+                        'active' => 'admin.projects.*',
+                        'permission' => 'admin.projects.view',
+                    ],
+                    [
                         'title' => 'Pages',
                         'route' => route('admin.pages.index'),
                         'icon' => 'pages',

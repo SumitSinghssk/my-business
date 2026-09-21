@@ -359,7 +359,7 @@
                             href="{{ route('admin.blogs.edit', $post) }}"
                             class="group flex gap-3 p-3 transition hover:bg-slate-50 lg:flex-col dark:hover:bg-slate-800/50"
                         >
-                            <div class="h-14 w-20 shrink-0 overflow-hidden rounded-lg bg-slate-100 lg:h-24 lg:w-full dark:bg-slate-800">
+                            <div class="aspect-16/10 w-24 shrink-0 overflow-hidden rounded-lg bg-slate-100 lg:w-full dark:bg-slate-800">
                                 @if ($post->featured_image_url)
                                     <img
                                         src="{{ $post->featured_image_url }}"

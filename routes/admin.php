@@ -9,8 +9,10 @@ use App\Http\Controllers\Admin\EnquiryController;
 use App\Http\Controllers\Admin\ImageController;
 use App\Http\Controllers\Admin\NotificationController;
 use App\Http\Controllers\Admin\PageController;
+use App\Http\Controllers\Admin\ProjectController;
 use App\Http\Controllers\Admin\RolePermissionController;
 use App\Http\Controllers\Admin\SeoController;
+use App\Http\Controllers\Admin\ServiceController;
 use App\Http\Controllers\Admin\Setting\ActivityLogController;
 use App\Http\Controllers\Admin\Setting\BasicSettingController;
 use App\Http\Controllers\Admin\Setting\ClearCacheController;
@@ -23,13 +25,13 @@ use App\Http\Controllers\Admin\Setting\SitemapController;
 use App\Http\Controllers\Admin\UserController;
 use Illuminate\Support\Facades\Route;
 
-Route::middleware('log.admin.activity')->prefix('admin')->name('admin.')->group(function () {
+Route::middleware(['scalar.query', 'log.admin.activity'])->prefix('admin')->name('admin.')->group(function () {
     Route::middleware('guest:web')->group(function () {
         Route::get('login', [AdminAuthController::class, 'index'])->name('login');
         Route::post('login', [AdminAuthController::class, 'store'])->name('login.store');
     });
 
-    Route::middleware('auth:web')->group(function () {
+    Route::middleware(['auth:web', 'active'])->group(function () {
         Route::post('logout', [AdminAuthController::class, 'destroy'])->name('logout');
         Route::get('profile', [ProfileController::class, 'edit'])->name('profile.edit');
         Route::patch('profile', [ProfileController::class, 'update'])->name('profile.update');
@@ -46,8 +48,8 @@ Route::middleware('log.admin.activity')->prefix('admin')->name('admin.')->group(
             Route::get('/', SettingController::class)->name('index');
             Route::post('/basic', BasicSettingController::class)->name('basic.update');
             Route::post('/scripts', ScriptSettingController::class)->name('scripts.update');
-            Route::get('/clear-cache', ClearCacheController::class)->name('clear-cache');
-            Route::get('/download-db', DbDownloadController::class)->name('download-db');
+            Route::post('/clear-cache', ClearCacheController::class)->name('clear-cache');
+            Route::post('/download-db', DbDownloadController::class)->name('download-db');
 
             Route::prefix('sitemap')->name('sitemap.')->group(function () {
                 Route::post('generate', [SitemapController::class, 'generate'])->name('generate');
@@ -86,7 +88,7 @@ Route::middleware('log.admin.activity')->prefix('admin')->name('admin.')->group(
         });
 
         Route::patch('/users/{user}/toggle-status', [UserController::class, 'toggleStatus'])->name('users.toggle-status');
-        Route::resource('users', UserController::class);
+        Route::resource('users', UserController::class)->except(['show']);
 
         Route::prefix('notifications')->name('notifications.')->group(function () {
             Route::get('/list', [NotificationController::class, 'list'])->name('list');
@@ -97,15 +99,22 @@ Route::middleware('log.admin.activity')->prefix('admin')->name('admin.')->group(
         });
 
         Route::patch('/blog-categories/{blogCategory}/toggle-status', [BlogCategoryController::class, 'toggleStatus'])->name('blog-categories.toggle-status');
-        Route::resource('blog-categories', BlogCategoryController::class);
+        Route::resource('blog-categories', BlogCategoryController::class)->except(['show']);
 
         Route::patch('blogs/{blog}/toggle-status', [BlogController::class, 'toggleStatus'])->name('blogs.toggle-status');
-        Route::resource('blogs', BlogController::class);
+        Route::resource('blogs', BlogController::class)->except(['show']);
 
         Route::patch('pages/{page}/toggle-status', [PageController::class, 'toggleStatus'])->name('pages.toggle-status');
         Route::resource('pages', PageController::class)->except(['show']);
 
+        Route::patch('services/{service}/toggle-status', [ServiceController::class, 'toggleStatus'])->name('services.toggle-status');
+        Route::resource('services', ServiceController::class)->except(['show']);
+
+        Route::patch('projects/{project}/toggle-status', [ProjectController::class, 'toggleStatus'])->name('projects.toggle-status');
+        Route::resource('projects', ProjectController::class)->except(['show']);
+
         Route::get('enquiries', [EnquiryController::class, 'index'])->name('enquiries.index');
+        Route::patch('enquiries/{enquiry}/seen', [EnquiryController::class, 'markSeen'])->name('enquiries.seen');
         Route::delete('enquiries/{enquiry}', [EnquiryController::class, 'destroy'])->name('enquiries.destroy');
     });
 });

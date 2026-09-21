@@ -6,6 +6,7 @@
 @source '../../storage/framework/views/*.php';
 @source '../**/*.blade.php';
 @source '../**/*.js';
+@source '../../config/images.php';
 
 @theme {
     --font-sans:
@@ -16,27 +17,13 @@
     display: none !important;
 }
 
-/* ==========================================================================
-   ADMIN THEME — scoped re-skin
-   --------------------------------------------------------------------------
-   Everything below is scoped to `.admin-theme` so it ONLY affects the admin
-   panel. Tailwind v4 utilities resolve `var(--color-*)`, `var(--radius-*)`,
-   `var(--text-*)` and `var(--spacing)` at use-site, so redefining them on an
-   admin-only ancestor re-themes every admin page at once.
-
-   Direction: compact, friendly and professional. Indigo accent, soft rounded
-   corners, a tighter spacing unit and a smaller type scale.
-   ========================================================================== */
 .admin-theme {
-    /* --- Font --------------------------------------------------------------- */
     --font-sans: 'Plus Jakarta Sans', ui-sans-serif, system-ui, sans-serif, 'Apple Color Emoji', 'Segoe UI Emoji';
     font-family: var(--font-sans);
     -webkit-font-smoothing: antialiased;
 
-    /* --- Density: every p-/m-/gap-/w-/h- utility scales from this unit ------ */
-    --spacing: 0.225rem; /* default 0.25rem → ~10% tighter everywhere */
+    --spacing: 0.225rem;
 
-    /* --- Corners: soft and friendly, never pill-shaped panels -------------- */
     --radius-xs: 3px;
     --radius-sm: 5px;
     --radius-md: 7px;
@@ -46,7 +33,6 @@
     --radius-3xl: 15px;
     --radius-4xl: 18px;
 
-    /* --- Typography: compact ---------------------------------------------- */
     --text-xs: 0.71875rem; /* 11.5px */
     --text-xs--line-height: 1rem;
     --text-sm: 0.8125rem; /* 13px */
@@ -66,11 +52,6 @@
     --text-5xl: 2.25rem;
     --text-5xl--line-height: 1;
 
-    /* --- Accent: blue / indigo / sky → one indigo brand scale --------------- *
-     * The codebase uses `blue` as primary, `indigo` as a secondary accent and
-     * `sky` for "view" actions. Mapping all three to indigo gives the whole
-     * panel one friendly brand colour. Semantic colours (emerald, red, amber)
-     * are left untouched. 500 (#6366f1) / 400-ish are validated chart steps.  */
     --color-blue-50: #eef2ff;
     --color-blue-100: #e0e7ff;
     --color-blue-200: #c7d2fe;
@@ -95,13 +76,11 @@
     --color-sky-900: #312e81;
     --color-sky-950: #1e1b4b;
 
-    /* --- Neutrals: a touch cooler/softer than stock slate ------------------ */
     --color-slate-50: #f7f8fc;
     --color-slate-100: #eff1f7;
     --color-slate-200: #e3e6ef;
     --color-slate-300: #cdd2df;
 
-    /* --- Shadows: soft, low-contrast ---------------------------------------- */
     --shadow-xs: 0 1px 2px 0 rgb(15 23 42 / 0.04);
     --shadow-sm: 0 1px 3px 0 rgb(15 23 42 / 0.06), 0 1px 2px -1px rgb(15 23 42 / 0.04);
     --shadow-md: 0 4px 12px -2px rgb(15 23 42 / 0.08), 0 2px 4px -2px rgb(15 23 42 / 0.05);
@@ -110,7 +89,6 @@
     --shadow-2xl: 0 20px 40px -12px rgb(15 23 42 / 0.18);
 }
 
-/* Thin, rounded scrollbars inside the admin panel. */
 .admin-theme .custom-scrollbar,
 .admin-theme .overflow-y-auto,
 .admin-theme .overflow-x-auto {
@@ -144,7 +122,6 @@
     background-color: var(--color-slate-700);
 }
 
-/* Dashboard chart: accent is a validated step per mode (light #6366f1, dark #7a80f5). */
 .admin-theme .chart-bar {
     background-color: #6366f1;
 }
@@ -153,7 +130,6 @@
     background-color: #7a80f5;
 }
 
-/* Denser rows for every list built with <x-admin.table> (unlayered, so it wins over per-view px-6 py-4). */
 .admin-theme .admin-table tbody td {
     padding: 0.625rem 1rem;
     font-size: var(--text-sm);

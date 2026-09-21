@@ -29,8 +29,8 @@
     $total = count($testimonials);
 @endphp
 
-<section class="py-space-2xl w-full border-b border-[#E1E5EA] bg-[#F7F8FA]">
-    <div class="site-container px-4">
+<section class="section-y w-full border-b border-[#E1E5EA] bg-[#F7F8FA]">
+    <div class="site-container">
         <div class="mx-auto max-w-4xl" data-testimonials>
             <div class="mb-space-lg gap-space-md flex items-center justify-between">
                 <span class="font-label-sm text-label-sm text-primary font-semibold tracking-widest uppercase">Partner Endorsement</span>
@@ -49,18 +49,7 @@
                                 aria-label="Previous testimonial"
                                 class="flex h-11 w-11 cursor-pointer items-center justify-center border border-[#E1E5EA] bg-white text-[#0A0A0A] transition-colors hover:border-[#0A0A0A] hover:bg-[#0A0A0A] hover:text-white focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#0A0A0A]"
                             >
-                                <svg
-                                    class="h-5 w-5"
-                                    viewBox="0 0 24 24"
-                                    fill="none"
-                                    stroke="currentColor"
-                                    stroke-width="1.75"
-                                    stroke-linecap="round"
-                                    stroke-linejoin="round"
-                                    aria-hidden="true"
-                                >
-                                    <path d="M19 12H5M11 6l-6 6 6 6" />
-                                </svg>
+                                <x-icons.arrow-prev class="h-5 w-5" aria-hidden="true" />
                             </button>
                             <button
                                 type="button"
@@ -68,18 +57,7 @@
                                 aria-label="Next testimonial"
                                 class="flex h-11 w-11 cursor-pointer items-center justify-center border border-[#E1E5EA] bg-white text-[#0A0A0A] transition-colors hover:border-[#0A0A0A] hover:bg-[#0A0A0A] hover:text-white focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#0A0A0A]"
                             >
-                                <svg
-                                    class="h-5 w-5"
-                                    viewBox="0 0 24 24"
-                                    fill="none"
-                                    stroke="currentColor"
-                                    stroke-width="1.75"
-                                    stroke-linecap="round"
-                                    stroke-linejoin="round"
-                                    aria-hidden="true"
-                                >
-                                    <path d="M5 12h14M13 6l6 6-6 6" />
-                                </svg>
+                                <x-icons.arrow-next class="h-5 w-5" aria-hidden="true" />
                             </button>
                         </div>
                     </div>
@@ -128,38 +106,3 @@
         </div>
     </div>
 </section>
-
-@push('scripts')
-    <script defer>
-        document.addEventListener('DOMContentLoaded', function () {
-            document.querySelectorAll('[data-testimonials]').forEach(function (root) {
-                var el = root.querySelector('[data-testimonials-swiper]');
-                var current = root.querySelector('[data-testimonials-current]');
-                var multiple = el.querySelectorAll('.swiper-slide').length > 1;
-
-                new Swiper(el, {
-                    slidesPerView: 1,
-                    spaceBetween: 32,
-                    speed: 600,
-                    loop: multiple,
-                    allowTouchMove: multiple,
-                    autoHeight: false,
-                    keyboard: { enabled: true },
-                    a11y: { enabled: true },
-                    autoplay: multiple ? { delay: 7000, disableOnInteraction: false, pauseOnMouseEnter: true } : false,
-                    navigation: {
-                        prevEl: root.querySelector('[data-testimonials-prev]'),
-                        nextEl: root.querySelector('[data-testimonials-next]'),
-                    },
-                    on: {
-                        slideChange: function (swiper) {
-                            if (current) {
-                                current.textContent = String(swiper.realIndex + 1).padStart(2, '0');
-                            }
-                        },
-                    },
-                });
-            });
-        });
-    </script>
-@endpush

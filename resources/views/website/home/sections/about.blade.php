@@ -6,20 +6,20 @@
     ];
 @endphp
 
-<section class="py-space-lg md:py-space-xl w-full border-b border-[#E1E5EA]">
-    <div class="site-container px-4">
-        <div class="mx-auto mb-6 lg:mb-8 lg:max-w-4xl lg:text-center">
+<section class="section-y w-full border-b border-[#E1E5EA]">
+    <div class="site-container">
+        <div class="section-head mx-auto lg:max-w-4xl lg:text-center">
             <h2 class="font-headline-lg text-2xl font-semibold tracking-[-0.035em] text-[#0A0A0A] md:text-3xl lg:text-4xl">
                 We combine strategy, design and engineering to turn ideas into reliable digital products.
             </h2>
         </div>
 
-        <div class="grid grid-cols-1 items-stretch gap-6 lg:grid-cols-12 lg:gap-8">
+        <div class="gap-section grid grid-cols-1 items-stretch lg:grid-cols-12">
             <div
                 class="bg-surface-container-low relative aspect-4/3 w-full overflow-hidden rounded-lg border border-[#E1E5EA] sm:aspect-video lg:col-span-7 lg:aspect-auto lg:min-h-105"
             >
                 <img
-                    src="{{ asset('images/website/about/team-workspace.jpg') }}"
+                    src="{{ asset('images/website/about/team-workspace.webp') }}"
                     width="1376"
                     height="768"
                     alt="Engineering team in an architectural design critique"

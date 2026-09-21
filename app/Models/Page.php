@@ -3,13 +3,17 @@
 namespace App\Models;
 
 use App\Enums\CommonStatusEnum;
+use App\Models\Concerns\HasSeoRecord;
 use App\Support\ContentToc;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
 
 class Page extends Model
 {
-    use SoftDeletes;
+    use HasSeoRecord, SoftDeletes;
+
+    /** URL path before the slug; Admin → SEO records are keyed by the full path. */
+    public const SEO_PATH_PREFIX = '';
 
     protected $fillable = [
         'user_id',
@@ -32,11 +36,6 @@ class Page extends Model
         return $this->belongsTo(User::class);
     }
 
-    public function seo()
-    {
-        return $this->hasOne(Seo::class, 'slug', 'slug');
-    }
-
     /**
      * Pages visible on the public website: active, and published now or earlier
      * (a null published_at counts as published, same as blog posts).
@@ -51,7 +50,7 @@ class Page extends Model
     /**
      * Slugs a CMS page may not use because a built-in route already owns them.
      */
-    public const RESERVED_SLUGS = ['about', 'contact', 'services', 'insights', 'admin', 'sitemap', 'sitemap-xml', 'robots', 'storage', 'build', 'images', 'plugins', 'login', 'logout', 'up'];
+    public const RESERVED_SLUGS = ['about', 'contact', 'services', 'work', 'insights', 'admin', 'sitemap', 'sitemap-xml', 'robots', 'storage', 'build', 'images', 'plugins', 'login', 'logout', 'up'];
 
     public function getFeaturedImageUrlAttribute(): ?string
     {

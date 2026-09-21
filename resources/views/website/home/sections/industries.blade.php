@@ -4,7 +4,7 @@
             'number' => '01',
             'title' => 'Healthcare & Life Sciences',
             'text' => 'HIPAA & FDA Title 21 compliant architecture, real-time telemetry streaming, genomic diagnostic workflows, and patient informatics platforms.',
-            'image' => asset('images/website/industries/healthcare.jpg'),
+            'image' => asset('images/website/industries/healthcare.webp'),
             'alt' => 'Modern digital healthcare and biomedical informatics',
             'tags' => ['HIPAA Compliant', 'HL7 / FHIR', 'Zero-Trust Telemetry'],
         ],
@@ -12,7 +12,7 @@
             'number' => '02',
             'title' => 'Financial Services & Trading',
             'text' => 'PCI-DSS Level 1 infrastructure, algorithmic clearing, sub-millisecond settlement engines, and real-time fraud telemetry.',
-            'image' => asset('images/website/industries/financial-services.jpg'),
+            'image' => asset('images/website/industries/financial-services.webp'),
             'alt' => 'Modern global fintech and high-frequency trading infrastructure',
             'tags' => ['PCI-DSS Level 1', 'Sub-ms Settlement', 'ISO 27001'],
         ],
@@ -20,7 +20,7 @@
             'number' => '03',
             'title' => 'Logistics & Headless Commerce',
             'text' => 'Autonomous fulfillment orchestration, distributed inventory synchronization, edge routing, and high-concurrency cart microservices.',
-            'image' => asset('images/website/industries/logistics-commerce.jpg'),
+            'image' => asset('images/website/industries/logistics-commerce.webp'),
             'alt' => 'Headless e-commerce and autonomous supply chain logistics',
             'tags' => ['High Concurrency', 'Edge Routing', 'Multi-Tenant ERP'],
         ],
@@ -28,7 +28,7 @@
             'number' => '04',
             'title' => 'Real Estate & PropTech',
             'text' => 'MLS data synchronization, smart asset tokenization, automated leasing workflows, and property management portals.',
-            'image' => asset('images/website/industries/real-estate.jpg'),
+            'image' => asset('images/website/industries/real-estate.webp'),
             'alt' => 'Modern real estate technology and smart property management',
             'tags' => ['MLS / RESO Sync', 'Asset Tokenization', 'Automated Leasing'],
         ],
@@ -36,7 +36,7 @@
             'number' => '05',
             'title' => 'Hospitality & Travel',
             'text' => 'Unified booking engines, distributed PMS API integrations, real-time guest profile sync, and channel manager connectivity.',
-            'image' => asset('images/website/industries/hospitality-travel.jpg'),
+            'image' => asset('images/website/industries/hospitality-travel.webp'),
             'alt' => 'Digital hospitality and travel booking platforms',
             'tags' => ['Unified Booking', 'PMS APIs', 'Guest Sync'],
         ],
@@ -44,7 +44,7 @@
             'number' => '06',
             'title' => 'Education & EdTech',
             'text' => 'LMS integrations, student analytics dashboards, admissions and fee workflows, and secure learner portals.',
-            'image' => asset('images/website/industries/education.jpg'),
+            'image' => asset('images/website/industries/education.webp'),
             'alt' => 'Modern education technology and student learning platforms',
             'tags' => ['LMS Integration', 'Student Analytics', 'Role-Based Portals'],
         ],
@@ -52,7 +52,7 @@
             'number' => '07',
             'title' => 'Professional & Legal',
             'text' => 'Encrypted client vaults, automated compliance tracking, matter management, and time-based billing systems.',
-            'image' => asset('images/website/industries/professional-legal.jpg'),
+            'image' => asset('images/website/industries/professional-legal.webp'),
             'alt' => 'Secure legal and professional services software',
             'tags' => ['Client Vault', 'Compliance Automation', 'Audit Trails'],
         ],
@@ -60,16 +60,16 @@
             'number' => '08',
             'title' => 'Venture Startups',
             'text' => 'Rapid MVP sprints, product-market telemetry, scalable architecture foundations, and investor-ready technical roadmaps.',
-            'image' => asset('images/website/industries/venture-startups.jpg'),
+            'image' => asset('images/website/industries/venture-startups.webp'),
             'alt' => 'Startup product development and rapid MVP engineering',
             'tags' => ['MVP Sprints', 'Product Telemetry', 'Scale-Ready'],
         ],
     ];
 @endphp
 
-<section class="py-space-lg md:py-space-xl w-full border-b border-[#E1E5EA] bg-white">
-    <div class="site-container px-4">
-        <div class="mb-6 flex flex-col items-start gap-3 text-left lg:mx-auto lg:mb-8 lg:max-w-4xl lg:items-center lg:text-center">
+<section class="section-y w-full border-b border-[#E1E5EA] bg-white">
+    <div class="site-container">
+        <div class="section-head flex flex-col items-start gap-3 text-left lg:mx-auto lg:max-w-4xl lg:items-center lg:text-center">
             <h2 class="font-headline-lg text-2xl font-semibold tracking-[-0.035em] text-[#0A0A0A] md:text-3xl lg:text-4xl">
                 Digital solutions across industries.
             </h2>
@@ -78,7 +78,7 @@
             </p>
         </div>
 
-        <div class="grid grid-cols-1 gap-5 sm:grid-cols-2 lg:gap-6 xl:grid-cols-4">
+        <div class="gap-section grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4">
             @foreach ($sectors as $sector)
                 <div
                     class="hover:border-primary-container flex flex-col overflow-hidden rounded-lg border border-[#E1E5EA] bg-white shadow-sm transition duration-200"

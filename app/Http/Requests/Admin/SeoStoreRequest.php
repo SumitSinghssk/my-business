@@ -2,6 +2,8 @@
 
 namespace App\Http\Requests\Admin;
 
+use App\Models\Seo;
+use App\Support\ImagePreset;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Validation\Rule;
 
@@ -26,9 +28,13 @@ class SeoStoreRequest extends FormRequest
             'meta_title' => 'nullable|string|max:255',
             'meta_description' => 'nullable|string',
 
-            'og_image' => 'nullable|image|mimes:jpg,jpeg,png,webp|max:2048',
+            ...ImagePreset::get('og')->rules('og_image'),
 
-            'schema' => 'nullable|string',
+            'schema' => ['nullable', 'string', function ($attribute, $value, $fail) {
+                if (filled($value) && Seo::parseSchema($value) === null) {
+                    $fail('The schema must be valid JSON-LD (plain JSON, or JSON inside <script type="application/ld+json"> tags).');
+                }
+            }],
             'faqs' => 'nullable|string',
 
             'header_scripts' => 'nullable|string',
@@ -36,5 +42,10 @@ class SeoStoreRequest extends FormRequest
             'custom_css' => 'nullable|string',
             'index' => 'required|boolean',
         ];
+    }
+
+    public function messages(): array
+    {
+        return ImagePreset::get('og')->messages('og_image');
     }
 }

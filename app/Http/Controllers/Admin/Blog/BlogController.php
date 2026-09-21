@@ -8,10 +8,10 @@ use App\Http\Requests\Admin\BlogStoreRequest;
 use App\Http\Requests\Admin\BlogUpdateRequest;
 use App\Models\Blog;
 use App\Models\BlogCategory;
+use App\Services\ImageProcessor;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Gate;
-use Illuminate\Support\Facades\Storage;
 
 class BlogController extends Controller
 {
@@ -75,7 +75,7 @@ class BlogController extends Controller
         $data['slug'] = $data['slug'] ?? str()->slug($data['title']);
 
         if ($request->hasFile('featured_image')) {
-            $data['featured_image'] = $request->file('featured_image')->store('blogs', 'public');
+            $data['featured_image'] = app(ImageProcessor::class)->store($request->file('featured_image'), 'blog', $request->input('featured_image_crop'));
         }
 
         $categoryIds = $data['category_ids'] ?? [];
@@ -115,13 +115,11 @@ class BlogController extends Controller
         $data = $request->validated();
 
         if ($request->hasFile('featured_image')) {
-            if ($blog->featured_image) {
-                Storage::disk('public')->delete($blog->featured_image);
-            }
-            $data['featured_image'] = $request->file('featured_image')->store('blogs', 'public');
+            // The old file is only removed once the new one has been saved.
+            $data['featured_image'] = app(ImageProcessor::class)->store($request->file('featured_image'), 'blog', $request->input('featured_image_crop'), $blog->featured_image);
         } elseif ($request->boolean('remove_image')) {
             if ($blog->featured_image) {
-                Storage::disk('public')->delete($blog->featured_image);
+                app(ImageProcessor::class)->delete($blog->featured_image);
             }
             $data['featured_image'] = null;
         }

@@ -28,9 +28,10 @@
                     @endcan
 
                     @can('admin.settings.clear-cache')
-                        <a href="{{ route('admin.settings.clear-cache') }}">
-                            <x-admin.button variant="danger">Clear Cache</x-admin.button>
-                        </a>
+                        <form method="POST" action="{{ route('admin.settings.clear-cache') }}">
+                            @csrf
+                            <x-admin.button type="submit" variant="danger">Clear Cache</x-admin.button>
+                        </form>
                     @endcan
                 </x-slot>
             @endcanany
@@ -109,9 +110,19 @@
 
                 onStart();
 
-                fetch(url)
+                fetch(url, {
+                    method: 'POST',
+                    headers: { 'X-CSRF-TOKEN': '{{ csrf_token() }}', 'X-Requested-With': 'XMLHttpRequest' },
+                })
                     .then((response) => {
-                        if (!response.ok) throw new Error('Server error');
+                        if (!response.ok) {
+                            return response
+                                .json()
+                                .catch(() => ({}))
+                                .then((data) => {
+                                    throw new Error(data.message || 'Server error');
+                                });
+                        }
 
                         const cd = response.headers.get('Content-Disposition') ?? '';
                         const match = cd.match(/filename[^;=\n]*=['\"](.*?)['\"]|filename=([^;\n]*)/i);

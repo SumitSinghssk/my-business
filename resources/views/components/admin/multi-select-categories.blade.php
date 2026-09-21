@@ -137,10 +137,7 @@
         <div
             class="sticky top-0 flex items-center gap-2 border-b border-slate-100 bg-slate-50/50 px-3 py-2 dark:border-slate-800 dark:bg-slate-800/50"
         >
-            <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2" class="h-4 w-4 shrink-0 text-slate-400">
-                <circle cx="7" cy="7" r="5" />
-                <path d="M11 11l3 3" stroke-linecap="round" />
-            </svg>
+            <x-icons.search class="h-4 w-4 shrink-0 text-slate-400" />
             <input
                 x-ref="searchInput"
                 x-model="search"
@@ -169,9 +166,7 @@
                             class="relative flex h-4 w-4 shrink-0 items-center justify-center rounded border transition-all"
                             :class="selected.includes(parent.id) ? 'border-blue-600 bg-blue-600' : 'border-slate-300 dark:border-slate-600'"
                         >
-                            <svg x-show="selected.includes(parent.id)" viewBox="0 0 9 7" fill="none" class="h-2.5 w-2.5 text-white">
-                                <path d="M1 3.5L3.5 6L8 1" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" />
-                            </svg>
+                            <x-icons.check x-show="selected.includes(parent.id)" class="h-2.5 w-2.5 text-white" stroke-width="2" />
                         </div>
                         <span class="font-semibold" x-text="parent.name"></span>
                     </div>
@@ -188,15 +183,7 @@
                                 class="relative flex h-4 w-4 shrink-0 items-center justify-center rounded border transition-all"
                                 :class="selected.includes(child.id) ? 'border-blue-600 bg-blue-600' : 'border-slate-300 dark:border-slate-600'"
                             >
-                                <svg x-show="selected.includes(child.id)" viewBox="0 0 9 7" fill="none" class="h-2.5 w-2.5 text-white">
-                                    <path
-                                        d="M1 3.5L3.5 6L8 1"
-                                        stroke="currentColor"
-                                        stroke-width="2"
-                                        stroke-linecap="round"
-                                        stroke-linejoin="round"
-                                    />
-                                </svg>
+                                <x-icons.check x-show="selected.includes(child.id)" class="h-2.5 w-2.5 text-white" stroke-width="2" />
                             </div>
                             <span x-text="child.name"></span>
                         </div>

@@ -11,9 +11,10 @@ class Settings
 
     const CACHE_TTL = 60 * 60 * 24;
 
-    protected static function all(): array
+    public static function all(): array
     {
-        return Cache::remember(self::CACHE_KEY, self::CACHE_TTL, function () {
+        // memo(): read the cache store once per request instead of once per settings() call.
+        return Cache::memo()->remember(self::CACHE_KEY, self::CACHE_TTL, function () {
             return Setting::all()
                 ->mapWithKeys(fn ($row) => [$row->key => $row->value])
                 ->toArray();
@@ -36,7 +37,7 @@ class Settings
 
     public static function flush(): void
     {
-        Cache::forget(self::CACHE_KEY);
+        Cache::memo()->forget(self::CACHE_KEY);
     }
 
     public static function refresh(): void
@@ -82,6 +83,35 @@ class Settings
         $path = self::get('basic_settings.logo.dark');
 
         return $path ? asset('storage/'.$path) : null;
+    }
+
+    /**
+     * Rebuild a Google Maps embed as a clean <iframe>, keeping only its src.
+     *
+     * Accepts either the full embed code or just the embed URL. Returns null for
+     * anything that is not an https://www.google.com/maps/embed URL, so stored
+     * values can never inject other markup or scripts into the page.
+     */
+    public static function mapEmbed(?string $raw): ?string
+    {
+        $raw = trim((string) $raw);
+
+        if ($raw === '') {
+            return null;
+        }
+
+        $src = preg_match('/\ssrc\s*=\s*(["\x27])(.*?)\1/is', $raw, $m) ? html_entity_decode($m[2]) : $raw;
+        $parts = parse_url($src);
+
+        $isGoogleMaps = ($parts['scheme'] ?? null) === 'https'
+            && in_array(strtolower($parts['host'] ?? ''), ['www.google.com', 'google.com', 'maps.google.com'], true)
+            && str_starts_with($parts['path'] ?? '', '/maps');
+
+        if (! $isGoogleMaps) {
+            return null;
+        }
+
+        return '<iframe src="'.e($src).'" loading="lazy" referrerpolicy="no-referrer-when-downgrade" allowfullscreen title="Office location map"></iframe>';
     }
 
     public static function favicon(): ?string

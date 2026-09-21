@@ -37,6 +37,11 @@ class LogAdminActivity
             return $response;
         }
 
+        // Background XHR/fetch calls (e.g. the header notification feed) are not page views.
+        if ($request->ajax() || $request->expectsJson()) {
+            return $response;
+        }
+
         if (! in_array($response->getStatusCode(), [200, 301, 302])) {
             return $response;
         }

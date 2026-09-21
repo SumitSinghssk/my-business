@@ -30,16 +30,20 @@ class AdminUserSeeder extends Seeder
         ];
 
         foreach ($users as $userData) {
-            $user = User::updateOrCreate(
-                ['email' => $userData['email']],
-                [
-                    'name' => $userData['name'],
-                    'password' => Hash::make('password'),
-                    'status' => CommonStatusEnum::ACTIVE->value,
-                ]
-            );
+            // Only create accounts that do not exist yet: re-running must never reset a
+            // real password or roles, nor re-create an account an admin deleted.
+            if (User::withTrashed()->where('email', $userData['email'])->exists()) {
+                continue;
+            }
 
-            $user->syncRoles([$userData['role']]);
+            $user = User::create([
+                'email' => $userData['email'],
+                'name' => $userData['name'],
+                'password' => Hash::make('password'),
+                'status' => CommonStatusEnum::ACTIVE->value,
+            ]);
+
+            $user->assignRole($userData['role']);
         }
     }
 }

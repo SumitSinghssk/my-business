@@ -3,10 +3,12 @@
 
     $appName = Settings::appName();
     $logo = Settings::logoLight();
+    // Intrinsic size so the browser reserves the logo's space before it loads (no layout shift).
+    [$logoWidth, $logoHeight] = ($logoPath = settings('basic_settings.logo.light')) ? (@getimagesize(storage_path('app/public/' . $logoPath)) ?: [null, null]) : [null, null];
 
     $links = [
-        ['label' => 'Services', 'url' => route('services'), 'pattern' => 'services'],
-        ['label' => 'Work', 'url' => route('home') . '#selected-work', 'pattern' => null],
+        ['label' => 'Services', 'url' => route('services'), 'pattern' => 'services*'],
+        ['label' => 'Work', 'url' => route('work.index'), 'pattern' => 'work*'],
         ['label' => 'About', 'url' => route('about'), 'pattern' => 'about'],
         ['label' => 'Insights', 'url' => route('blog.index'), 'pattern' => 'insights*'],
     ];
@@ -26,7 +28,12 @@
                 aria-label="{{ $appName }} home"
             >
                 @if ($logo)
-                    <img src="{{ $logo }}" alt="{{ $appName }} logo" class="h-8 w-auto object-contain" />
+                    <img
+                        src="{{ $logo }}"
+                        alt=""
+                        @if ($logoWidth) width="{{ $logoWidth }}" height="{{ $logoHeight }}" @endif
+                        class="h-8 w-auto object-contain"
+                    />
                 @endif
 
                 <span class="font-headline-sm text-headline-sm text-on-surface font-semibold tracking-tight uppercase">{{ $appName }}</span>
@@ -62,12 +69,8 @@
                 aria-label="Toggle navigation menu"
                 class="text-on-surface focus-visible:ring-primary-container inline-flex h-10 w-10 items-center justify-center border border-[#E1E5EA] transition-colors hover:border-[#0A0A0A] focus:outline-none focus-visible:ring-2 md:hidden"
             >
-                <svg x-show="!mobileMenuOpen" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true">
-                    <path stroke-linecap="square" stroke-width="1.75" d="M4 7h16M4 12h16M4 17h16" />
-                </svg>
-                <svg x-show="mobileMenuOpen" x-cloak class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true">
-                    <path stroke-linecap="square" stroke-width="1.75" d="M6 18L18 6M6 6l12 12" />
-                </svg>
+                <x-icons.menu-lines x-show="!mobileMenuOpen" class="h-5 w-5" aria-hidden="true" />
+                <x-icons.close x-show="mobileMenuOpen" x-cloak class="h-5 w-5" aria-hidden="true" stroke-width="1.75" />
             </button>
         </div>
     </div>
@@ -104,9 +107,7 @@
                 aria-label="Close menu"
                 class="text-on-surface inline-flex h-10 w-10 items-center justify-center border border-[#E1E5EA] hover:border-[#0A0A0A] focus:outline-none"
             >
-                <svg class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true">
-                    <path stroke-linecap="square" stroke-width="1.75" d="M6 18L18 6M6 6l12 12" />
-                </svg>
+                <x-icons.close class="h-5 w-5" aria-hidden="true" stroke-width="1.75" />
             </button>
         </div>
 

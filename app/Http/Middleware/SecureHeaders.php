@@ -19,13 +19,13 @@ class SecureHeaders
 
             $response->headers->set('Referrer-Policy', 'strict-origin-when-cross-origin');
 
-            $response->headers->set('X-XSS-Protection', '1; mode=block');
+            // The site uses none of these browser features; the map on the contact page is a Google iframe with its own origin.
+            $response->headers->set('Permissions-Policy', 'camera=(), microphone=(), geolocation=(), payment=(), usb=()');
 
-            if ($request->isSecure()) {
-                $response->headers->set(
-                    'Strict-Transport-Security',
-                    'max-age=31536000; includeSubDomains; preload'
-                );
+            // Only sent over HTTPS in production. No includeSubDomains/preload: those would force HTTPS on
+            // every subdomain (and can't be undone quickly), so opt in to them deliberately at the server.
+            if ($request->isSecure() && app()->isProduction()) {
+                $response->headers->set('Strict-Transport-Security', 'max-age=31536000');
             }
         }
 

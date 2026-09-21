@@ -3,6 +3,8 @@
 namespace App\Http\Controllers\Admin\Auth;
 
 use App\Http\Controllers\Controller;
+use App\Services\ImageProcessor;
+use App\Support\ImagePreset;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\Facades\Hash;
@@ -26,14 +28,18 @@ class ProfileController extends Controller
 
         $user = $request->user();
 
+        $avatarPreset = ImagePreset::get('avatar');
+
         $validated = $request->validate([
             'name' => 'required|string|max:255',
             'bio' => 'nullable|string',
-            'avatar' => 'nullable|image|max:2048',
+            ...$avatarPreset->rules('avatar'),
             'social_links' => 'nullable|array',
             'social_links.*' => 'nullable|url',
             'remove_avatar' => 'nullable|boolean',
-        ]);
+        ], $avatarPreset->messages('avatar'));
+
+        unset($validated['avatar_crop']);
 
         if ($request->remove_avatar) {
             if ($user->avatar && Storage::disk('public')->exists($user->avatar)) {
@@ -44,11 +50,8 @@ class ProfileController extends Controller
         }
 
         if ($request->hasFile('avatar')) {
-            if ($user->avatar && Storage::disk('public')->exists($user->avatar)) {
-                Storage::disk('public')->delete($user->avatar);
-            }
-
-            $validated['avatar'] = $request->file('avatar')->store('avatars', 'public');
+            // The old file is only removed once the new one has been saved.
+            $validated['avatar'] = app(ImageProcessor::class)->store($request->file('avatar'), 'avatar', $request->input('avatar_crop'), $user->avatar);
         }
 
         $user->update($validated);

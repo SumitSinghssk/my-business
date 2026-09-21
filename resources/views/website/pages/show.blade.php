@@ -11,11 +11,7 @@
     {{-- Header --}}
     <section class="bg-surface-container-lowest w-full border-b border-[#E1E5EA]">
         <div class="site-container py-space-xl">
-            <div class="pb-space-lg border-b border-[#E1E5EA]">
-                <x-website.breadcrumbs :items="[['label' => $page->title]]" />
-            </div>
-
-            <div class="gap-gutter pt-space-xl grid grid-cols-1 items-end lg:grid-cols-12">
+            <div class="gap-gutter grid grid-cols-1 items-end lg:grid-cols-12">
                 <h1
                     class="font-display text-headline-lg-mobile text-on-surface md:text-headline-lg xl:text-display leading-[1.05] tracking-tight lg:col-span-8"
                 >
@@ -45,7 +41,9 @@
                 <img
                     src="{{ $page->featured_image_url }}"
                     alt="{{ $page->title }}"
-                    class="h-[240px] w-full rounded-lg border border-[#E1E5EA] object-cover sm:h-[360px]"
+                    width="1600"
+                    height="600"
+                    class="aspect-8/3 w-full rounded-lg border border-[#E1E5EA] object-cover"
                 />
             </div>
         </section>
@@ -73,7 +71,7 @@
                         }"
                         x-init="update()"
                         x-on:scroll.window.passive="update()"
-                        class="bg-surface-container-lowest p-space-lg rounded-lg shadow-sm lg:sticky lg:top-28"
+                        class="bg-surface-container-lowest rounded-lg p-4 shadow-sm lg:sticky lg:top-28"
                     >
                         <span class="mb-space-md font-label-sm text-label-sm text-outline block tracking-widest uppercase">On this page</span>
                         <nav class="space-y-space-xs" aria-label="Table of contents">
@@ -95,12 +93,14 @@
             @endif
 
             <article
-                class="{{ count($toc) ? 'lg:col-span-8' : 'lg:col-span-10 lg:col-start-2' }} article-prose is-plain bg-surface-container-lowest p-space-lg md:p-space-xl min-w-0 rounded-lg shadow-sm"
+                class="{{ count($toc) ? 'lg:col-span-8' : 'lg:col-span-10 lg:col-start-2' }} article-prose is-plain bg-surface-container-lowest min-w-0 rounded-lg p-4 shadow-sm md:p-6"
             >
                 {!! $content['html'] !!}
             </article>
         </div>
     </section>
+
+    <x-website.faq class="bg-white" />
 
     @include(
         'website.blog.partials.cta',

@@ -1,0 +1,21 @@
+<p>Orion Systems runs network infrastructure for enterprises across three cloud providers. Their operations team needed one console to see, and act on, the health of more than 24,000 cluster nodes in real time.</p>
+
+<h2>The Challenge</h2>
+<p>Telemetry lived in separate tools for each cloud. Engineers switched between dashboards during incidents, and the existing web console froze when more than a few thousand nodes reported at once. Mean time to resolution was climbing as the estate grew.</p>
+
+<h2>Our Approach</h2>
+<p>We started with a two-week discovery sprint alongside Orion's site reliability engineers, mapping the incidents that cost them the most time. That shaped a clear goal: one live topology view, fast enough to stay responsive at peak load, with actions available from the same screen.</p>
+<ul>
+<li>A Go ingestion service that normalises metrics from every cloud into a single stream.</li>
+<li>TimescaleDB for high-volume time-series storage with automatic downsampling.</li>
+<li>A Next.js console that renders the topology with virtualised canvas drawing.</li>
+</ul>
+
+<h2>What We Built</h2>
+<p>The new console streams updates over WebSockets and redraws only what changed, so it stays smooth with the full estate on screen. Engineers can filter by region, drill into a cluster and trigger resource reallocation without leaving the view. Every action is recorded in an audit trail.</p>
+<blockquote>
+<p>“For the first time, the whole team looks at the same picture during an incident.”</p>
+</blockquote>
+
+<h2>The Outcome</h2>
+<p>Orion now monitors all three clouds from one place. Incident resolution time dropped sharply in the first quarter after launch, and the platform has scaled with the estate without a rewrite.</p>

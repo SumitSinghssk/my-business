@@ -1,28 +1,33 @@
 @php
     use App\Helpers\Settings;
     use App\Models\Seo;
-    use Illuminate\Support\Facades\Cache;
 
     $path = request()->path();
 
-    $seoCollection = Cache::remember('seo_all', now()->addHours(24), fn () => Seo::all()->keyBy('slug'));
-
     // Priority: an admin SEO record for this exact URL > the page's own defaults
     // (passed via <x-website title/description/image>) > the site-wide `default-seo` record.
-    $pageSeo = $seoCollection[$path] ?? null;
-    $defaultSeo = $seoCollection['default-seo'] ?? null;
-    $seo = $pageSeo ?? $defaultSeo;
+    $pageSeo = Seo::forPath($path);
+    $defaultSeo = Seo::forPath('default-seo');
+
+    // A filtered or paginated listing (?category=…, ?service=…, ?page=2) is a different page from the
+    // plain URL, so it keeps its own specific title/description instead of the record for the plain URL.
+    // Tracking parameters (utm_*, gclid…) do not count.
+    $isVariantUrl = collect(request()->query())
+        ->reject(fn ($value, $key) => str_starts_with((string) $key, 'utm_') || in_array($key, ['gclid', 'fbclid', 'msclkid', 'ref'], true))
+        ->isNotEmpty();
+    $recordMeta = $isVariantUrl ? null : $pageSeo;
 
     $appName = Settings::appName();
-    $metaTitle = $pageSeo?->meta_title ?: ($title ?? null ?: ($defaultSeo?->meta_title ?: $appName));
-    $metaDescription = $pageSeo?->meta_description ?: ($description ?? null ?: $defaultSeo?->meta_description);
+    $metaTitle = Seo::withSiteName($recordMeta?->meta_title ?: ($title ?? null ?: ($defaultSeo?->meta_title ?: $appName)));
+    $metaDescription = Seo::withSiteName($recordMeta?->meta_description ?: ($description ?? null ?: $defaultSeo?->meta_description));
 
     $fallbackOgImage = $defaultSeo?->og_image ?: settings('basic_settings.logo.light');
     $ogImageUrl = match (true) {
         (bool) $pageSeo?->og_image => asset('storage/' . $pageSeo->og_image),
         (bool) ($image ?? null) => $image,
         (bool) $fallbackOgImage => asset('storage/' . $fallbackOgImage),
-        default => null,
+        // Last resort so shared links always have a preview image.
+        default => asset('images/website/hero/dashboard.jpg'),
     };
 
     // Canonical: explicit prop, else the clean path (keeping ?page=N so paginated pages are distinct).
@@ -45,6 +50,11 @@
         'logo' => $logo,
         'email' => Settings::emails()[0] ?? null,
         'telephone' => Settings::phones()[0] ?? null,
+        'address' => collect(Settings::addresses())
+            ->pluck('text')
+            ->filter()
+            ->map(fn ($text) => trim(preg_replace('/\s*\R\s*/', ', ', $text)))
+            ->first(),
         'sameAs' => array_values(array_filter(array_column(Settings::socialLinks(), 'url'))) ?: null,
     ]);
     $website = [
@@ -59,7 +69,11 @@
 
 @push('heads')
     <title>{{ $metaTitle }}</title>
-    <link rel="canonical" href="{{ $canonicalUrl }}" />
+    {{-- No canonical on noindex pages (404s, excluded pages): the two signals would contradict each other. --}}
+    @if ($isIndexable)
+        <link rel="canonical" href="{{ $canonicalUrl }}" />
+    @endif
+
     <link rel="icon" href="{{ $favicon }}" />
     <meta name="robots" content="{{ $isIndexable ? 'index, follow' : 'noindex, follow' }}" />
 
@@ -84,6 +98,7 @@
 
     @if ($ogImageUrl)
         <meta property="og:image" content="{{ $ogImageUrl }}" />
+        <meta property="og:image:alt" content="{{ $metaTitle }}" />
         <meta name="twitter:image" content="{{ $ogImageUrl }}" />
     @endif
 
@@ -91,9 +106,17 @@
         {!! json_encode([$organization, $website], JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE | JSON_HEX_TAG) !!}
     </script>
 
-    @if ($seo?->custom_css)
+    {{-- Admin → SEO "Schema" for this URL, always output as valid JSON-LD. --}}
+    @if ($schemaJson = $pageSeo?->schemaJson())
+        <script type="application/ld+json">
+            {!! $schemaJson !!}
+        </script>
+    @endif
+
+    {{-- Page-specific CSS/scripts come only from this URL's own record; site-wide code lives in Settings → Scripts. --}}
+    @if ($pageSeo?->custom_css)
         <style>
-            {!! $seo->custom_css !!}
+            {!! $pageSeo->custom_css !!}
         </style>
     @endif
 
@@ -109,18 +132,14 @@
 @endpush
 
 @push('head-scripts')
-    @if ($seo?->header_scripts)
-        {!! $seo->header_scripts !!}
+    @if ($pageSeo?->header_scripts)
+        {!! $pageSeo->header_scripts !!}
     @endif
 @endpush
 
 @push('scripts')
-    @if ($seo?->schema)
-        {!! $seo->schema !!}
-    @endif
-
-    @if ($seo?->footer_scripts)
-        {!! $seo->footer_scripts !!}
+    @if ($pageSeo?->footer_scripts)
+        {!! $pageSeo->footer_scripts !!}
     @endif
 
     @if (! empty($scriptSettings['footer_scripts'] ?? null))

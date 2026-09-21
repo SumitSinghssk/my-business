@@ -75,6 +75,18 @@ class RolePermissionSeeder extends Seeder
             'admin.pages.delete',
             'admin.pages.toogle-status',
 
+            'admin.services.view',
+            'admin.services.create',
+            'admin.services.edit',
+            'admin.services.delete',
+            'admin.services.toogle-status',
+
+            'admin.projects.view',
+            'admin.projects.create',
+            'admin.projects.edit',
+            'admin.projects.delete',
+            'admin.projects.toogle-status',
+
             'admin.log-settings.view',
             'admin.log-settings.delete',
 
@@ -86,28 +98,24 @@ class RolePermissionSeeder extends Seeder
             Permission::updateOrCreate(['name' => $permission]);
         }
 
-        $roles = ['super admin', 'admin', 'developer', 'sales'];
+        Role::firstOrCreate(['name' => 'super admin'])->syncPermissions(Permission::all());
 
-        foreach ($roles as $role) {
-            Role::updateOrCreate(['name' => $role]);
+        // Default permissions are only applied when a role is first created, so
+        // re-running the seeder never undoes changes made in Roles & Permissions.
+        $defaults = [
+            'admin' => ['dashboard.view', 'profile.view', 'profile.update', 'profile.update-password'],
+            'developer' => ['dashboard.view', 'profile.view'],
+            'sales' => ['dashboard.view'],
+        ];
+
+        foreach ($defaults as $name => $rolePermissions) {
+            $role = Role::firstOrCreate(['name' => $name]);
+
+            if ($role->wasRecentlyCreated) {
+                $role->syncPermissions($rolePermissions);
+            }
         }
 
-        Role::findByName('super admin')->syncPermissions(Permission::all());
-
-        Role::findByName('admin')->syncPermissions([
-            'dashboard.view',
-            'profile.view',
-            'profile.update',
-            'profile.update-password',
-        ]);
-
-        Role::findByName('developer')->syncPermissions([
-            'dashboard.view',
-            'profile.view',
-        ]);
-
-        Role::findByName('sales')->syncPermissions([
-            'dashboard.view',
-        ]);
+        app()[PermissionRegistrar::class]->forgetCachedPermissions();
     }
 }

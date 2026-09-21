@@ -7,9 +7,9 @@
     ];
 @endphp
 
-<section class="py-space-lg md:py-space-xl w-full border-b border-[#E1E5EA]">
-    <div class="site-container px-4">
-        <div class="mb-6 flex flex-col items-start gap-3 text-left lg:mx-auto lg:mb-8 lg:max-w-4xl lg:items-center lg:text-center">
+<section class="section-y w-full border-b border-[#E1E5EA]">
+    <div class="site-container">
+        <div class="section-head flex flex-col items-start gap-3 text-left lg:mx-auto lg:max-w-4xl lg:items-center lg:text-center">
             <h2 class="font-headline-lg text-2xl font-semibold tracking-[-0.035em] text-[#0A0A0A] md:text-3xl lg:text-4xl">
                 Good software starts with understanding the problem.
             </h2>
@@ -21,7 +21,7 @@
 
         <div class="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-4">
             @foreach ($principles as $principle)
-                <div class="flex h-full flex-col justify-between border border-[#E1E5EA] bg-white p-5">
+                <div class="flex h-full flex-col justify-between border border-[#E1E5EA] bg-white p-4">
                     <div>
                         <span class="font-label-sm text-label-sm text-secondary mb-3 block font-semibold tracking-widest uppercase">
                             {{ $principle['label'] }}
@@ -29,7 +29,7 @@
                         <h3 class="font-headline-sm text-headline-sm mb-2 font-semibold text-[#0A0A0A]">{{ $principle['title'] }}</h3>
                         <p class="font-body-md text-body-md text-secondary">{{ $principle['text'] }}</p>
                     </div>
-                    <div class="font-label-sm text-label-sm text-secondary mt-5 border-t border-[#E1E5EA] pt-4 uppercase">
+                    <div class="font-label-sm text-label-sm text-secondary mt-4 border-t border-[#E1E5EA] pt-3 uppercase">
                         {{ $principle['footer'] }}
                     </div>
                 </div>

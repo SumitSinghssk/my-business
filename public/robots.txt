@@ -1,5 +1,0 @@
-User-agent: *
-Disallow: /admin/
-
-# Update this to your live domain after deploying (Admin -> Settings -> Robots).
-Sitemap: http://localhost/my-business-master/public/sitemap.xml

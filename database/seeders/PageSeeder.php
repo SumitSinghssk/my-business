@@ -6,19 +6,22 @@ use App\Enums\CommonStatusEnum;
 use App\Helpers\Settings;
 use App\Models\Page;
 use App\Models\User;
+use Database\Seeders\Concerns\SeedsMissingRecords;
 use Illuminate\Database\Seeder;
 
 /**
  * Seeds the legal pages every public website needs (privacy, terms, cookies).
  *
- * Uses firstOrCreate, so it never overwrites a page an admin has already
- * edited. The text is a sensible starting template: have it reviewed for
+ * Only creates pages that never existed, so it never overwrites a page an admin
+ * has edited and never brings back one an admin deleted. The text is a sensible starting template: have it reviewed for
  * your jurisdiction before relying on it.
  *
  *   php artisan db:seed --class=PageSeeder
  */
 class PageSeeder extends Seeder
 {
+    use SeedsMissingRecords;
+
     public function run(): void
     {
         $author = User::where('email', 'superadmin@gmail.com')->first() ?? User::query()->first();
@@ -33,9 +36,13 @@ class PageSeeder extends Seeder
         ];
 
         foreach ($pages as $slug => [$title, $content]) {
-            Page::firstOrCreate(
-                ['slug' => $slug],
+            if ($this->alreadySeeded(Page::class, $slug)) {
+                continue;
+            }
+
+            Page::create(
                 [
+                    'slug' => $slug,
                     'user_id' => $author?->id,
                     'title' => $title,
                     'content' => $content,

@@ -2,8 +2,8 @@
     $email = \App\Helpers\Settings::emails()[0] ?? null;
 @endphp
 
-<section class="py-space-2xl w-full bg-[#0A0A0A] text-white">
-    <div class="site-container px-4">
+<section class="section-y w-full bg-[#0A0A0A] text-white">
+    <div class="site-container">
         <div class="mx-auto flex max-w-4xl flex-col items-center text-center">
             <h2 class="mb-space-md font-display text-[44px] leading-[1.05] font-semibold tracking-[-0.04em] text-white sm:text-[60px] lg:text-[68px]">
                 Have a project in mind?

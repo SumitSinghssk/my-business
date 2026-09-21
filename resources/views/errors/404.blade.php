@@ -20,7 +20,7 @@
 
 <x-website :title="'Page Not Found | ' . $appName" description="The page you are looking for could not be found." :noindex="true">
     <section class="bg-surface-container-lowest py-space-2xl w-full border-b border-[#E1E5EA]">
-        <div class="site-container px-4">
+        <div class="site-container">
             <div class="mx-auto max-w-3xl text-center">
                 <span class="text-label-md text-primary font-mono font-semibold">[ ERROR 404 ]</span>
                 <h1 class="mt-space-md font-display text-[44px] leading-[1.05] font-semibold tracking-[-0.04em] text-[#0A0A0A] sm:text-[64px]">
@@ -48,7 +48,7 @@
     </section>
 
     <section class="py-space-2xl w-full">
-        <div class="site-container px-4">
+        <div class="site-container">
             <div class="gap-space-md grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4">
                 @foreach ($links as $link)
                     <a

@@ -1,4 +1,4 @@
-<x-admin.card title="Robots.txt" text="Manage your robots.txt file for SEO crawling.">
+<x-admin.card title="Robots.txt" text="Crawling rules served at /robots.txt. The Sitemap line is added automatically with your live domain.">
     <form method="POST" action="{{ route('admin.settings.robots.update') }}">
         @csrf
 

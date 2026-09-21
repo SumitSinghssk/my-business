@@ -7,6 +7,7 @@ use App\Http\Controllers\Controller;
 use App\Http\Requests\Admin\UserStoreRequest;
 use App\Http\Requests\Admin\UserUpdateRequest;
 use App\Models\User;
+use App\Services\ImageProcessor;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\Facades\Storage;
@@ -41,8 +42,9 @@ class UserController extends Controller
         }
 
         // Filter by Role (Spatie HasRoles trait scope)
-        if ($request->filled('role')) {
-            $query->role($request->role);
+        if ($request->filled('role') && is_string($request->role)) {
+            // whereHas instead of the role() scope, which throws on unknown role names.
+            $query->whereHas('roles', fn ($q) => $q->where('name', $request->role));
         }
 
         $users = $query->latest()
@@ -88,7 +90,7 @@ class UserController extends Controller
 
         $avatarPath = null;
         if ($request->hasFile('avatar')) {
-            $avatarPath = $request->file('avatar')->store('avatars', 'public');
+            $avatarPath = app(ImageProcessor::class)->store($request->file('avatar'), 'avatar', $request->input('avatar_crop'));
         }
 
         $user = User::create([
@@ -113,6 +115,7 @@ class UserController extends Controller
     public function edit(User $user)
     {
         Gate::authorize('admin.users.edit');
+        $this->ensureCanManage($user);
 
         $roles = Role::with('permissions')->orderBy('name')->get();
         $permissions = Permission::orderBy('name')->get();
@@ -144,11 +147,15 @@ class UserController extends Controller
     public function update(UserUpdateRequest $request, User $user)
     {
         Gate::authorize('admin.users.edit');
+        $this->ensureCanManage($user);
+
+        // Only a super admin may change their own status, roles or permissions.
+        $editingSelf = $user->is(auth()->user()) && ! $this->actorIsSuperAdmin();
 
         $data = [
             'name' => $request->name,
             'email' => $request->email,
-            'status' => $request->status,
+            'status' => $editingSelf ? $user->status : $request->status,
             'bio' => $request->bio,
         ];
 
@@ -157,10 +164,8 @@ class UserController extends Controller
         }
 
         if ($request->hasFile('avatar')) {
-            if ($user->avatar) {
-                Storage::disk('public')->delete($user->avatar);
-            }
-            $data['avatar'] = $request->file('avatar')->store('avatars', 'public');
+            // The old file is only removed once the new one has been saved.
+            $data['avatar'] = app(ImageProcessor::class)->store($request->file('avatar'), 'avatar', $request->input('avatar_crop'), $user->avatar);
         } elseif ($request->boolean('remove_avatar')) {
             if ($user->avatar) {
                 Storage::disk('public')->delete($user->avatar);
@@ -169,8 +174,11 @@ class UserController extends Controller
         }
 
         $user->update($data);
-        $user->syncRoles($this->resolveRoles((array) ($request->roles ?? []), $user));
-        $user->syncPermissions($this->resolvePermissions((array) ($request->permissions ?? []), $user));
+
+        if (! $editingSelf) {
+            $user->syncRoles($this->resolveRoles((array) ($request->roles ?? []), $user));
+            $user->syncPermissions($this->resolvePermissions((array) ($request->permissions ?? []), $user));
+        }
 
         return back()->with('success', "User \"{$user->name}\" updated successfully.");
     }
@@ -182,6 +190,8 @@ class UserController extends Controller
         if ($user->id === auth()->id()) {
             return back()->with('error', 'You cannot delete your own account.');
         }
+
+        $this->ensureCanManage($user);
 
         if ($user->avatar) {
             Storage::disk('public')->delete($user->avatar);
@@ -202,7 +212,7 @@ class UserController extends Controller
             ], 422);
         }
 
-        if ($user->hasRole(self::PROTECTED_ROLES) && ! auth()->user()->hasRole(self::PROTECTED_ROLES)) {
+        if ($user->hasRole(self::PROTECTED_ROLES) && ! $this->actorIsSuperAdmin()) {
             return response()->json([
                 'message' => 'You are not allowed to change this account\'s status.',
             ], 403);
@@ -225,16 +235,23 @@ class UserController extends Controller
      */
     private function resolveRoles(array $requested, ?User $target = null): array
     {
-        if (auth()->user()->hasRole(self::PROTECTED_ROLES)) {
+        if ($this->actorIsSuperAdmin()) {
             return $requested;
         }
 
-        $requested = array_values(array_diff($requested, self::PROTECTED_ROLES));
+        // A non super admin may only hand out roles whose permissions they already hold,
+        // otherwise assigning a role would grant more access than the actor has.
+        $allowed = auth()->user()->getAllPermissions()->pluck('name');
+        $assignable = Role::with('permissions')->whereNotIn('name', self::PROTECTED_ROLES)->get()
+            ->filter(fn (Role $role) => $role->permissions->pluck('name')->diff($allowed)->isEmpty())
+            ->pluck('name');
+
+        $requested = array_values(array_intersect($requested, $assignable->all()));
 
         if ($target) {
-            $existingProtected = $target->roles->pluck('name')
-                ->intersect(self::PROTECTED_ROLES)->all();
-            $requested = array_values(array_unique(array_merge($requested, $existingProtected)));
+            // Keep roles the target already has that the actor is not allowed to manage.
+            $kept = $target->roles->pluck('name')->diff($assignable)->all();
+            $requested = array_values(array_unique(array_merge($requested, $kept)));
         }
 
         return $requested;
@@ -250,7 +267,7 @@ class UserController extends Controller
     {
         $actor = auth()->user();
 
-        if ($actor->hasRole(self::PROTECTED_ROLES)) {
+        if ($this->actorIsSuperAdmin()) {
             return $requested;
         }
 
@@ -264,5 +281,18 @@ class UserController extends Controller
         }
 
         return $requested;
+    }
+
+    private function actorIsSuperAdmin(): bool
+    {
+        return auth()->user()->hasRole(self::PROTECTED_ROLES);
+    }
+
+    /**
+     * Only a super admin may view, edit or delete a super admin account.
+     */
+    private function ensureCanManage(User $user): void
+    {
+        abort_if($user->hasRole(self::PROTECTED_ROLES) && ! $this->actorIsSuperAdmin(), 403, 'You are not allowed to manage this account.');
     }
 }

@@ -108,6 +108,18 @@ class RolePermissionController extends Controller
         ]);
 
         $permissionName = $request->permission;
+        $actor = $request->user();
+
+        // Non super admins may not edit a role they hold themselves, nor grant or
+        // revoke a permission they do not have: either would let them raise their own access.
+        if (! $actor->hasRole(self::PROTECTED_ROLES)) {
+            if ($actor->hasRole($role) || ! $actor->hasPermissionTo($permissionName)) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'You are not allowed to change this permission for this role.',
+                ], 403);
+            }
+        }
 
         if ($role->hasPermissionTo($permissionName)) {
             $role->revokePermissionTo($permissionName);

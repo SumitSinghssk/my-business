@@ -2,8 +2,8 @@
 
 namespace App\Http\Controllers\Admin\Setting;
 
+use App\Support\Robots;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\File;
 use Illuminate\Support\Facades\Gate;
 
 class RobotsController
@@ -17,13 +17,13 @@ class RobotsController
         ]);
 
         try {
-            $written = File::put(public_path('robots.txt'), $request->content ?? '');
+            $written = Robots::save($request->content ?? '');
         } catch (\Throwable $e) {
             $written = false;
         }
 
         if ($written === false) {
-            return back()->with('error', 'Failed to update robots.txt. Please check that the public directory is writable.');
+            return back()->with('error', 'Failed to update robots.txt. Please check that the storage/app directory is writable.');
         }
 
         return back()->with('success', 'Robots.txt updated successfully');

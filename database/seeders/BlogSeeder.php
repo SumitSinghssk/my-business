@@ -6,16 +6,18 @@ use App\Enums\CommonStatusEnum;
 use App\Models\Blog;
 use App\Models\BlogCategory;
 use App\Models\User;
+use App\Services\ImageProcessor;
+use Database\Seeders\Concerns\SeedsMissingRecords;
 use Illuminate\Database\Seeder;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\File;
-use Illuminate\Support\Facades\Storage;
 
 /**
  * Seeds demo blog categories and posts for the public Insights pages.
  *
- * Safe to re-run: every record is matched on its slug, so running it again
- * updates the seeded rows instead of duplicating them. Article bodies live in
+ * Safe to re-run: only categories and posts that never existed are created.
+ * Existing ones (possibly edited in the admin panel) and ones deleted there are
+ * left untouched. Article bodies live in
  * database/seeders/content/blogs/{slug}.html and featured images in
  * database/seeders/assets/blogs/{slug}.jpg (copied to the public disk).
  *
@@ -23,6 +25,8 @@ use Illuminate\Support\Facades\Storage;
  */
 class BlogSeeder extends Seeder
 {
+    use SeedsMissingRecords;
+
     private const CONTENT_PATH = 'seeders/content/blogs';
 
     private const IMAGE_PATH = 'seeders/assets/blogs';
@@ -37,55 +41,55 @@ class BlogSeeder extends Seeder
             return;
         }
 
-        $categories = collect($this->categories())->mapWithKeys(function (array $category) {
-            $model = BlogCategory::updateOrCreate(
-                ['slug' => $category['slug']],
-                [
+        $createdCategories = 0;
+        foreach ($this->categories() as $category) {
+            if (! $this->alreadySeeded(BlogCategory::class, $category['slug'])) {
+                BlogCategory::create([
+                    'slug' => $category['slug'],
                     'name' => $category['name'],
                     'description' => $category['description'],
                     'status' => CommonStatusEnum::ACTIVE->value,
-                ]
-            );
-
-            return [$category['slug'] => $model->id];
-        });
-
-        foreach ($this->posts() as $post) {
-            $blog = Blog::updateOrCreate(
-                ['slug' => $post['slug']],
-                [
-                    'user_id' => $author->id,
-                    'title' => $post['title'],
-                    'excerpt' => $post['excerpt'],
-                    'content' => File::get(database_path(self::CONTENT_PATH."/{$post['slug']}.html")),
-                    'featured_image' => $this->storeImage($post['slug']),
-                    'status' => CommonStatusEnum::ACTIVE->value,
-                    'published_at' => Carbon::parse($post['published_at']),
-                ]
-            );
-
-            $blog->categories()->sync($categories->only($post['categories'])->values());
+                ]);
+                $createdCategories++;
+            }
         }
 
-        $this->command?->info('BlogSeeder: '.count($this->categories()).' categories and '.count($this->posts()).' posts seeded.');
+        // Live categories only; a category deleted in the admin panel is not re-attached.
+        $categories = BlogCategory::whereIn('slug', array_column($this->categories(), 'slug'))->pluck('id', 'slug');
+
+        $createdPosts = 0;
+        foreach ($this->posts() as $post) {
+            if ($this->alreadySeeded(Blog::class, $post['slug'])) {
+                continue;
+            }
+
+            $blog = Blog::create([
+                'slug' => $post['slug'],
+                'user_id' => $author->id,
+                'title' => $post['title'],
+                'excerpt' => $post['excerpt'],
+                'content' => File::get(database_path(self::CONTENT_PATH."/{$post['slug']}.html")),
+                'featured_image' => $this->storeImage($post['slug']),
+                'status' => CommonStatusEnum::ACTIVE->value,
+                'published_at' => Carbon::parse($post['published_at']),
+            ]);
+
+            $blog->categories()->sync($categories->only($post['categories'])->values());
+            $createdPosts++;
+        }
+
+        $this->command?->info("BlogSeeder: {$createdCategories} categories and {$createdPosts} posts created (existing ones left untouched).");
     }
 
     /**
-     * Copy the bundled image onto the public disk (same place admin uploads go)
-     * and return its stored path.
+     * Crop/resize the bundled image to the blog preset (config/images.php),
+     * and store it where admin uploads go.
      */
     private function storeImage(string $slug): ?string
     {
         $source = database_path(self::IMAGE_PATH."/{$slug}.jpg");
 
-        if (! File::exists($source)) {
-            return null;
-        }
-
-        $path = "blogs/{$slug}.jpg";
-        Storage::disk('public')->put($path, File::get($source));
-
-        return $path;
+        return File::exists($source) ? app(ImageProcessor::class)->store($source, 'blog') : null;
     }
 
     private function categories(): array

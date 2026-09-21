@@ -23,3 +23,53 @@
     RewriteCond %{REQUEST_FILENAME} !-f
     RewriteRule ^ index.php [L]
 </IfModule>
+
+# ----------------------------------------------------------------------
+# Compression (used when the host has mod_brotli / mod_deflate enabled).
+# Images, fonts in woff2 and other already-compressed files are skipped.
+# ----------------------------------------------------------------------
+<IfModule mod_brotli.c>
+    AddOutputFilterByType BROTLI_COMPRESS text/html text/plain text/css text/xml application/xml application/javascript text/javascript application/json application/ld+json image/svg+xml application/manifest+json
+</IfModule>
+
+<IfModule mod_deflate.c>
+    <IfModule mod_filter.c>
+        AddOutputFilterByType DEFLATE text/html text/plain text/css text/xml application/xml application/javascript text/javascript application/json application/ld+json image/svg+xml application/manifest+json
+    </IfModule>
+</IfModule>
+
+# ----------------------------------------------------------------------
+# Browser caching for static files. HTML pages are not cached here
+# (Laravel sends its own no-cache headers for them).
+# ----------------------------------------------------------------------
+<IfModule mod_headers.c>
+    # Vite build output has a content hash in every file name, so it never changes: cache for a year.
+    <If "%{REQUEST_URI} =~ m#/build/assets/#">
+        Header set Cache-Control "public, max-age=31536000, immutable"
+    </If>
+
+    # Uploaded images get a new random name on every upload, so they can be cached long too.
+    <ElseIf "%{REQUEST_URI} =~ m#/storage/.+\.(webp|avif|jpe?g|png|gif|svg)$#i">
+        Header set Cache-Control "public, max-age=31536000, immutable"
+    </ElseIf>
+
+    # Theme images, icons and fonts keep their names when replaced: cache for 30 days.
+    <ElseIf "%{REQUEST_URI} =~ m#\.(webp|avif|jpe?g|png|gif|svg|ico|woff2?)$#i">
+        Header set Cache-Control "public, max-age=2592000"
+    </ElseIf>
+
+    # Compressed responses differ per Accept-Encoding.
+    <FilesMatch "\.(css|js|svg|json|xml|txt)$">
+        Header append Vary Accept-Encoding
+    </FilesMatch>
+
+    # Static files are served by Apache directly, so they need the header here (Laravel sets it on pages).
+    Header setifempty X-Content-Type-Options "nosniff"
+</IfModule>
+
+<IfModule mod_mime.c>
+    AddType image/webp .webp
+    AddType image/avif .avif
+    AddType font/woff2 .woff2
+    AddType application/manifest+json .webmanifest
+</IfModule>

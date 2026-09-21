@@ -6,7 +6,7 @@
         $disabled = 'bg-surface text-outline cursor-not-allowed border-[#E1E5EA]';
     @endphp
 
-    <nav class="gap-space-md flex flex-col items-center justify-between sm:flex-row" role="navigation" aria-label="Pagination">
+    <nav class="gap-space-md flex flex-col items-center justify-between sm:flex-row" aria-label="Pagination">
         <p class="font-label-sm text-label-sm text-secondary tracking-wider uppercase">
             Page {{ str_pad($paginator->currentPage(), 2, '0', STR_PAD_LEFT) }} of {{ str_pad($paginator->lastPage(), 2, '0', STR_PAD_LEFT) }} •
             Showing {{ $paginator->firstItem() }}–{{ $paginator->lastItem() }} of {{ $paginator->total() }}
@@ -31,7 +31,7 @@
                                 {{ str_pad($page, 2, '0', STR_PAD_LEFT) }}
                             </span>
                         @else
-                            <a href="{{ $url }}" class="{{ $base }} {{ $idle }}" aria-label="Go to page {{ $page }}">
+                            <a href="{{ $url }}" class="{{ $base }} {{ $idle }}">
                                 {{ str_pad($page, 2, '0', STR_PAD_LEFT) }}
                             </a>
                         @endif

@@ -2,6 +2,7 @@
     use App\Helpers\Settings;
     use App\Models\Blog;
     use App\Models\Page;
+    use App\Models\Service;
 
     $appName = Settings::appName();
     $emails = array_values(array_filter(Settings::emails()));
@@ -13,19 +14,20 @@
         'Company' => [
             ['label' => 'Home', 'url' => route('home')],
             ['label' => 'Services', 'url' => route('services')],
+            ['label' => 'Work', 'url' => route('work.index')],
             ['label' => 'About', 'url' => route('about')],
             ['label' => 'Insights', 'url' => route('blog.index')],
             ['label' => 'Contact', 'url' => route('contact')],
         ],
-        'Services' => [
-            ['label' => 'Website Development', 'url' => route('services') . '#website'],
-            ['label' => 'Web Applications', 'url' => route('services') . '#web-app'],
-            ['label' => 'Mobile Apps', 'url' => route('services') . '#mobile-app'],
-            ['label' => 'Custom Software', 'url' => route('services') . '#custom-software'],
-            ['label' => 'UI/UX Design', 'url' => route('services') . '#ui-ux'],
-            ['label' => 'Cloud & DevOps', 'url' => route('services') . '#cloud-devops'],
-        ],
     ];
+
+    $footerServices = Service::active()
+        ->ordered()
+        ->take(6)
+        ->get(['title', 'slug']);
+    if ($footerServices->isNotEmpty()) {
+        $columns['Services'] = $footerServices->map(fn ($service) => ['label' => $service->title, 'url' => route('services.show', $service->slug)])->all();
+    }
 
     $latestPosts = Blog::published()
         ->latestPublished()
@@ -41,7 +43,7 @@
 @endphp
 
 <footer class="w-full border-t border-[#1C1C1C] bg-[#0A0A0A] text-white">
-    <div class="site-container pt-space-2xl pb-space-xl px-4">
+    <div class="site-container pt-space-2xl pb-space-xl">
         <div class="gap-gutter pb-space-2xl grid grid-cols-1 border-b border-[#1C1C1C] lg:grid-cols-12">
             <div class="gap-space-xl lg:pr-space-xl flex flex-col justify-between pr-0 lg:col-span-4">
                 <div class="space-y-space-md">
@@ -75,7 +77,7 @@
             <div class="gap-gutter grid grid-cols-2 md:grid-cols-4 lg:col-span-8">
                 @foreach ($columns as $heading => $items)
                     <nav class="space-y-space-md flex flex-col" aria-label="{{ $heading }}">
-                        <span class="font-label-sm text-label-sm text-outline tracking-widest uppercase">{{ $heading }}</span>
+                        <span class="font-label-sm text-label-sm tracking-widest text-[#8E91A0] uppercase">{{ $heading }}</span>
                         <ul class="space-y-space-xs">
                             @foreach ($items as $item)
                                 <li class="py-1">
@@ -89,7 +91,7 @@
                 @endforeach
 
                 <div class="space-y-space-md flex flex-col">
-                    <span class="font-label-sm text-label-sm text-outline tracking-widest uppercase">Get in Touch</span>
+                    <span class="font-label-sm text-label-sm tracking-widest text-[#8E91A0] uppercase">Get in Touch</span>
                     <ul class="space-y-space-xs font-body-sm text-body-sm text-[#D1D5DB]">
                         @foreach (array_slice($emails, 0, 1) as $email)
                             <li class="py-1">
@@ -120,11 +122,13 @@
         </div>
 
         <div class="gap-space-md pt-space-lg flex flex-col items-center justify-between md:flex-row">
-            <p class="font-label-sm text-label-sm text-outline tracking-wider uppercase">© {{ date('Y') }} {{ $appName }}. All Rights Reserved.</p>
+            <p class="font-label-sm text-label-sm tracking-wider text-[#8E91A0] uppercase">
+                © {{ date('Y') }} {{ $appName }}. All Rights Reserved.
+            </p>
 
             @if ($legalPages->isNotEmpty())
                 <nav
-                    class="gap-x-space-lg gap-y-space-xs font-label-sm text-label-sm text-outline flex flex-wrap items-center justify-center tracking-wider uppercase"
+                    class="gap-x-space-lg gap-y-space-xs font-label-sm text-label-sm flex flex-wrap items-center justify-center tracking-wider text-[#8E91A0] uppercase"
                     aria-label="Legal"
                 >
                     @foreach ($legalPages as $legalPage)

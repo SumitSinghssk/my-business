@@ -15,14 +15,7 @@
                     <span
                         class="inline-flex items-center gap-1.5 rounded-sm bg-slate-100 px-2 py-1 text-xs font-semibold tracking-wide text-slate-600 uppercase dark:bg-slate-700 dark:text-slate-300"
                     >
-                        <svg class="h-3 w-3 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path
-                                stroke-linecap="round"
-                                stroke-linejoin="round"
-                                stroke-width="2"
-                                d="M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.102-1.101m-.758-4.899a4 4 0 005.656 0l4-4a4 4 0 00-5.656-5.656l-1.1 1.1"
-                            />
-                        </svg>
+                        <x-icons.url class="h-3 w-3 shrink-0" />
                         {{ $enquiry->source }}
                     </span>
 
@@ -97,7 +90,7 @@
                 <p class="text-sm text-slate-400 italic dark:text-slate-500">No data attached to this enquiry.</p>
             @endif
 
-            @if ($enquiry->source_url)
+            @if ($enquiry->source_url && preg_match("#^https?://#i", $enquiry->source_url))
                 <div class="min-w-0">
                     <p class="mb-1 text-xs font-semibold tracking-wide text-slate-400 uppercase dark:text-slate-500">Source URL</p>
                     <a
@@ -105,14 +98,7 @@
                         target="_blank"
                         class="inline-flex items-center gap-1.5 text-sm wrap-break-word text-slate-700 underline-offset-2 hover:text-slate-900 hover:underline dark:text-slate-300 dark:hover:text-white"
                     >
-                        <svg class="h-3.5 w-3.5 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path
-                                stroke-linecap="round"
-                                stroke-linejoin="round"
-                                stroke-width="2"
-                                d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"
-                            />
-                        </svg>
+                        <x-icons.external-link class="h-3.5 w-3.5 shrink-0" />
                         {{ $enquiry->source_url }}
                     </a>
                 </div>

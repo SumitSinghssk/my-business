@@ -60,6 +60,25 @@ class EnquiryController extends Controller
         return view('admin.enquiries.index', compact('enquiries', 'sources'));
     }
 
+    /**
+     * Called when an admin opens an enquiry, so the unread counts (sidebar badge,
+     * dashboard) and the seen/unseen filter reflect what has actually been read.
+     */
+    public function markSeen(Request $request, Enquiry $enquiry)
+    {
+        Gate::authorize('admin.enquiries.view');
+
+        if ($enquiry->is_unseen) {
+            $enquiry->forceFill([
+                'seen_at' => now(),
+                'seen_by' => $request->user()->id,
+                'status' => $enquiry->status === 'new' ? 'seen' : $enquiry->status,
+            ])->save();
+        }
+
+        return response()->json(['seen' => true]);
+    }
+
     public function destroy(Enquiry $enquiry)
     {
         Gate::authorize('admin.enquiries.delete');

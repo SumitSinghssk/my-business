@@ -4,51 +4,51 @@
             'meta' => 'Phase 1.0 • Days 1-10',
             'title' => 'Discover & Map',
             'text' => 'Deep immersion in commercial logic, constraint mapping, technical debt audits, and core user workflows.',
-            'image' => 'discover.jpg',
+            'image' => 'discover.webp',
             'alt' => 'Team mapping requirements on a wall of notes during a discovery workshop sticky',
         ],
         [
             'meta' => 'Phase 2.0 • Days 11-20',
             'title' => 'Architecture & Specs',
             'text' => 'System topology, relational and non-relational data modeling, API contracts, and infrastructure blueprints.',
-            'image' => 'architecture.jpg',
+            'image' => 'architecture.webp',
             'alt' => 'Engineer connecting components on a system architecture flow diagram',
         ],
         [
             'meta' => 'Phase 3.0 • Sprints 1-2',
             'title' => 'Design Systems',
             'text' => 'High-density wireframing, component tokenization, accessible interaction patterns, and click-through prototypes.',
-            'image' => 'design-systems.jpg',
+            'image' => 'design-systems.webp',
             'alt' => 'Designer sketching user interface wireframes on paper',
         ],
         [
             'meta' => 'Phase 4.0 • Sprints 3-6',
             'title' => 'Agile Build',
             'text' => 'Modular engine engineering, type-safe data pipes, continuous automated regression testing, and PR reviews.',
-            'image' => 'agile-build.jpg',
+            'image' => 'agile-build.webp',
             'alt' => 'Source code open in an editor on a laptop',
         ],
         [
             'meta' => 'Phase 5.0 • Production',
             'title' => 'Hardened Launch',
             'text' => 'Third-party penetration testing, multi-region container orchestration, staging audits, and zero-downtime cutover.',
-            'image' => 'launch.jpg',
+            'image' => 'launch.webp',
             'alt' => 'Networked server racks in a data centre',
         ],
         [
             'meta' => 'Phase 6.0 • Continuity',
             'title' => 'Scale & Observability',
             'text' => 'Real-time telemetry observability, P99 latency optimizations, weekly iterations, and enterprise SLA guarantee.',
-            'image' => 'observability.jpg',
+            'image' => 'observability.webp',
             'alt' => 'Live performance analytics dashboard with latency and traffic charts',
         ],
     ];
 @endphp
 
-<section class="py-space-lg md:py-space-xl w-full border-b border-[#E1E5EA] bg-white">
-    <div class="site-container px-4">
+<section class="section-y w-full border-b border-[#E1E5EA] bg-white">
+    <div class="site-container">
         {{-- Header: left-aligned below lg, centered from lg up --}}
-        <div class="mb-6 flex flex-col gap-3 text-left lg:mx-auto lg:mb-8 lg:max-w-4xl lg:items-center lg:text-center">
+        <div class="section-head flex flex-col gap-3 text-left lg:mx-auto lg:max-w-4xl lg:items-center lg:text-center">
             <h2 class="font-headline-lg text-2xl font-semibold tracking-[-0.035em] text-[#0A0A0A] md:text-3xl lg:text-4xl">
                 Simple process. Serious execution.
             </h2>
@@ -58,7 +58,7 @@
             </p>
         </div>
 
-        <div class="grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-3 lg:gap-8">
+        <div class="gap-section grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3">
             @foreach ($phases as $phase)
                 <div
                     class="group hover:border-primary-container flex flex-col overflow-hidden rounded-lg border border-[#E1E5EA] bg-white shadow-sm transition-all duration-200 hover:-translate-y-0.5 hover:shadow-md"

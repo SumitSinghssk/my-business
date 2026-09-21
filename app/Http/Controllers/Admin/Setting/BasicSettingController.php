@@ -22,8 +22,8 @@ class BasicSettingController extends Controller
             'addresses.*.text' => 'nullable|string',
             'addresses.*.map_iframe' => ['nullable', 'string', 'max:2000',
                 function ($attribute, $value, $fail) {
-                    if (! empty($value) && ! str_starts_with(trim($value), '<iframe')) {
-                        $fail('The map embed code must be a valid <iframe> tag from Google Maps.');
+                    if (! empty($value) && Settings::mapEmbed($value) === null) {
+                        $fail('The map must be a Google Maps embed code (or its https://www.google.com/maps/embed link).');
                     }
                 },
             ],
@@ -79,7 +79,8 @@ class BasicSettingController extends Controller
             ->map(fn ($a) => [
                 'label' => trim($a['label'] ?? ''),
                 'text' => trim($a['text'] ?? ''),
-                'map_iframe' => trim($a['map_iframe'] ?? ''),
+                // Store only the rebuilt, safe iframe.
+                'map_iframe' => Settings::mapEmbed($a['map_iframe'] ?? null) ?? '',
             ])
             ->values()
             ->toArray();

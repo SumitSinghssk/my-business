@@ -7,6 +7,7 @@ use App\Http\Controllers\Controller;
 use App\Http\Requests\Admin\BlogCategoryStoreRequest;
 use App\Http\Requests\Admin\BlogCategoryUpdateRequest;
 use App\Models\BlogCategory;
+use App\Services\ImageProcessor;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\Facades\Storage;
@@ -57,7 +58,7 @@ class BlogCategoryController extends Controller
         $data = $request->validated();
 
         if ($request->hasFile('image')) {
-            $data['image'] = $request->file('image')->store('blog-categories', 'public');
+            $data['image'] = app(ImageProcessor::class)->store($request->file('image'), 'category', $request->input('image_crop'));
         }
 
         $data['slug'] = $data['slug'] ?? str()->slug($data['name']);
@@ -93,10 +94,8 @@ class BlogCategoryController extends Controller
         $data = $request->validated();
 
         if ($request->hasFile('image')) {
-            if ($blogCategory->image) {
-                Storage::disk('public')->delete($blogCategory->image);
-            }
-            $data['image'] = $request->file('image')->store('blog-categories', 'public');
+            // The old file is only removed once the new one has been saved.
+            $data['image'] = app(ImageProcessor::class)->store($request->file('image'), 'category', $request->input('image_crop'), $blogCategory->image);
         } elseif ($request->boolean('remove_image')) {
             if ($blogCategory->image) {
                 Storage::disk('public')->delete($blogCategory->image);
@@ -112,6 +111,10 @@ class BlogCategoryController extends Controller
     public function destroy(BlogCategory $blogCategory)
     {
         Gate::authorize('admin.blog-categories.delete');
+
+        // Promote sub-categories to top level; otherwise they point at a deleted parent
+        // and disappear from every category picker.
+        $blogCategory->children()->update(['parent_id' => null]);
 
         $blogCategory->delete();
 

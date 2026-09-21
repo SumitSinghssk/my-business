@@ -2,29 +2,21 @@
 
 namespace App\Http\Requests\Website;
 
+use App\Models\Service;
 use Illuminate\Foundation\Http\FormRequest;
+use Illuminate\Validation\Rule;
 
 class ContactRequest extends FormRequest
 {
-    public const SERVICES = [
-        'website' => 'Website Development',
-        'web-app' => 'Web Application',
-        'mobile-app' => 'Mobile App',
-        'custom-software' => 'Custom Software',
-        'ui-ux' => 'UI/UX Design',
-        'cloud-devops' => 'Cloud & DevOps',
-        'consulting' => 'Architecture Consulting',
-        'other' => 'Something Else',
-    ];
-
-    public const BUDGETS = [
-        'under-10k' => 'Under $10k',
-        '10k-25k' => '$10k – $25k',
-        '25k-50k' => '$25k – $50k',
-        '50k-100k' => '$50k – $100k',
-        '100k-plus' => '$100k+',
-        'not-sure' => 'Not sure yet',
-    ];
+    /**
+     * Options for "What do you need?": active services (slug => title) plus a catch-all.
+     *
+     * @return array<string, string>
+     */
+    public static function serviceOptions(): array
+    {
+        return Service::active()->ordered()->pluck('title', 'slug')->all() + ['other' => 'Something Else'];
+    }
 
     public function authorize(): bool
     {
@@ -38,8 +30,7 @@ class ContactRequest extends FormRequest
             'email' => ['required', 'email', 'max:150'],
             'company' => ['nullable', 'string', 'max:150'],
             'phone' => ['nullable', 'string', 'max:30', 'regex:/^[0-9+\-\s().]{6,30}$/'],
-            'service' => ['nullable', 'string', 'in:'.implode(',', array_keys(self::SERVICES))],
-            'budget' => ['nullable', 'string', 'in:'.implode(',', array_keys(self::BUDGETS))],
+            'service' => ['nullable', 'string', Rule::in(array_keys(self::serviceOptions()))],
             'message' => ['required', 'string', 'min:10', 'max:5000'],
             // Honeypot: hidden from people, bots fill it in.
             'website' => ['nullable', 'max:0'],

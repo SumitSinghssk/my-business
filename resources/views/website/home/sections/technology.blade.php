@@ -39,9 +39,9 @@
     ];
 @endphp
 
-<section class="py-space-lg md:py-space-xl w-full border-b border-[#1C1C1C] bg-[#0A0A0A] text-white">
-    <div class="site-container px-4">
-        <div class="mb-6 flex flex-col items-start gap-3 text-left lg:mx-auto lg:mb-8 lg:max-w-4xl lg:items-center lg:text-center">
+<section class="section-y w-full border-b border-[#1C1C1C] bg-[#0A0A0A] text-white">
+    <div class="site-container">
+        <div class="section-head flex flex-col items-start gap-3 text-left lg:mx-auto lg:max-w-4xl lg:items-center lg:text-center">
             <h2 class="font-headline-lg text-2xl font-semibold tracking-[-0.035em] text-white md:text-3xl lg:text-4xl">
                 Technology that works for your business.
             </h2>
@@ -52,17 +52,17 @@
 
         <div class="grid grid-cols-1 border-t border-l border-[#1C1C1C] md:grid-cols-2 lg:grid-cols-3">
             @foreach ($layers as $layer)
-                <div class="border-r border-b border-[#1C1C1C] p-5 transition-colors hover:bg-[#121212] lg:p-6">
+                <div class="border-r border-b border-[#1C1C1C] p-4 transition-colors hover:bg-[#121212] lg:p-5">
                     <div class="mb-4 flex items-center justify-between">
-                        <span class="font-label-sm text-label-sm text-outline tracking-widest uppercase">{{ $layer['layer'] }}</span>
-                        <span class="font-label-sm text-label-sm text-primary-container uppercase">{{ $layer['tag'] }}</span>
+                        <span class="font-label-sm text-label-sm tracking-widest text-[#8E91A0] uppercase">{{ $layer['layer'] }}</span>
+                        <span class="font-label-sm text-label-sm text-[#4D8BFF] uppercase">{{ $layer['tag'] }}</span>
                     </div>
                     <h3 class="font-headline-sm text-headline-sm mb-3 font-semibold text-white">{{ $layer['title'] }}</h3>
                     <ul class="space-y-space-xs font-body-md text-body-md text-[#A0A0A0]">
                         @foreach ($layer['items'] as $name => $note)
                             <li class="flex items-center justify-between gap-3">
                                 <span>{{ $name }}</span>
-                                <span class="text-outline shrink-0 text-xs">{{ $note }}</span>
+                                <span class="shrink-0 text-xs text-[#8E91A0]">{{ $note }}</span>
                             </li>
                         @endforeach
                     </ul>

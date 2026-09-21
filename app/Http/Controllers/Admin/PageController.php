@@ -7,10 +7,10 @@ use App\Http\Controllers\Controller;
 use App\Http\Requests\Admin\PageStoreRequest;
 use App\Http\Requests\Admin\PageUpdateRequest;
 use App\Models\Page;
+use App\Services\ImageProcessor;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Gate;
-use Illuminate\Support\Facades\Storage;
 
 class PageController extends Controller
 {
@@ -55,7 +55,7 @@ class PageController extends Controller
         $data['slug'] = $data['slug'] ?? str()->slug($data['title']);
 
         if ($request->hasFile('featured_image')) {
-            $data['featured_image'] = $request->file('featured_image')->store('pages', 'public');
+            $data['featured_image'] = app(ImageProcessor::class)->store($request->file('featured_image'), 'page', $request->input('featured_image_crop'));
         }
 
         $page = Page::create($data);
@@ -83,13 +83,11 @@ class PageController extends Controller
         $data = $request->validated();
 
         if ($request->hasFile('featured_image')) {
-            if ($page->featured_image) {
-                Storage::disk('public')->delete($page->featured_image);
-            }
-            $data['featured_image'] = $request->file('featured_image')->store('pages', 'public');
+            // The old file is only removed once the new one has been saved.
+            $data['featured_image'] = app(ImageProcessor::class)->store($request->file('featured_image'), 'page', $request->input('featured_image_crop'), $page->featured_image);
         } elseif ($request->boolean('remove_image')) {
             if ($page->featured_image) {
-                Storage::disk('public')->delete($page->featured_image);
+                app(ImageProcessor::class)->delete($page->featured_image);
             }
             $data['featured_image'] = null;
         }

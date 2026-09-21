@@ -5,7 +5,7 @@
         'failed_login' => ['label' => 'Failed Login', 'dot' => 'bg-red-500', 'bg' => 'bg-red-100 dark:bg-red-900/30', 'text' => 'text-red-700 dark:text-red-400', 'icon' => 'icons.close'],
         'viewed' => ['label' => 'Viewed', 'dot' => 'bg-blue-500', 'bg' => 'bg-blue-100 dark:bg-blue-900/30', 'text' => 'text-blue-700 dark:text-blue-400', 'icon' => 'icons.visibility'],
         'created' => ['label' => 'Created', 'dot' => 'bg-green-500', 'bg' => 'bg-green-100 dark:bg-green-900/30', 'text' => 'text-green-700 dark:text-green-400', 'icon' => 'icons.add'],
-        'updated' => ['label' => 'Updated', 'dot' => 'bg-yellow-500', 'bg' => 'bg-yellow-100 dark:bg-yellow-900/30', 'text' => 'text-yellow-700 dark:text-yellow-400', 'icon' => 'icons.updated'],
+        'updated' => ['label' => 'Updated', 'dot' => 'bg-yellow-500', 'bg' => 'bg-yellow-100 dark:bg-yellow-900/30', 'text' => 'text-yellow-700 dark:text-yellow-400', 'icon' => 'icons.update'],
         'deleted' => ['label' => 'Deleted', 'dot' => 'bg-red-500', 'bg' => 'bg-red-100 dark:bg-red-900/30', 'text' => 'text-red-700 dark:text-red-400', 'icon' => 'icons.delete'],
     ];
 

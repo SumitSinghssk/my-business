@@ -50,6 +50,7 @@ class AdminAuthController extends Controller
         $request->session()->forget('login_'.sha1($guard));
         $request->session()->forget('password_hash_'.$guard);
 
+        $request->session()->invalidate();
         $request->session()->regenerateToken();
 
         return to_route('admin.login');

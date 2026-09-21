@@ -4,8 +4,8 @@ namespace App\Http\Controllers\Admin\Setting;
 
 use App\Http\Controllers\Controller;
 use App\Models\Setting;
+use App\Support\Robots;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\File;
 use Illuminate\Support\Facades\Gate;
 
 class SettingController extends Controller
@@ -26,10 +26,8 @@ class SettingController extends Controller
 
         $logFiles = (new LogController)->getLogFiles();
 
-        $robotsPath = public_path('robots.txt');
-        $robotsContent = File::exists($robotsPath) ? File::get($robotsPath) : '';
-        $robotsExists = File::exists($robotsPath);
+        $robotsContent = Robots::content();
 
-        return view('admin.settings.index', compact('settings', 'scriptSettings', 'sitemapInfo', 'sitemapExists', 'logFiles', 'robotsContent', 'robotsExists'));
+        return view('admin.settings.index', compact('settings', 'scriptSettings', 'sitemapInfo', 'sitemapExists', 'logFiles', 'robotsContent'));
     }
 }

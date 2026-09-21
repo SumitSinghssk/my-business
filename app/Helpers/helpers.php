@@ -7,7 +7,8 @@ if (! function_exists('settings')) {
     function settings(?string $key = null, mixed $default = null): mixed
     {
         if ($key === null) {
-            return Settings::get('', []);
+            // data_get() with an empty key looks up a literal "" key, so return everything directly.
+            return Settings::all();
         }
 
         return Settings::get($key, $default);

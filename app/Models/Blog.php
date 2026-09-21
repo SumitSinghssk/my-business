@@ -3,6 +3,7 @@
 namespace App\Models;
 
 use App\Enums\CommonStatusEnum;
+use App\Models\Concerns\HasSeoRecord;
 use App\Support\ContentToc;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Model;
@@ -11,7 +12,10 @@ use Illuminate\Support\Carbon;
 
 class Blog extends Model
 {
-    use SoftDeletes;
+    use HasSeoRecord, SoftDeletes;
+
+    /** URL path before the slug; Admin → SEO records are keyed by the full path. */
+    public const SEO_PATH_PREFIX = 'insights';
 
     protected $fillable = [
         'user_id',
@@ -38,11 +42,6 @@ class Blog extends Model
     public function categories()
     {
         return $this->belongsToMany(BlogCategory::class, 'blog_category_blog');
-    }
-
-    public function seo()
-    {
-        return $this->hasOne(Seo::class, 'slug', 'slug');
     }
 
     /**

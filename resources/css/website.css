@@ -1,20 +1,29 @@
-@import 'tailwindcss';
+@import '@fontsource/geist/latin-400.css';
+@import '@fontsource/geist/latin-500.css';
+@import '@fontsource/geist/latin-600.css';
+@import '@fontsource/hanken-grotesk/latin-400.css';
+@import '@fontsource/hanken-grotesk/latin-500.css';
+
+@import 'swiper/css';
+
+@import 'tailwindcss' source(none);
 
 @custom-variant dark (&:where(.dark, .dark *));
 
-@source '../../vendor/laravel/framework/src/Illuminate/Pagination/resources/views/*.blade.php';
-@source '../../storage/framework/views/*.php';
-@source '../**/*.blade.php';
-@source '../**/*.js';
+@source '../views/website';
+@source '../views/components/website';
+@source '../views/components/icons';
+@source '../views/components/modal.blade.php';
+@source '../views/layouts/app.blade.php';
+@source '../views/layouts/website.blade.php';
+@source '../views/layouts/partials/website';
+@source '../views/errors';
+@source '../views/vendor/pagination';
+@source '../js/app.js';
+@source '../../app/View/Components/Website.php';
+@source '../../config/images.php';
 
-/* ==========================================================================
-   WEBSITE THEME
-   --------------------------------------------------------------------------
-   Design tokens for the public website. Only loaded by the website bundle,
-   so none of this leaks into the admin panel (resources/css/app.css).
-   ========================================================================== */
 @theme {
-    /* --- Fonts ------------------------------------------------------------ */
     --font-sans: 'Hanken Grotesk', ui-sans-serif, system-ui, sans-serif, 'Apple Color Emoji', 'Segoe UI Emoji', 'Segoe UI Symbol', 'Noto Color Emoji';
     --font-body-sm: 'Hanken Grotesk', ui-sans-serif, system-ui, sans-serif;
     --font-body-md: 'Hanken Grotesk', ui-sans-serif, system-ui, sans-serif;
@@ -27,7 +36,6 @@
     --font-label-sm: 'Geist', ui-sans-serif, system-ui, sans-serif;
     --font-label-md: 'Geist', ui-sans-serif, system-ui, sans-serif;
 
-    /* --- Type scale ------------------------------------------------------- */
     --text-body-sm: 13px;
     --text-body-sm--line-height: 18px;
     --text-body-sm--letter-spacing: 0em;
@@ -78,7 +86,6 @@
     --text-display--letter-spacing: -0.04em;
     --text-display--font-weight: 600;
 
-    /* --- Spacing ---------------------------------------------------------- */
     --spacing-space-xs: 0.25rem;
     --spacing-space-sm: 0.5rem;
     --spacing-space-md: 1rem;
@@ -90,7 +97,6 @@
     --spacing-margin: 3rem;
     --spacing-margin-mobile: 1.25rem;
 
-    /* --- Colors ----------------------------------------------------------- */
     --color-primary: #0047c1;
     --color-on-primary: #ffffff;
     --color-primary-container: #155eef;
@@ -141,12 +147,9 @@
     --color-inverse-surface: #2a313d;
     --color-inverse-on-surface: #ebf1ff;
 
-    --color-outline: #737687;
+    --color-outline: #6a6d7e;
     --color-outline-variant: #c3c6d8;
 
-    /* --- Animations ------------------------------------------------------- */
-    /* Track holds two identical copies of the content, so shifting by -50%
-       lands exactly on the start of the second copy: a seamless loop. */
     --animate-marquee: marquee 40s linear infinite;
 
     @keyframes marquee {
@@ -170,12 +173,6 @@
     display: none !important;
 }
 
-/* ==========================================================================
-   ARTICLE PROSE
-   --------------------------------------------------------------------------
-   Styles rich-text blog content (HTML from the admin editor) to match the
-   article design. Scoped to `.article-prose` so nothing else is affected.
-   ========================================================================== */
 .article-prose {
     color: var(--color-on-surface-variant);
     font-family: var(--font-body-md);
@@ -344,12 +341,54 @@
         border-color: #e1e5ea;
     }
 }
+
 @utility site-container {
+    width: 100%;
     max-width: 1500px;
     margin: 0 auto;
+    padding: 0 10px;
 }
 
-/* Plain variant (legal / CMS pages): no lead paragraph or drop cap. */
+@utility section-y {
+    padding-block: 2.5rem;
+
+    @media (width >= 48rem) {
+        padding-block: 3.5rem;
+    }
+
+    @media (width >= 64rem) {
+        padding-block: 4.5rem;
+    }
+
+    @media (width >= 80rem) {
+        padding-block: 5.5rem;
+    }
+}
+
+@utility section-head {
+    margin-bottom: 1.5rem;
+
+    @media (width >= 48rem) {
+        margin-bottom: 2rem;
+    }
+
+    @media (width >= 64rem) {
+        margin-bottom: 3rem;
+    }
+}
+
+@utility gap-section {
+    gap: 1rem;
+
+    @media (width >= 48rem) {
+        gap: 1.5rem;
+    }
+
+    @media (width >= 64rem) {
+        gap: 2rem;
+    }
+}
+
 .article-prose.is-plain > p:first-child {
     color: inherit;
     font-size: inherit;
@@ -367,4 +406,20 @@
     margin-top: 0;
     padding-top: 0;
     border-top: 0;
+}
+
+.blog-tab {
+    border-color: #e1e5ea;
+    background-color: #fff;
+    color: var(--color-on-surface-variant);
+}
+
+.blog-tab:hover {
+    background-color: var(--color-surface-container);
+}
+
+.blog-tab.is-active {
+    border-color: #0a0a0a;
+    background-color: #0a0a0a;
+    color: #fff;
 }

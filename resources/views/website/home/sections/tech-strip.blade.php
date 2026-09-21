@@ -15,7 +15,7 @@
 @endphp
 
 <section class="py-space-md w-full overflow-hidden border-b border-[#E1E5EA] bg-[#F7F8FA]">
-    <div class="site-container px-4">
+    <div class="site-container">
         <div class="gap-space-md md:gap-space-xl flex flex-col md:flex-row md:items-center">
             <div class="font-label-sm text-label-sm text-outline shrink-0 tracking-widest uppercase">Built with modern technologies —</div>
 

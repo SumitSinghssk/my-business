@@ -11,6 +11,7 @@ use App\Models\Page;
 use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Carbon;
+use Illuminate\Support\Facades\Gate;
 
 class DashboardController extends Controller
 {
@@ -18,6 +19,8 @@ class DashboardController extends Controller
 
     public function __invoke(Request $request)
     {
+        Gate::authorize('dashboard.view');
+
         $user = $request->user();
 
         $canEnquiries = $user->can('admin.enquiries.view');

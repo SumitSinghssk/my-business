@@ -5,7 +5,7 @@
 
 <section id="cta" class="bg-surface-container-low py-space-2xl w-full border-t border-[#E1E5EA]">
     <div class="site-container">
-        <div class="p-space-xl md:p-space-2xl relative overflow-hidden rounded-lg border border-[#2A2A2A] bg-[#0A0A0A] text-white">
+        <div class="relative overflow-hidden rounded-lg border border-[#2A2A2A] bg-[#0A0A0A] p-6 text-white md:p-10">
             <div
                 class="pointer-events-none absolute inset-0 bg-[linear-gradient(to_right,#1C1C1C_1px,transparent_1px),linear-gradient(to_bottom,#1C1C1C_1px,transparent_1px)] bg-size-[4rem_4rem] opacity-40"
             ></div>
@@ -43,7 +43,7 @@
                             {{ $email }}
                         </a>
                     @else
-                        <span class="font-label-sm text-label-sm text-outline text-center tracking-wider uppercase lg:text-right">
+                        <span class="font-label-sm text-label-sm text-center tracking-wider text-[#8E91A0] uppercase lg:text-right">
                             30-min technical discovery call
                         </span>
                     @endif

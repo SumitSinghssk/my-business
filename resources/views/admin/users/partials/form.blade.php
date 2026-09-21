@@ -128,63 +128,14 @@
     </div>
 
     <div x-show="activeTab === 'details'" x-cloak class="space-y-5">
-        <div
-            x-data="{
-                preview:
-                    '{{ $isEdit && $user->avatar ? asset('storage/' . $user->avatar) : '' }}',
-                removeAvatar: false,
-                handleFileChange(event) {
-                    const file = event.target.files[0]
-                    if (file) {
-                        this.preview = URL.createObjectURL(file)
-                        this.removeAvatar = false
-                    }
-                },
-                clearPreview() {
-                    this.preview = ''
-                    this.removeAvatar = true
-                    this.$refs.avatarFile.value = ''
-                },
-            }"
-        >
-            <x-admin.form-label label="Avatar" />
-            <p class="mb-3 text-xs text-slate-500 dark:text-slate-400">Square image recommended. Max 2 MB.</p>
-
-            <input type="file" name="avatar" accept="image/*" class="hidden" x-ref="avatarFile" x-on:change="handleFileChange" />
-            <input type="hidden" name="remove_avatar" :value="removeAvatar ? 1 : 0" />
-
-            <div class="flex items-center gap-4">
-                <div
-                    x-on:click="$refs.avatarFile.click()"
-                    class="group relative flex h-20 w-20 cursor-pointer items-center justify-center overflow-hidden rounded-full border-2 border-dashed border-slate-300 bg-slate-50 transition-colors hover:border-blue-400 hover:bg-blue-50/30 dark:border-slate-700 dark:bg-slate-800/50"
-                >
-                    <template x-if="preview">
-                        <img :src="preview" class="h-full w-full object-cover" />
-                    </template>
-                    <template x-if="!preview">
-                        <x-icons.account-circle class="h-8 w-8 text-slate-300 dark:text-slate-600" />
-                    </template>
-                    <div
-                        class="absolute inset-0 flex items-center justify-center rounded-full bg-black/40 opacity-0 transition-opacity group-hover:opacity-100"
-                    >
-                        <x-icons.camera class="h-5 w-5 text-white" />
-                    </div>
-                </div>
-
-                <div class="flex flex-col gap-1.5">
-                    <button
-                        type="button"
-                        x-show="preview"
-                        x-on:click="clearPreview()"
-                        class="inline-flex cursor-pointer items-center gap-1.5 text-xs text-red-500 hover:text-red-600"
-                    >
-                        <x-icons.delete class="h-4 w-4" />
-                        Remove
-                    </button>
-                </div>
-            </div>
-            <x-admin.form-error for="avatar" />
-        </div>
+        <x-admin.image-upload
+            name="avatar"
+            preset="avatar"
+            remove-name="remove_avatar"
+            label="Avatar"
+            class="max-w-xs"
+            :current="isset($user) && $user->avatar ? asset('storage/' . $user->avatar) : null"
+        />
 
         <div class="grid grid-cols-1 gap-5 sm:grid-cols-2">
             <div>
@@ -359,14 +310,7 @@
             <div
                 class="flex flex-col items-center justify-center rounded-xl border border-dashed border-slate-300 py-12 text-center dark:border-slate-700"
             >
-                <svg class="mb-3 h-10 w-10 text-slate-300 dark:text-slate-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path
-                        stroke-linecap="round"
-                        stroke-linejoin="round"
-                        stroke-width="1.5"
-                        d="M15 7a2 2 0 012 2m4 0a6 6 0 01-7.743 5.743L11 17H9v2H7v2H4a1 1 0 01-1-1v-2.586a1 1 0 01.293-.707l5.964-5.964A6 6 0 1121 9z"
-                    />
-                </svg>
+                <x-icons.key class="mb-3 h-10 w-10 text-slate-300 dark:text-slate-600" />
                 <p class="text-sm font-medium text-slate-500 dark:text-slate-400">No permissions available</p>
             </div>
         @else

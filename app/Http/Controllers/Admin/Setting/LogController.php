@@ -57,7 +57,7 @@ class LogController extends Controller
 
         $filename = $request->input('file');
 
-        if (! $filename || ! $this->isValidLogFile($filename)) {
+        if (! is_string($filename) || ! $this->isValidLogFile($filename)) {
             return back()->withErrors(['file' => 'Invalid log file.']);
         }
 
