@@ -8,84 +8,129 @@
         ->can('admin.log-settings.delete');
     $canManage = $canView || $canDelete;
 
-    $headers = ['Filename', 'Size', 'Last Modified'];
+    $headers = ['File', 'Size', 'Last modified'];
     if ($canManage) {
         $headers[] = 'Actions';
     }
 @endphp
 
 <div x-data="logSettings()" x-init="init()" class="space-y-6">
-    <x-admin.card title="Application Logs" text="View and manage server-side log files.">
-        <x-slot name="actions">
-            <a href="{{ request()->fullUrl() }}">
-                <x-admin.button variant="secondary">
-                    <span class="flex items-center gap-1.5">
-                        <x-icons.refresh class="h-3.5 w-3.5" />
-                        Refresh
-                    </span>
-                </x-admin.button>
-            </a>
-
-            @can('admin.log-settings.delete')
-                @if (count($logFiles) > 0)
-                    <form
-                        method="POST"
-                        action="{{ route('admin.settings.logs.destroy-all') }}"
-                        x-data
-                        x-on:submit.prevent="
-                                if (confirm('Delete ALL log files? This cannot be undone.')) $el.submit()
-                            "
+    <x-admin.table
+        :headers="$headers"
+        :data="$logFiles"
+        empty-message="No log files found."
+        empty-text="Server log files will show up here when the application writes them."
+        empty-icon="scroll"
+    >
+        <x-slot:toolbar>
+            <div class="flex flex-wrap items-center justify-between gap-3 py-1">
+                <div class="flex min-w-0 items-center gap-3">
+                    <span
+                        class="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg border border-slate-200 bg-slate-50 text-slate-500 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-300"
                     >
-                        @csrf
-                        @method('DELETE')
+                        <x-admin.icon name="scroll" class="h-4 w-4" />
+                    </span>
+                    <div class="min-w-0">
+                        <h2 class="flex items-center gap-2 text-sm font-semibold text-slate-900 dark:text-white">
+                            Application logs
+                            <span
+                                class="tabular rounded-full border border-slate-200 bg-white px-2 py-px text-xs font-medium text-slate-600 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-300"
+                            >
+                                {{ count($logFiles) }}
+                            </span>
+                        </h2>
+                        <p class="mt-0.5 text-xs text-slate-500 dark:text-slate-400">View and manage server-side log files.</p>
+                    </div>
+                </div>
 
-                        <x-admin.button variant="danger" class="flex items-center gap-1">
-                            <x-icons.delete class="h-4 w-4" />
-                            Delete All
-                        </x-admin.button>
-                    </form>
-                @endif
-            @endcan
+                <div class="flex flex-wrap items-center gap-2">
+                    <x-admin.button variant="secondary" size="sm" icon="refresh" :href="request()->fullUrl()">Refresh</x-admin.button>
+
+                    @can('admin.log-settings.delete')
+                        @if (count($logFiles) > 0)
+                            <form
+                                method="POST"
+                                action="{{ route('admin.settings.logs.destroy-all') }}"
+                                x-data
+                                x-on:submit.prevent="
+                                    if (confirm('Delete ALL log files? This cannot be undone.')) $el.submit()
+                                "
+                            >
+                                @csrf
+                                @method('DELETE')
+
+                                <x-admin.button variant="danger-outline" size="sm" icon="trash">Delete all</x-admin.button>
+                            </form>
+                        @endif
+                    @endcan
+                </div>
+            </div>
         </x-slot>
 
-        <x-admin.table :headers="$headers" :data="$logFiles" emptyMessage="No log files found.">
-            @foreach ($logFiles as $log)
-                <tr class="group transition-colors hover:bg-slate-50/50 dark:hover:bg-slate-800/30">
-                    <td class="px-6 py-4">
-                        <div class="flex items-center gap-2">
-                            <x-icons.pages class="h-4 w-4 shrink-0 text-blue-400" />
-                            <span class="font-mono text-xs text-slate-800 dark:text-slate-200">
-                                {{ $log['filename'] }}
-                            </span>
+        @foreach ($logFiles as $log)
+            @php
+                $modifiedAt = isset($log['modified_ts']) ? \Illuminate\Support\Carbon::createFromTimestamp($log['modified_ts']) : null;
+            @endphp
+
+            <tr>
+                <td>
+                    <div class="flex items-center gap-3">
+                        <span
+                            class="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg border border-slate-200 bg-slate-50 text-slate-500 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-300"
+                        >
+                            <x-admin.icon name="file-text" class="h-4 w-4" />
+                        </span>
+                        <div class="min-w-0">
+                            @if ($canView)
+                                <button
+                                    type="button"
+                                    x-on:click="openViewer(@js($log['filename']))"
+                                    class="cursor-pointer truncate font-mono text-[13px] font-medium text-slate-900 hover:text-blue-600 focus:outline-none focus-visible:underline dark:text-white dark:hover:text-blue-400"
+                                >
+                                    {{ $log['filename'] }}
+                                </button>
+                            @else
+                                <p class="truncate font-mono text-[13px] font-medium text-slate-900 dark:text-white">{{ $log['filename'] }}</p>
+                            @endif
+                            <p class="mt-0.5 flex items-center gap-1 text-xs text-slate-500 dark:text-slate-400">
+                                <x-admin.icon name="terminal" class="h-3 w-3" />
+                                storage/logs
+                            </p>
                         </div>
-                    </td>
+                    </div>
+                </td>
 
-                    <td class="px-6 py-4 text-xs text-slate-500 dark:text-slate-400">
-                        {{ $log['size'] }}
-                    </td>
+                <td class="tabular text-sm whitespace-nowrap text-slate-600 dark:text-slate-300">
+                    {{ $log['size'] }}
+                </td>
 
-                    <td class="px-6 py-4 text-xs text-slate-500 dark:text-slate-400">
-                        {{ $log['modified'] }}
-                    </td>
-
-                    @if ($canManage)
-                        <td class="px-6 py-4">
-                            <x-admin.row-actions
-                                size="sm"
-                                :viewClick="'openViewer(\'' . $log['filename'] . '\')'"
-                                :canView="auth()->user()->can('admin.log-settings.view')"
-                                :deleteFormAction="route('admin.settings.logs.destroy')"
-                                :deleteFormField="['name' => 'file', 'value' => $log['filename']]"
-                                :deleteConfirmMessage="'Delete ' . $log['filename'] . '? This cannot be undone.'"
-                                :canDelete="auth()->user()->can('admin.log-settings.delete')"
-                            />
-                        </td>
+                <td class="whitespace-nowrap">
+                    @if ($modifiedAt)
+                        <p class="text-sm text-slate-700 dark:text-slate-300">{{ $modifiedAt->format('d M Y') }}</p>
+                        <p class="text-xs text-slate-400">{{ $modifiedAt->diffForHumans() }}</p>
+                    @else
+                        <p class="text-sm text-slate-700 dark:text-slate-300">{{ $log['modified'] }}</p>
                     @endif
-                </tr>
-            @endforeach
-        </x-admin.table>
-    </x-admin.card>
+                </td>
 
+                @if ($canManage)
+                    <td>
+                        <x-admin.row-actions
+                            size="sm"
+                            :viewClick="'openViewer(\'' . $log['filename'] . '\')'"
+                            :canView="auth()->user()->can('admin.log-settings.view')"
+                            :deleteFormAction="route('admin.settings.logs.destroy')"
+                            :deleteFormField="['name' => 'file', 'value' => $log['filename']]"
+                            :deleteConfirmMessage="'Delete ' . $log['filename'] . '? This cannot be undone.'"
+                            :canDelete="auth()->user()->can('admin.log-settings.delete')"
+                        />
+                    </td>
+                @endif
+            </tr>
+        @endforeach
+    </x-admin.table>
+
+    {{-- Log viewer --}}
     <div
         x-show="viewerOpen"
         x-cloak
@@ -95,23 +140,32 @@
         x-transition:leave="transition duration-150 ease-in"
         x-transition:leave-start="opacity-100"
         x-transition:leave-end="opacity-0"
-        class="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4 backdrop-blur-sm dark:bg-black/70"
+        class="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/50 p-2 backdrop-blur-sm sm:p-4 dark:bg-black/70"
         x-on:click="closeViewer()"
         x-on:keydown.escape.window="closeViewer()"
     >
         <div
-            class="flex h-[85vh] w-full max-w-5xl flex-col overflow-hidden rounded-xl bg-white shadow-2xl ring-1 ring-gray-200 dark:bg-gray-900 dark:ring-white/10"
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="log-viewer-title"
+            class="flex h-[90vh] w-full max-w-5xl flex-col overflow-hidden rounded-xl border border-slate-200 bg-white shadow-2xl sm:h-[85vh] dark:border-slate-800 dark:bg-slate-900"
             x-on:click.stop
         >
-            <div
-                class="flex shrink-0 items-center justify-between border-b border-gray-200 bg-gray-50 px-5 py-3 dark:border-gray-700 dark:bg-gray-800"
-            >
-                <div class="flex items-center gap-3">
-                    <x-icons.pages class="h-5 w-5 text-blue-500 dark:text-blue-400" />
+            <div class="flex shrink-0 items-center justify-between gap-3 border-b border-slate-100 px-4 py-3 sm:px-5 dark:border-slate-800">
+                <div class="flex min-w-0 items-center gap-3">
+                    <span
+                        class="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg border border-slate-200 bg-slate-50 text-slate-500 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-300"
+                    >
+                        <x-admin.icon name="file-text" class="h-4 w-4" />
+                    </span>
 
-                    <div>
-                        <p class="font-mono text-sm font-semibold text-gray-900 dark:text-white" x-text="viewerFilename"></p>
-                        <p class="text-xs text-gray-500 dark:text-gray-400" x-show="logData">
+                    <div class="min-w-0">
+                        <p
+                            id="log-viewer-title"
+                            class="truncate font-mono text-sm font-semibold text-slate-900 dark:text-white"
+                            x-text="viewerFilename"
+                        ></p>
+                        <p class="text-xs text-slate-500 dark:text-slate-400" x-show="logData">
                             <span x-text="logData?.size"></span>
                             ·
                             <span x-text="rawLines.length"></span>
@@ -119,57 +173,60 @@
                         </p>
                     </div>
                 </div>
-                <div class="flex items-center gap-1">
+                <div class="flex shrink-0 items-center gap-1">
                     <button
                         type="button"
                         x-on:click="fetchLog()"
                         x-bind:disabled="viewerLoading"
                         title="Refresh"
-                        class="cursor-pointer rounded-md p-1.5 text-gray-500 transition-colors hover:bg-gray-200 hover:text-gray-800 disabled:opacity-50 dark:text-gray-400 dark:hover:bg-gray-700 dark:hover:text-white"
+                        aria-label="Refresh log"
+                        class="flex h-8 w-8 cursor-pointer items-center justify-center rounded-lg text-slate-500 transition hover:bg-slate-100 hover:text-slate-900 focus:outline-none focus-visible:ring-3 focus-visible:ring-blue-500/30 disabled:opacity-50 dark:text-slate-400 dark:hover:bg-slate-800 dark:hover:text-white"
                     >
-                        <x-icons.refresh x-bind:class="viewerLoading ? 'animate-spin' : ''" class="h-4 w-4" />
+                        <x-admin.icon name="refresh" x-bind:class="viewerLoading ? 'animate-spin' : ''" class="h-4 w-4" />
                     </button>
 
                     <button
                         type="button"
                         x-on:click="closeViewer()"
                         title="Close"
-                        class="cursor-pointer rounded-md p-1.5 text-gray-500 transition-colors hover:bg-gray-200 hover:text-gray-800 dark:text-gray-400 dark:hover:bg-gray-700 dark:hover:text-white"
+                        aria-label="Close log viewer"
+                        class="flex h-8 w-8 cursor-pointer items-center justify-center rounded-lg text-slate-500 transition hover:bg-slate-100 hover:text-slate-900 focus:outline-none focus-visible:ring-3 focus-visible:ring-blue-500/30 dark:text-slate-400 dark:hover:bg-slate-800 dark:hover:text-white"
                     >
-                        <x-icons.close class="h-4 w-4" />
+                        <x-admin.icon name="x" class="h-4 w-4" />
                     </button>
                 </div>
             </div>
 
-            <div class="shrink-0 border-b border-gray-200 bg-gray-50 px-5 py-2 dark:border-gray-700 dark:bg-gray-800">
-                <x-admin.form-input
-                    type="text"
-                    name="page"
-                    id="page"
+            <div class="shrink-0 border-b border-slate-100 bg-slate-50/70 px-4 py-2.5 sm:px-5 dark:border-slate-800 dark:bg-slate-900/60">
+                <x-admin.form.input
+                    type="search"
+                    id="log-filter"
+                    aria-label="Filter log lines"
                     x-model="filter"
                     x-bind:disabled="viewerLoading"
                     placeholder="Filter log lines…"
                 >
                     <x-slot:leftIcon>
-                        <x-icons.search class="h-5 w-5" />
+                        <x-admin.icon name="search" class="h-4 w-4" />
                     </x-slot>
-                </x-admin.form-input>
+                </x-admin.form.input>
             </div>
 
-            <div class="flex-1 overflow-y-auto bg-white px-5 py-3 dark:bg-gray-900">
+            <div class="flex-1 overflow-y-auto bg-white px-3 py-3 sm:px-5 dark:bg-slate-900">
                 <template x-if="viewerLoading">
                     <div class="flex h-full items-center justify-center">
-                        <x-icons.loading class="h-6 w-6 animate-spin text-blue-500 dark:text-blue-400" />
+                        <x-admin.icon name="refresh" class="h-6 w-6 animate-spin text-blue-500 dark:text-blue-400" />
                     </div>
                 </template>
 
                 <template x-if="!viewerLoading && viewerError">
-                    <div class="mt-12 text-center">
-                        <p class="text-sm text-red-500 dark:text-red-400" x-text="viewerError"></p>
+                    <div class="mt-12 flex flex-col items-center gap-2 text-center">
+                        <x-admin.icon name="alert-circle" class="h-6 w-6 text-red-500" />
+                        <p class="text-sm text-red-600 dark:text-red-400" x-text="viewerError"></p>
                         <button
                             type="button"
                             x-on:click="fetchLog()"
-                            class="mt-3 text-xs text-gray-500 underline hover:text-gray-800 dark:text-gray-400 dark:hover:text-white"
+                            class="mt-1 cursor-pointer text-xs font-medium text-blue-600 hover:underline dark:text-blue-400"
                         >
                             Try again
                         </button>
@@ -177,7 +234,10 @@
                 </template>
 
                 <template x-if="!viewerLoading && !viewerError && filteredEntries.length === 0">
-                    <p class="mt-12 text-center text-sm text-gray-400 dark:text-gray-500">No matching log entries.</p>
+                    <div class="mt-12 flex flex-col items-center gap-2 text-center">
+                        <x-admin.icon name="search" class="h-6 w-6 text-slate-300 dark:text-slate-600" />
+                        <p class="text-sm text-slate-500 dark:text-slate-400">No matching log entries.</p>
+                    </div>
                 </template>
 
                 <template x-if="!viewerLoading && !viewerError">
@@ -195,8 +255,9 @@
                                     x-on:click="entry.trace.length && toggleTrace(i)"
                                 >
                                     <template x-if="entry.trace.length">
-                                        <span class="mt-0.5 shrink-0 text-gray-400 dark:text-gray-500">
-                                            <x-icons.chevron-down
+                                        <span class="mt-0.5 shrink-0 text-slate-400 dark:text-slate-500">
+                                            <x-admin.icon
+                                                name="chevron-down"
                                                 class="h-3 w-3 transition-transform duration-200"
                                                 x-bind:class="{ 'rotate-180': !collapsed.includes(i) }"
                                             />
@@ -206,10 +267,10 @@
                                 </div>
 
                                 <template x-if="entry.trace.length && ! collapsed.includes(i)">
-                                    <div class="mt-0.5 ml-5 rounded-md bg-gray-50 px-3 py-2 dark:bg-gray-800">
+                                    <div class="mt-0.5 ml-5 rounded-md bg-slate-50 px-3 py-2 dark:bg-slate-800/60">
                                         <template x-for="(t, j) in entry.trace" :key="j">
                                             <p
-                                                class="leading-relaxed break-all whitespace-pre-wrap text-gray-500 dark:text-gray-400"
+                                                class="leading-relaxed break-all whitespace-pre-wrap text-slate-500 dark:text-slate-400"
                                                 x-text="t"
                                             ></p>
                                         </template>
@@ -316,13 +377,13 @@
                         WARNING: 'bg-yellow-50 text-yellow-700 dark:bg-yellow-900/30 dark:text-yellow-300',
                         NOTICE: 'bg-blue-50 text-blue-600 dark:bg-blue-900/30 dark:text-blue-300',
                         INFO: 'bg-green-50 text-green-600 dark:bg-green-900/30 dark:text-green-300',
-                        DEBUG: 'bg-gray-100 text-gray-600 dark:bg-gray-700/60 dark:text-gray-300',
+                        DEBUG: 'bg-slate-100 text-slate-600 dark:bg-slate-800 dark:text-slate-300',
                     };
                     const upper = line.toUpperCase();
                     for (const [level, cls] of Object.entries(LEVELS)) {
                         if (upper.includes('.' + level) || upper.includes('[' + level + ']')) return cls;
                     }
-                    return 'text-gray-700 dark:text-gray-300';
+                    return 'text-slate-700 dark:text-slate-300';
                 },
             };
         }

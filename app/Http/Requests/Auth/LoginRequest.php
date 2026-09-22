@@ -6,6 +6,7 @@ use App\Enums\CommonStatusEnum;
 use App\Mail\CustomerVerificationMail;
 use App\Models\Customer;
 use App\Models\User;
+use App\Services\ActivityLogger;
 use Illuminate\Auth\Events\Lockout;
 use Illuminate\Database\UniqueConstraintViolationException;
 use Illuminate\Foundation\Http\FormRequest;
@@ -93,7 +94,13 @@ class LoginRequest extends FormRequest
         // the same generic error, so the login form cannot be used to
         // enumerate valid accounts.
         if (! Auth::guard($guard)->attempt($this->only('email', 'password'), $this->boolean('remember'))) {
-            RateLimiter::hit($this->throttleKey());
+            // 5 wrong passwords lock this email + IP out for 15 minutes.
+            RateLimiter::hit($this->throttleKey(), 900);
+
+            if ($guard === 'web') {
+                rescue(fn () => ActivityLogger::failedLogin((string) $this->input('email'), $this), report: false);
+            }
+
             throw ValidationException::withMessages([
                 'email' => trans('auth.failed'),
             ]);

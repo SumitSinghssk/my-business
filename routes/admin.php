@@ -28,10 +28,10 @@ use Illuminate\Support\Facades\Route;
 Route::middleware(['scalar.query', 'log.admin.activity'])->prefix('admin')->name('admin.')->group(function () {
     Route::middleware('guest:web')->group(function () {
         Route::get('login', [AdminAuthController::class, 'index'])->name('login');
-        Route::post('login', [AdminAuthController::class, 'store'])->name('login.store');
+        Route::post('login', [AdminAuthController::class, 'store'])->middleware('throttle:10,1')->name('login.store');
     });
 
-    Route::middleware(['auth:web', 'active'])->group(function () {
+    Route::middleware(['auth:web', 'auth.session', 'active'])->group(function () {
         Route::post('logout', [AdminAuthController::class, 'destroy'])->name('logout');
         Route::get('profile', [ProfileController::class, 'edit'])->name('profile.edit');
         Route::patch('profile', [ProfileController::class, 'update'])->name('profile.update');

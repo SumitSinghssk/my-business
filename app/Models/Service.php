@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Casts\SafeHtml;
 use App\Enums\CommonStatusEnum;
 use App\Models\Concerns\HasSeoRecord;
 use Illuminate\Database\Eloquent\Builder;
@@ -29,6 +30,7 @@ class Service extends Model
     ];
 
     protected $casts = [
+        'content' => SafeHtml::class,
         'status' => CommonStatusEnum::class,
         'highlights' => 'array',
         'tags' => 'array',

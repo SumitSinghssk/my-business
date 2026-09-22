@@ -2,6 +2,7 @@
 
 namespace App\Http\Requests\Admin;
 
+use App\Http\Requests\Concerns\NormalizesSeoPath;
 use App\Models\Seo;
 use App\Support\ImagePreset;
 use Illuminate\Foundation\Http\FormRequest;
@@ -9,6 +10,8 @@ use Illuminate\Validation\Rule;
 
 class SeoStoreRequest extends FormRequest
 {
+    use NormalizesSeoPath;
+
     public function authorize(): bool
     {
         return true;

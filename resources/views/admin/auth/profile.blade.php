@@ -5,32 +5,128 @@
         $canUpdate = auth()
             ->user()
             ->can("profile.update");
+        $canUpdatePassword = auth()
+            ->user()
+            ->can("profile.update-password");
+        $me = auth()->user();
+        $avatarUrl = $me->avatar ? asset("storage/" . $me->avatar) : null;
+        $initials = collect(explode(" ", trim($me->name)))
+            ->filter()
+            ->take(2)
+            ->map(fn ($part) => mb_strtoupper(mb_substr($part, 0, 1)))
+            ->implode("");
+
+        $sections = [
+            ["id" => "profile", "label" => "Profile details", "icon" => "user", "text" => "Name, photo and bio"],
+            ["id" => "social", "label" => "Social profiles", "icon" => "share", "text" => "Links shown on your author page"],
+        ];
+
+        if ($canUpdatePassword) {
+            $sections[] = ["id" => "password", "label" => "Password", "icon" => "lock", "text" => "Keep your account secure"];
+        }
     @endphp
 
-    <div class="mx-auto max-w-5xl space-y-8">
-        <div class="grid grid-cols-1 gap-6 lg:grid-cols-3">
-            <div class="px-2">
-                <h3 class="text-lg font-bold tracking-tight text-slate-900 dark:text-white">Account Information</h3>
-                <p class="mt-1 text-sm text-slate-500 dark:text-slate-400">Update your account's profile information and email address.</p>
+    <x-admin.page-header title="Account settings" description="Manage your profile, public links and sign-in password." icon="user-circle" />
+
+    <div class="grid grid-cols-1 items-start gap-6 lg:grid-cols-[16rem_minmax(0,1fr)]">
+        {{-- Summary + section nav --}}
+        <aside class="space-y-4 lg:sticky lg:top-20">
+            <div class="rounded-xl border border-slate-200/80 bg-white p-4 shadow-xs dark:border-slate-800 dark:bg-slate-900">
+                <div class="flex items-center gap-3">
+                    <span
+                        class="flex h-11 w-11 shrink-0 items-center justify-center overflow-hidden rounded-full bg-blue-50 text-sm font-semibold text-blue-700 ring-2 ring-white dark:bg-blue-500/10 dark:text-blue-300 dark:ring-slate-900"
+                    >
+                        @if ($avatarUrl)
+                            <img src="{{ $avatarUrl }}" alt="" class="h-full w-full object-cover" />
+                        @else
+                            {{ $initials ?: "?" }}
+                        @endif
+                    </span>
+                    <div class="min-w-0">
+                        <p class="truncate text-sm font-semibold text-slate-900 dark:text-white">{{ $me->name }}</p>
+                        <p class="truncate text-xs text-slate-500 dark:text-slate-400">{{ $me->email }}</p>
+                    </div>
+                </div>
+
+                <div class="mt-4 flex flex-wrap gap-1.5 border-t border-slate-100 pt-3 dark:border-slate-800">
+                    @forelse ($me->getRoleNames() as $roleName)
+                        <span
+                            class="inline-flex items-center gap-1 rounded-full bg-blue-50 px-2 py-0.5 text-xs font-medium text-blue-700 capitalize dark:bg-blue-500/10 dark:text-blue-300"
+                        >
+                            <x-admin.icon name="shield" class="h-3 w-3" />
+                            {{ $roleName }}
+                        </span>
+                    @empty
+                        <span class="text-xs text-slate-400">No role assigned</span>
+                    @endforelse
+                </div>
+
+                @if ($me->created_at)
+                    <p class="mt-3 flex items-center gap-1.5 text-xs text-slate-500 dark:text-slate-400">
+                        <x-admin.icon name="calendar" class="h-3.5 w-3.5" />
+                        Member since {{ $me->created_at->format("d M Y") }}
+                    </p>
+                @endif
             </div>
 
-            <div class="lg:col-span-2">
-                <form
-                    @if ($canUpdate)
-                        method="POST"
-                        action="{{ route("admin.profile.update") }}"
-                        x-data="{ submitting: false }"
-                        x-on:submit="submitting = true"
-                        enctype="multipart/form-data"
-                    @endcan
-                    class="overflow-hidden rounded-xl border border-slate-200 bg-white shadow-sm dark:border-slate-800 dark:bg-slate-900"
-                >
-                    @csrf
-                    @method("PATCH")
+            <nav
+                aria-label="Account sections"
+                class="hidden flex-col gap-1 rounded-xl border border-slate-200/80 bg-white p-1.5 shadow-xs lg:flex dark:border-slate-800 dark:bg-slate-900"
+            >
+                @foreach ($sections as $section)
+                    <a
+                        href="#{{ $section["id"] }}"
+                        class="group flex shrink-0 items-center gap-3 rounded-lg px-2.5 py-2 text-sm font-medium text-slate-600 transition hover:bg-slate-50 hover:text-slate-900 dark:text-slate-300 dark:hover:bg-slate-800 dark:hover:text-white"
+                    >
+                        <span
+                            class="flex h-7 w-7 shrink-0 items-center justify-center rounded-md border border-slate-200 bg-white text-slate-500 group-hover:text-blue-600 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-400 dark:group-hover:text-blue-400"
+                        >
+                            <x-admin.icon :name="$section['icon']" class="h-3.5 w-3.5" />
+                        </span>
+                        <span class="min-w-0">
+                            <span class="block truncate">{{ $section["label"] }}</span>
+                            <span class="hidden truncate text-xs font-normal text-slate-400 lg:block">{{ $section["text"] }}</span>
+                        </span>
+                    </a>
+                @endforeach
+            </nav>
+        </aside>
 
-                    <div class="space-y-5 p-6 sm:p-8">
+        <div class="min-w-0 space-y-6">
+            <form
+                @if ($canUpdate)
+                    method="POST"
+                    action="{{ route("admin.profile.update") }}"
+                    x-data="{ submitting: false }"
+                    x-on:submit="submitting = true"
+                    enctype="multipart/form-data"
+                @endif
+                class="space-y-6"
+            >
+                @csrf
+                @method("PATCH")
+
+                <x-admin.card
+                    id="profile"
+                    title="Profile details"
+                    text="How you appear across the admin and on your posts."
+                    icon="user"
+                    class="scroll-mt-24"
+                >
+                    @unless ($canUpdate)
+                        <x-slot:extra>
+                            <span
+                                class="inline-flex items-center gap-1 rounded-full bg-slate-100 px-2 py-0.5 text-xs font-medium text-slate-600 dark:bg-slate-800 dark:text-slate-300"
+                            >
+                                <x-admin.icon name="lock" class="h-3 w-3" />
+                                Read-only
+                            </span>
+                        </x-slot>
+                    @endunless
+
+                    <div class="space-y-6">
                         <div
-                            class="flex justify-center"
+                            class="flex flex-col gap-4 sm:flex-row sm:items-center"
                             x-data="{
                                 preview:
                                     '{{ auth()->user()->avatar ? asset("storage/" . auth()->user()->avatar) : "" }}',
@@ -49,206 +145,193 @@
                                 },
                             }"
                         >
-                            <div class="group relative">
-                                <input type="file" name="avatar" accept="image/*" class="hidden" x-ref="file" x-on:change="handleFileChange" />
+                            <input type="file" name="avatar" accept="image/*" class="hidden" x-ref="file" x-on:change="handleFileChange" />
 
-                                <input type="hidden" name="remove_avatar" :value="removeAvatar ? 1 : 0" />
+                            <input type="hidden" name="remove_avatar" :value="removeAvatar ? 1 : 0" />
 
-                                <div
-                                    x-on:click="$refs.file.click()"
-                                    class="relative flex h-28 w-28 cursor-pointer items-center justify-center overflow-hidden rounded-full border-4 border-white bg-slate-100 shadow-md transition-all dark:border-slate-800 dark:bg-slate-700"
-                                >
-                                    <template x-if="preview">
-                                        <img :src="preview" class="h-full w-full object-cover" />
-                                    </template>
-
-                                    <template x-if="!preview">
-                                        <x-icons.account-circle class="h-12 w-12 text-slate-400" />
-                                    </template>
-
-                                    <div
-                                        class="absolute inset-0 flex flex-col items-center justify-center bg-black/40 opacity-0 transition-opacity duration-200 group-hover:opacity-100"
-                                    >
-                                        <x-icons.camera class="h-6 w-6 text-white" />
-                                        <span class="text-[10px] font-medium tracking-wider text-white uppercase">Update</span>
-                                    </div>
-                                </div>
-
+                            <button
+                                type="button"
+                                x-on:click="$refs.file.click()"
+                                aria-label="Change photo"
+                                class="group relative flex h-20 w-20 shrink-0 cursor-pointer items-center justify-center overflow-hidden rounded-full bg-slate-100 ring-4 ring-slate-50 transition focus:outline-none focus-visible:ring-blue-500/30 dark:bg-slate-800 dark:ring-slate-800/60"
+                            >
                                 <template x-if="preview">
-                                    <button
-                                        type="button"
-                                        x-on:click="clearPreview()"
-                                        class="absolute top-2 right-1 flex h-5 w-5 cursor-pointer items-center justify-center rounded-full bg-red-500 text-white shadow-lg ring-2 ring-white transition-transform hover:scale-110 hover:bg-red-600 focus:outline-none dark:ring-slate-900"
-                                        title="Remove image"
-                                    >
-                                        <x-icons.close class="h-4 w-4" />
-                                    </button>
+                                    <img :src="preview" alt="" class="h-full w-full object-cover" />
                                 </template>
+
+                                <template x-if="!preview">
+                                    <x-admin.icon name="user" class="h-8 w-8 text-slate-400" />
+                                </template>
+
+                                <span
+                                    class="absolute inset-0 flex items-center justify-center bg-slate-900/45 text-white opacity-0 transition-opacity group-hover:opacity-100"
+                                >
+                                    <x-admin.icon name="camera" class="h-5 w-5" />
+                                </span>
+                            </button>
+
+                            <div class="min-w-0">
+                                <p class="text-sm font-medium text-slate-900 dark:text-white">Profile photo</p>
+                                <p class="mt-0.5 text-xs text-slate-500 dark:text-slate-400">A square JPG, PNG or WebP works best.</p>
+                                <div class="mt-3 flex flex-wrap items-center gap-2">
+                                    <x-admin.button type="button" variant="secondary" size="sm" icon="upload" x-on:click="$refs.file.click()">
+                                        Upload photo
+                                    </x-admin.button>
+                                    <template x-if="preview">
+                                        <x-admin.button type="button" variant="ghost" size="sm" icon="trash" x-on:click="clearPreview()">
+                                            Remove
+                                        </x-admin.button>
+                                    </template>
+                                </div>
                             </div>
                         </div>
 
-                        <div>
-                            <x-admin.form-label for="name" label="Full Name" />
-
-                            <x-admin.form-input
-                                type="text"
+                        <div class="grid grid-cols-1 gap-5 border-t border-slate-100 pt-5 sm:grid-cols-2 dark:border-slate-800">
+                            <x-admin.form.input
                                 name="name"
-                                :value="old('name', auth()->user()->name)"
+                                label="Full name"
+                                :value="auth()->user()->name"
                                 placeholder="Your Name"
-                                :disabled="!$canUpdate"
-                                :error="$errors->first('name')"
+                                :disabled="! $canUpdate"
                             >
                                 <x-slot:leftIcon>
-                                    <x-icons.account-circle class="h-5 w-5" />
+                                    <x-admin.icon name="user" class="h-4 w-4" />
                                 </x-slot>
-                            </x-admin.form-input>
+                            </x-admin.form.input>
 
-                            <x-admin.form-error for="name" />
-                        </div>
-
-                        <div>
-                            <x-admin.form-label for="email" label="Email Address" />
-
-                            <x-admin.form-input
+                            <x-admin.form.input
                                 type="email"
                                 name="email"
+                                label="Email address"
                                 disabled
-                                :value="old('email', auth()->user()->email)"
-                                placeholder="admin@devsales.com"
+                                :value="auth()->user()->email"
+                                hint="Ask another administrator to change your email address."
                             >
                                 <x-slot:leftIcon>
-                                    <x-icons.mail class="h-5 w-5" />
+                                    <x-admin.icon name="mail" class="h-4 w-4" />
                                 </x-slot>
-                            </x-admin.form-input>
-
-                            <x-admin.form-error for="email" />
+                            </x-admin.form.input>
                         </div>
 
-                        <div class="grid grid-cols-1 gap-4 sm:grid-cols-2">
-                            <x-admin.form-input
-                                name="social_links[twitter]"
-                                :value="old('social_links.twitter', auth()->user()->social_links['twitter'] ?? '')"
-                                placeholder="Twitter URL"
-                            />
-
-                            <x-admin.form-input
-                                name="social_links[linkedin]"
-                                :value="old('social_links.linkedin', auth()->user()->social_links['linkedin'] ?? '')"
-                                placeholder="LinkedIn URL"
-                            />
-
-                            <x-admin.form-input
-                                name="social_links[github]"
-                                :value="old('social_links.github', auth()->user()->social_links['github'] ?? '')"
-                                placeholder="GitHub URL"
-                            />
-
-                            <x-admin.form-input
-                                name="social_links[instagram]"
-                                :value="old('social_links.instagram', auth()->user()->social_links['instagram'] ?? '')"
-                                placeholder="Instagram URL"
-                            />
-
-                            <x-admin.form-input
-                                name="social_links[facebook]"
-                                :value="old('social_links.facebook', auth()->user()->social_links['facebook'] ?? '')"
-                                placeholder="Facebook URL"
-                            />
-
-                            <x-admin.form-input
-                                name="social_links[youtube]"
-                                :value="old('social_links.youtube', auth()->user()->social_links['youtube'] ?? '')"
-                                placeholder="YouTube URL"
-                            />
-                        </div>
-
-                        <div>
-                            <x-admin.form-label for="bio" label="Bio" />
-
-                            <x-admin.form-textarea name="bio" rows="3" placeholder="Write something about yourself..." :disabled="!$canUpdate">
-                                {{ old("bio", auth()->user()->bio) }}
-                            </x-admin.form-textarea>
-
-                            <x-admin.form-error for="bio" />
-                        </div>
+                        <x-admin.form.textarea
+                            name="bio"
+                            label="Bio"
+                            rows="3"
+                            :value="auth()->user()->bio"
+                            placeholder="Write something about yourself..."
+                            :disabled="! $canUpdate"
+                        />
                     </div>
+                </x-admin.card>
 
-                    @if ($canUpdate)
-                        <div class="border-t border-slate-100 bg-slate-50/50 px-6 py-4 dark:border-slate-800 dark:bg-slate-900/50">
-                            <x-admin.button class="w-full">
-                                <span x-text="submitting ? 'Saving...' : 'Save Changes'">Save Changes</span>
-                            </x-admin.button>
-                        </div>
-                    @endif
-                </form>
-            </div>
-        </div>
+                <x-admin.card
+                    id="social"
+                    title="Social profiles"
+                    text="Full URLs, e.g. https://linkedin.com/in/you."
+                    icon="share"
+                    class="scroll-mt-24"
+                >
+                    <div class="grid grid-cols-1 gap-5 sm:grid-cols-2">
+                        @foreach (["twitter" => "Twitter", "linkedin" => "LinkedIn", "github" => "GitHub", "instagram" => "Instagram", "facebook" => "Facebook", "youtube" => "YouTube"] as $network => $networkLabel)
+                            <x-admin.form.input
+                                type="url"
+                                name="social_links[{{ $network }}]"
+                                :label="$networkLabel"
+                                :value="auth()->user()->social_links[$network] ?? ''"
+                                :placeholder="$networkLabel . ' URL'"
+                                :disabled="! $canUpdate"
+                            >
+                                <x-slot:leftIcon>
+                                    <x-admin.icon name="link" class="h-4 w-4" />
+                                </x-slot>
+                            </x-admin.form.input>
+                        @endforeach
+                    </div>
+                </x-admin.card>
 
-        @can("profile.update-password")
-            <div class="hidden border-t border-slate-200 sm:block dark:border-slate-800"></div>
+                @if ($canUpdate)
+                    <div class="flex justify-end">
+                        <x-admin.button icon="check">
+                            <span x-text="submitting ? 'Saving…' : 'Save profile'">Save profile</span>
+                        </x-admin.button>
+                    </div>
+                @endif
+            </form>
 
-            <div class="grid grid-cols-1 gap-6 lg:grid-cols-3">
-                <div class="px-2">
-                    <h3 class="text-lg font-bold tracking-tight text-slate-900 dark:text-white">Update Password</h3>
-                    <p class="mt-1 text-sm text-slate-500 dark:text-slate-400">
-                        Ensure your account is using a long, random password to stay secure.
-                    </p>
-                </div>
+            @can("profile.update-password")
+                <form
+                    method="POST"
+                    action="{{ route("admin.update-password") }}"
+                    x-data="{ submitting: false }"
+                    x-on:submit="submitting = true"
+                >
+                    @csrf
+                    @method("PUT")
 
-                <div class="lg:col-span-2">
-                    <form
-                        method="POST"
-                        action="{{ route("admin.update-password") }}"
-                        class="overflow-hidden rounded-xl border border-slate-200 bg-white shadow-sm dark:border-slate-800 dark:bg-slate-900"
-                        x-data="{ submitting: false }"
-                        x-on:submit="submitting = true"
+                    <x-admin.card
+                        id="password"
+                        title="Password"
+                        text="Use a long, random password you don't use anywhere else."
+                        icon="lock"
+                        class="scroll-mt-24"
                     >
-                        @csrf
-                        @method("PUT")
+                        <div class="space-y-5">
+                            <x-admin.form.input
+                                type="password"
+                                name="current_password"
+                                label="Current password"
+                                autocomplete="current-password"
+                                placeholder="••••••••"
+                                :error="$errors->updatePassword->first('current_password') ?: false"
+                            >
+                                <x-slot:leftIcon>
+                                    <x-admin.icon name="key" class="h-4 w-4" />
+                                </x-slot>
+                            </x-admin.form.input>
 
-                        <div class="space-y-5 p-6 sm:p-8">
-                            <div>
-                                <x-admin.form-label for="current_password" label="Current Password" />
-
-                                <x-admin.form-input
-                                    type="password"
-                                    name="current_password"
-                                    placeholder="••••••••"
-                                    toggle
-                                    :error="$errors->updatePassword->first('current_password')"
-                                />
-                                <x-admin.form-error for="current_password" />
-                            </div>
-
-                            <div>
-                                <x-admin.form-label for="password" label="New Password" />
-
-                                <x-admin.form-input
+                            <div class="grid grid-cols-1 gap-5 border-t border-slate-100 pt-5 sm:grid-cols-2 dark:border-slate-800">
+                                <x-admin.form.input
                                     type="password"
                                     name="password"
+                                    label="New password"
+                                    autocomplete="new-password"
                                     placeholder="••••••••"
-                                    toggle
-                                    :error="$errors->updatePassword->first('password')"
-                                />
-                                <x-admin.form-error for="password" />
+                                    :error="$errors->updatePassword->first('password') ?: false"
+                                >
+                                    <x-slot:leftIcon>
+                                        <x-admin.icon name="lock" class="h-4 w-4" />
+                                    </x-slot>
+                                </x-admin.form.input>
+
+                                <x-admin.form.input
+                                    type="password"
+                                    name="password_confirmation"
+                                    label="Confirm new password"
+                                    autocomplete="new-password"
+                                    placeholder="••••••••"
+                                    :error="$errors->updatePassword->first('password_confirmation') ?: false"
+                                >
+                                    <x-slot:leftIcon>
+                                        <x-admin.icon name="lock" class="h-4 w-4" />
+                                    </x-slot>
+                                </x-admin.form.input>
                             </div>
 
-                            <div>
-                                <x-admin.form-label for="password_confirmation" label="Confirm New Password" />
-
-                                <x-admin.form-input type="password" name="password_confirmation" placeholder="••••••••" toggle />
-                                <x-admin.form-error for="password_confirmation" />
+                            <div
+                                class="flex flex-col gap-3 border-t border-slate-100 pt-4 sm:flex-row sm:items-center sm:justify-between dark:border-slate-800"
+                            >
+                                <p class="flex items-center gap-1.5 text-xs text-slate-500 dark:text-slate-400">
+                                    <x-admin.icon name="shield-check" class="h-3.5 w-3.5" />
+                                    You need your current password to set a new one.
+                                </p>
+                                <x-admin.button icon="key">
+                                    <span x-text="submitting ? 'Updating…' : 'Update password'">Update password</span>
+                                </x-admin.button>
                             </div>
                         </div>
-
-                        <div class="border-t border-slate-100 bg-slate-50/50 px-6 py-4 dark:border-slate-800 dark:bg-slate-900/50">
-                            <x-admin.button class="w-full">
-                                <span x-text="submitting ? 'Updating...' : 'Update Password'">Update Password</span>
-                            </x-admin.button>
-                        </div>
-                    </form>
-                </div>
-            </div>
-        @endcan
+                    </x-admin.card>
+                </form>
+            @endcan
+        </div>
     </div>
 </x-admin>

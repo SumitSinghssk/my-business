@@ -144,6 +144,20 @@
     --color-outline: #6a6d7e;
     --color-outline-variant: #c3c6d8;
 
+    /* --- Brand neutrals (used directly in the website views) ------------------- */
+    --color-ink: #0a0a0a; /* near-black: buttons, dark sections, headings */
+    --color-ink-soft: #121212; /* hover on dark panels */
+    --color-ink-line: #1c1c1c; /* borders/grid lines on dark */
+    --color-ink-line-strong: #2a2a2a; /* stronger borders on dark */
+    --color-line: #e1e5ea; /* default light border */
+    --color-canvas: #f7f8fa; /* light hover / subtle panel */
+    --color-dark-text: #d1d5db; /* body text on dark */
+    --color-dark-muted: #a0a0a0; /* secondary text on dark */
+    --color-dark-subtle: #8e91a0; /* labels on dark (4.5:1 on ink) */
+    --color-accent-on-dark: #4d8bff; /* brand blue readable on ink */
+    --color-success: #10b981;
+    --color-on-success: #047857;
+
     --animate-marquee: marquee 40s linear infinite;
 
     @keyframes marquee {
@@ -196,7 +210,7 @@
     & h2 {
         margin-top: var(--spacing-space-2xl);
         padding-top: var(--spacing-space-lg);
-        border-top: 1px solid #e1e5ea;
+        border-top: 1px solid var(--color-line);
         color: var(--color-on-surface);
         font-family: var(--font-headline-md);
         font-size: var(--text-headline-md);
@@ -289,7 +303,7 @@
     & pre {
         overflow-x: auto;
         padding: var(--spacing-space-lg);
-        background: #0a0a0a;
+        background: var(--color-ink);
         color: #d1d5db;
         font-family: var(--font-mono);
         font-size: var(--text-body-sm);
@@ -328,11 +342,11 @@
     & img {
         width: 100%;
         height: auto;
-        border: 1px solid #e1e5ea;
+        border: 1px solid var(--color-line);
     }
 
     & hr {
-        border-color: #e1e5ea;
+        border-color: var(--color-line);
     }
 }
 
@@ -371,6 +385,35 @@
     }
 }
 
+/* Section h2 size and weight (colour is set separately: text-ink or text-white). */
+@utility section-title {
+    @apply font-headline-lg text-2xl font-semibold tracking-[-0.035em] md:text-3xl lg:text-4xl;
+}
+
+/* Website form fields (contact form). Border colour is added per state: border-line or border-error. */
+@utility form-label {
+    @apply font-label-sm text-label-sm text-on-surface-variant mb-1.5 block tracking-wider uppercase;
+}
+
+@utility form-control {
+    @apply font-body-md text-body-md text-on-surface placeholder:text-outline focus:border-primary-container focus:ring-primary-container w-full border bg-white px-4 py-3 transition-colors focus:ring-1 focus:outline-none;
+}
+
+/* Card heading (h3) inside white cards. */
+@utility card-title {
+    @apply font-headline-sm text-headline-sm text-on-surface font-semibold;
+}
+
+/* Small uppercase label above a value, e.g. "EMAIL", "PHONE". */
+@utility meta-label {
+    @apply font-label-sm text-label-sm text-outline block tracking-widest uppercase;
+}
+
+/* Square tinted tile holding an icon. */
+@utility icon-tile {
+    @apply bg-primary-container/10 text-primary-container flex h-10 w-10 shrink-0 items-center justify-center rounded-md;
+}
+
 @utility gap-section {
     gap: 1rem;
 
@@ -403,7 +446,7 @@
 }
 
 .blog-tab {
-    border-color: #e1e5ea;
+    border-color: var(--color-line);
     background-color: #fff;
     color: var(--color-on-surface-variant);
 }
@@ -413,7 +456,7 @@
 }
 
 .blog-tab.is-active {
-    border-color: #0a0a0a;
-    background-color: #0a0a0a;
+    border-color: var(--color-ink);
+    background-color: var(--color-ink);
     color: #fff;
 }

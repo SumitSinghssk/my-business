@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Helpers\Settings;
 use App\Http\Requests\Website\ContactRequest;
 use App\Models\Enquiry;
 use Illuminate\Support\Str;
@@ -10,8 +11,18 @@ class ContactController extends Controller
 {
     public function index()
     {
+        $emails = Settings::emails();
+        $phones = Settings::phones();
+        $socialLinks = Settings::socialLinks();
+
         return view('website.contact.index', [
             'services' => ContactRequest::serviceOptions(),
+            'emails' => $emails,
+            'phones' => $phones,
+            'socialLinks' => $socialLinks,
+            'offices' => Settings::offices(),
+            // The right-hand column only appears when there is something to put in it.
+            'hasSidebar' => $emails || $phones || $socialLinks,
         ]);
     }
 
@@ -30,16 +41,23 @@ class ContactController extends Controller
             'data' => array_filter($data, fn ($value) => filled($value)),
         ]);
 
-        notify(
+        // The enquiry is already saved: a failed notification must not show the visitor an error.
+        rescue(fn () => notify(
             'Enquiry',
             'New Contact Enquiry',
             "{$enquiry->data['name']} ({$enquiry->data['email']}) sent a message via the contact form",
             ['enquiry_id' => $enquiry->id],
             route('admin.enquiries.index')
-        );
+        ));
 
-        return to_route('contact')
-            ->with('contact_success', "Thanks, {$enquiry->data['name']}. Your message is with our team and we'll reply within one business day.");
+        $message = "Thanks, {$enquiry->data['name']}. Your message is with our team and we'll reply within one business day.";
+
+        // The form submits with fetch (no page reload); a plain POST (JavaScript off) still redirects back.
+        if ($request->expectsJson()) {
+            return response()->json(['message' => $message]);
+        }
+
+        return redirect()->to(route('contact').'#contact-form')->with('contact_success', $message);
     }
 
     /**

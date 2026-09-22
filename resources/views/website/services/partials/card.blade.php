@@ -2,9 +2,9 @@
 @php($url = route("services.show", $service->slug))
 
 <article
-    class="group hover:border-primary-container relative flex flex-col overflow-hidden rounded-lg border border-[#E1E5EA] bg-white shadow-sm transition-all duration-200 hover:-translate-y-0.5 hover:shadow-md"
+    class="group hover:border-primary-container border-line relative flex flex-col overflow-hidden rounded-lg border bg-white shadow-sm transition-all duration-200 hover:-translate-y-0.5 hover:shadow-md"
 >
-    <div class="relative aspect-16/10 overflow-hidden border-b border-[#E1E5EA] bg-[#0A0A0A]">
+    <div class="border-line bg-ink relative aspect-16/10 overflow-hidden border-b">
         @if ($service->featured_image_url)
             <img
                 src="{{ $service->featured_image_url }}"
@@ -33,7 +33,7 @@
         </div>
 
         <div
-            class="font-label-sm text-on-surface mt-3 flex items-center justify-between border-t border-[#E1E5EA] pt-3 text-[11px] font-semibold tracking-wider uppercase"
+            class="font-label-sm text-on-surface border-line mt-3 flex items-center justify-between border-t pt-3 text-[11px] font-semibold tracking-wider uppercase"
         >
             <span class="group-hover:text-primary-container transition-colors">View Service</span>
             <span class="transition-transform group-hover:translate-x-1" aria-hidden="true">→</span>

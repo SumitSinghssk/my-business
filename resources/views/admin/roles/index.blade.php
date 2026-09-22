@@ -2,40 +2,87 @@
     $roles = $roles ?? collect();
     $permissions = $permissions ?? collect();
     $groupedPermissions = $groupedPermissions ?? collect();
+
+    $groupIcons = [
+        'Activity logs' => 'history',
+        'Blog categories' => 'folder-tree',
+        'Blogs' => 'newspaper',
+        'Dashboard' => 'dashboard',
+        'Enquiries' => 'inbox',
+        'Log settings' => 'scroll',
+        'Notifications' => 'bell',
+        'Pages' => 'file-text',
+        'Permissions' => 'key',
+        'Profile' => 'user-circle',
+        'Projects' => 'briefcase',
+        'Roles' => 'shield',
+        'Seo' => 'globe',
+        'Services' => 'layers',
+        'Settings' => 'settings',
+        'Users' => 'users',
+    ];
+
+    $actionIcons = [
+        'create' => 'plus',
+        'edit' => 'pencil',
+        'update' => 'pencil',
+        'delete' => 'trash',
+        'clear' => 'trash',
+        'view' => 'eye',
+        'toogle-status' => 'toggle',
+        'download-db' => 'download',
+        'clear-cache' => 'refresh',
+        'mark-all-as-read' => 'check-circle',
+        'update-password' => 'lock',
+    ];
+
+    // "admin.settings.basic-details.update" → "Basic details · update" (the group is shown above it).
+    $permissionLabel = function (string $name) {
+        $parts = explode('.', $name);
+        $rest = $parts[0] === 'admin' && isset($parts[1]) ? array_slice($parts, 2) : array_slice($parts, 1);
+
+        return $rest ? ucfirst(str_replace(['toogle', '-'], ['toggle', ' '], implode(' · ', $rest))) : $name;
+    };
+
+    $permissionIcon = fn (string $name) => $actionIcons[\Illuminate\Support\Str::afterLast($name, '.')] ?? 'key';
 @endphp
 
 <x-admin :breadcrumb="[['label' => 'Roles & Permissions', 'url' => '#']]">
-    <div class="space-y-6">
-        <x-admin.card title="Roles & Permissions" text="Manage roles, permissions, and assign permissions to roles">
-            <div x-data="rolesPermissionsTabs()" class="space-y-6">
-                <div class="sticky top-24 z-20 border-b border-slate-200 bg-white/80 backdrop-blur-md dark:border-slate-800 dark:bg-slate-900/80">
-                    <nav class="scrollbar-hide -mb-px flex items-center gap-2 overflow-x-auto whitespace-nowrap" aria-label="Tabs">
-                        <template x-for="tab in tabs" :key="tab.id">
-                            <button
-                                type="button"
-                                x-on:click="setTab(tab.id)"
-                                :class="activeTab === tab.id
-                                    ? 'text-blue-600 dark:text-blue-400'
-                                    : 'border-transparent text-slate-500 hover:text-slate-700 dark:text-slate-400 dark:hover:text-slate-200'"
-                                class="group relative flex cursor-pointer items-center px-4 py-4 text-sm font-bold transition-all duration-200 focus:outline-none"
-                            >
-                                <span x-text="tab.label" class="tracking-tight"></span>
-                                <div
-                                    x-show="activeTab === tab.id"
-                                    x-transition:enter="transition duration-300 ease-out"
-                                    x-transition:enter-start="scale-x-0 opacity-0"
-                                    x-transition:enter-end="scale-x-100 opacity-100"
-                                    class="absolute inset-x-0 bottom-0 h-0.5 bg-blue-600 shadow-[0_-2px_10px_rgba(37,99,235,0.4)] dark:bg-blue-500"
-                                ></div>
-                            </button>
-                        </template>
-                    </nav>
-                </div>
+    <x-admin.page-header
+        title="Roles & permissions"
+        description="Group permissions into roles, then assign roles to your team."
+        icon="shield-check"
+    />
 
-                @include('admin.roles.partials.roles')
-                @include('admin.roles.partials.permissions')
-            </div>
-        </x-admin.card>
+    <div x-data="rolesPermissionsTabs()" class="space-y-6">
+        <nav
+            class="inline-flex max-w-full items-center gap-1 overflow-x-auto rounded-xl border border-slate-200/80 bg-white p-1 shadow-xs dark:border-slate-800 dark:bg-slate-900"
+            aria-label="Tabs"
+        >
+            <template x-for="tab in tabs" :key="tab.id">
+                <button
+                    type="button"
+                    x-on:click="setTab(tab.id)"
+                    :aria-current="activeTab === tab.id ? 'page' : null"
+                    :class="activeTab === tab.id
+                        ? 'bg-slate-900 text-white shadow-xs dark:bg-white dark:text-slate-900'
+                        : 'text-slate-600 hover:bg-slate-100 hover:text-slate-900 dark:text-slate-300 dark:hover:bg-slate-800 dark:hover:text-white'"
+                    class="inline-flex cursor-pointer items-center gap-2 rounded-lg px-3.5 py-1.5 text-sm font-medium whitespace-nowrap transition focus:outline-none focus-visible:ring-3 focus-visible:ring-blue-500/30"
+                >
+                    <span x-show="tab.id === 'roles'"><x-admin.icon name="shield" class="h-4 w-4" /></span>
+                    <span x-show="tab.id === 'permissions'"><x-admin.icon name="key" class="h-4 w-4" /></span>
+                    <span x-text="tab.label"></span>
+                    <span
+                        class="tabular rounded-full px-1.5 text-xs"
+                        :class="activeTab === tab.id ? 'bg-white/15 dark:bg-slate-900/10' : 'bg-slate-100 text-slate-500 dark:bg-slate-800 dark:text-slate-400'"
+                        x-text="tab.count"
+                    ></span>
+                </button>
+            </template>
+        </nav>
+
+        @include('admin.roles.partials.roles')
+        @include('admin.roles.partials.permissions')
     </div>
 
     <script>
@@ -43,10 +90,10 @@
             return {
                 tabs: [
                     @can('admin.roles.view')
-                    { id: 'roles', label: 'Roles' },
+                    { id: 'roles', label: 'Roles', count: {{ $roles->count() }} },
                     @endcan
                     @can('admin.permissions.view')
-                    { id: 'permissions', label: 'Permissions' },
+                    { id: 'permissions', label: 'Permissions', count: {{ $permissions->count() }} },
                     @endcan
                 ],
 

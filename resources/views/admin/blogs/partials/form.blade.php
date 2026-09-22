@@ -2,118 +2,100 @@
     x-data="blogForm({
                 preview:
                     '{{ isset($blog) && $blog->featured_image ? asset('storage/' . $blog->featured_image) : '' }}',
-                title: `{{ old('title', $blog->title ?? '') }}`,
-                slug: `{{ old('slug', $blog->slug ?? '') }}`,
+                title: @js(old('title', $blog->title ?? '')),
+                slug: @js(old('slug', $blog->slug ?? '')),
             })"
-    class="space-y-8"
 >
-    <div class="grid grid-cols-1 gap-5 sm:grid-cols-2">
-        <div>
-            <x-admin.form-label for="title" label="Post Title" required />
-            <x-admin.form-input
-                type="text"
-                name="title"
-                id="title"
-                x-model="title"
-                :value="old('title', $blog->title ?? '')"
-                placeholder="e.g. Getting Started with Laravel"
-                :error="$errors->first('title')"
-            >
-                <x-slot:leftIcon>
-                    <x-icons.pages class="h-5 w-5" />
-                </x-slot>
-            </x-admin.form-input>
-            <x-admin.form-error for="title" />
-        </div>
+    <x-admin.form-grid>
+        <x-admin.card title="Post details" text="The headline, its web address and a short summary." icon="file-text">
+            <div class="space-y-5">
+                <x-admin.form.input
+                    name="title"
+                    label="Post title"
+                    required
+                    x-model="title"
+                    :value="$blog->title ?? ''"
+                    placeholder="e.g. Getting Started with Laravel"
+                />
 
-        <div>
-            <x-admin.form-label for="slug" label="Slug" required />
-            <x-admin.form-input
-                type="text"
-                name="slug"
-                id="slug"
-                x-model="slug"
-                x-on:input="onSlugInput"
-                :value="old('slug', $blog->slug ?? '')"
-                placeholder="e.g. getting-started-with-laravel"
-                :error="$errors->first('slug')"
-            >
-                <x-slot:leftIcon>
-                    <x-icons.url class="h-5 w-5" />
-                </x-slot>
-            </x-admin.form-input>
-            <x-admin.form-error for="slug" />
-        </div>
-    </div>
+                <x-admin.form.input
+                    name="slug"
+                    label="Slug"
+                    required
+                    x-model="slug"
+                    x-on:input="onSlugInput"
+                    :value="$blog->slug ?? ''"
+                    placeholder="e.g. getting-started-with-laravel"
+                    hint="Filled in from the title. Letters, numbers and dashes only."
+                >
+                    <x-slot:leftIcon>
+                        <x-admin.icon name="link" class="h-4 w-4" />
+                    </x-slot>
+                </x-admin.form.input>
 
-    <div class="grid grid-cols-1 gap-5 lg:grid-cols-3">
-        <div>
-            @php
-                use App\Enums\CommonStatusEnum;
-                $status = old('status', $blog->status ?? CommonStatusEnum::ACTIVE->value);
-            @endphp
+                <x-admin.form.input
+                    name="excerpt"
+                    label="Excerpt"
+                    :value="$blog->excerpt ?? ''"
+                    placeholder="Short summary shown in listings…"
+                    hint="One or two sentences shown on blog cards and in search results."
+                />
+            </div>
+        </x-admin.card>
 
-            <x-admin.form-label for="status" label="Status" required />
-            <x-admin.form-select name="status" id="status">
-                @foreach (CommonStatusEnum::cases() as $statusOption)
-                    <option value="{{ $statusOption->value }}" @selected($status === $statusOption->value)>
-                        {{ $statusOption->label() }}
-                    </option>
-                @endforeach
-            </x-admin.form-select>
-            <x-admin.form-error for="status" />
-        </div>
-
-        <div>
-            <x-admin.form-label for="published_at" label="Published At" />
-            <x-admin.form-input
-                type="datetime-local"
-                name="published_at"
-                id="published_at"
-                :value="old('published_at', isset($blog) && $blog->published_at ? $blog->published_at->format('Y-m-d\TH:i') : '')"
-                :error="$errors->first('published_at')"
+        <x-admin.card title="Content" text="The body of the post." icon="newspaper">
+            <x-admin.form.textarea
+                name="content"
+                label="Content"
+                required
+                rows="12"
+                editor
+                :value="$blog->content ?? ''"
+                placeholder="Write your blog post content here..."
             />
-            <x-admin.form-error for="published_at" />
-        </div>
+        </x-admin.card>
 
-        <div>
-            <x-admin.form-label for="categories" label="Categories" />
-            <x-admin.multi-select-categories :categories="$categories" :selectedCategoryIds="old('category_ids', $selectedCategoryIds ?? [])" />
-            <x-admin.form-error for="category_ids" />
-        </div>
-    </div>
+        <x-slot:aside>
+            <x-admin.card title="Publishing" icon="calendar">
+                <div class="space-y-5">
+                    <x-admin.form.select
+                        name="status"
+                        label="Status"
+                        required
+                        :options="\App\Enums\CommonStatusEnum::dotOptions()"
+                        :value="isset($blog) ? $blog->status->value : \App\Enums\CommonStatusEnum::ACTIVE->value"
+                    />
 
-    <div>
-        <x-admin.form-label for="excerpt" label="Excerpt" />
-        <x-admin.form-input
-            type="text"
-            name="excerpt"
-            id="excerpt"
-            :value="old('excerpt', $blog->excerpt ?? '')"
-            placeholder="Short summary shown in listings..."
-            :error="$errors->first('excerpt')"
-        />
-        <x-admin.form-error for="excerpt" />
-    </div>
+                    <x-admin.form.date-picker
+                        name="published_at"
+                        label="Publish date"
+                        with-time
+                        :value="isset($blog) && $blog->published_at ? $blog->published_at->format('Y-m-d\TH:i') : ''"
+                        hint="Leave empty to publish now. A future date schedules the post."
+                    />
+                </div>
+            </x-admin.card>
 
-    <div class="space-y-4">
-        <div>
-            <x-admin.image-upload
-                name="featured_image"
-                preset="blog"
-                label="Featured image"
-                :current="isset($blog) && $blog->featured_image ? asset('storage/' . $blog->featured_image) : null"
-            />
-        </div>
-    </div>
+            <x-admin.card title="Organisation" icon="tag">
+                <x-admin.form.multi-select
+                    name="category_ids"
+                    label="Categories"
+                    placeholder="Select categories…"
+                    :options="\App\Support\FormField::tree($categories)"
+                    :value="$selectedCategoryIds ?? []"
+                />
+            </x-admin.card>
 
-    <div class="mb-4">
-        <x-admin.form-label for="content" label="Content" required />
-        <x-admin.form-textarea name="content" id="content" rows="12" editor placeholder="Write your blog post content here...">
-            {{ old('content', $blog->content ?? '') }}
-        </x-admin.form-textarea>
-        <x-admin.form-error for="content" />
-    </div>
+            <x-admin.card title="Featured image" icon="image">
+                <x-admin.image-upload
+                    name="featured_image"
+                    preset="blog"
+                    label="Featured image"
+                    :current="isset($blog) && $blog->featured_image ? asset('storage/' . $blog->featured_image) : null"
+                />
+            </x-admin.card>
+        </x-slot>
+    </x-admin.form-grid>
 </div>
 
 @push('scripts')

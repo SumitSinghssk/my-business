@@ -31,7 +31,7 @@ class Admin extends Component
                     [
                         'title' => 'Enquiries',
                         'route' => route('admin.enquiries.index'),
-                        'icon' => 'mail',
+                        'icon' => 'inbox',
                         'active' => 'admin.enquiries.*',
                         'permission' => 'admin.enquiries.view',
                         'badge' => $unreadEnquiries ?: null,
@@ -44,42 +44,42 @@ class Admin extends Component
                     [
                         'title' => 'Blogs',
                         'route' => route('admin.blogs.index'),
-                        'icon' => 'blog',
+                        'icon' => 'newspaper',
                         'active' => 'admin.blogs.*',
                         'permission' => 'admin.blogs.view',
                     ],
                     [
                         'title' => 'Categories',
                         'route' => route('admin.blog-categories.index'),
-                        'icon' => 'category',
+                        'icon' => 'tag',
                         'active' => 'admin.blog-categories.*',
                         'permission' => 'admin.blog-categories.view',
                     ],
                     [
                         'title' => 'Services',
                         'route' => route('admin.services.index'),
-                        'icon' => 'desktop',
+                        'icon' => 'layers',
                         'active' => 'admin.services.*',
                         'permission' => 'admin.services.view',
                     ],
                     [
                         'title' => 'Work',
                         'route' => route('admin.projects.index'),
-                        'icon' => 'gallery',
+                        'icon' => 'briefcase',
                         'active' => 'admin.projects.*',
                         'permission' => 'admin.projects.view',
                     ],
                     [
                         'title' => 'Pages',
                         'route' => route('admin.pages.index'),
-                        'icon' => 'pages',
+                        'icon' => 'file-text',
                         'active' => 'admin.pages.*',
                         'permission' => 'admin.pages.view',
                     ],
                     [
                         'title' => 'SEO',
                         'route' => route('admin.seo.index'),
-                        'icon' => 'seo',
+                        'icon' => 'globe',
                         'active' => 'admin.seo.*',
                         'permission' => 'admin.seo.view',
                     ],
@@ -98,7 +98,7 @@ class Admin extends Component
                     [
                         'title' => 'Roles & Permissions',
                         'route' => route('admin.roles.index'),
-                        'icon' => 'verified-user',
+                        'icon' => 'shield-check',
                         'active' => 'admin.roles.*',
                         'permission' => 'admin.roles.view',
                     ],
@@ -112,7 +112,7 @@ class Admin extends Component
                     [
                         'title' => 'Settings',
                         'route' => route('admin.settings.index'),
-                        'icon' => 'setting',
+                        'icon' => 'settings',
                         'active' => 'admin.settings.*',
                         'permission' => 'admin.settings.view',
                     ],
@@ -121,10 +121,31 @@ class Admin extends Component
         ];
     }
 
+    /** "New …" shortcuts for the top bar's Create menu and the command palette (permission-filtered). */
+    protected function quickCreate(): array
+    {
+        $user = auth()->user();
+
+        return collect([
+            ['title' => 'Blog post', 'icon' => 'newspaper', 'route' => 'admin.blogs.create', 'permission' => 'admin.blogs.create'],
+            ['title' => 'Page', 'icon' => 'file-text', 'route' => 'admin.pages.create', 'permission' => 'admin.pages.create'],
+            ['title' => 'Service', 'icon' => 'layers', 'route' => 'admin.services.create', 'permission' => 'admin.services.create'],
+            ['title' => 'Work project', 'icon' => 'briefcase', 'route' => 'admin.projects.create', 'permission' => 'admin.projects.create'],
+            ['title' => 'Blog category', 'icon' => 'tag', 'route' => 'admin.blog-categories.create', 'permission' => 'admin.blog-categories.create'],
+            ['title' => 'SEO record', 'icon' => 'globe', 'route' => 'admin.seo.create', 'permission' => 'admin.seo.create'],
+            ['title' => 'User', 'icon' => 'users', 'route' => 'admin.users.create', 'permission' => 'admin.users.create'],
+        ])
+            ->filter(fn ($item) => $user?->can($item['permission']))
+            ->map(fn ($item) => [...$item, 'url' => route($item['route'])])
+            ->values()
+            ->all();
+    }
+
     public function render(): View|Closure|string
     {
         return view('layouts.admin', [
             'links' => $this->links,
+            'quickCreate' => $this->quickCreate(),
         ]);
     }
 }

@@ -3,37 +3,20 @@
     $shareUrl = urlencode(route("blog.show", $blog->slug));
     $shareTitle = urlencode($blog->title);
     $toc = $content["toc"];
-    $authorName = $blog->author?->name ?? \App\Helpers\Settings::appName();
+    $authorName = $blog->author?->name ?? $appName;
     $wasUpdated = $blog->updated_at && $blog->updated_at->gt($blog->published_date->copy()->addDay());
-
-    $articleSchema = array_filter([
-        "@context" => "https://schema.org",
-        "@type" => "BlogPosting",
-        "mainEntityOfPage" => route("blog.show", $blog->slug),
-        "headline" => \Illuminate\Support\Str::limit($blog->title, 110, ""),
-        "description" => $blog->excerpt,
-        "image" => $blog->featured_image_url,
-        "datePublished" => $blog->published_date->toAtomString(),
-        "dateModified" => $blog->updated_at?->toAtomString(),
-        "wordCount" => str_word_count(strip_tags((string) $blog->content)),
-        "articleSection" => $primaryCategory?->name,
-        "author" => ["@type" => "Person", "name" => $authorName],
-        "publisher" => ["@id" => url("/") . "#organization"],
-    ]);
 
     $shareButton = "bg-surface-container-low font-label-sm text-label-sm text-on-surface hover:bg-surface-container inline-flex h-9 flex-1 items-center justify-center px-3 tracking-wider uppercase transition-colors";
 @endphp
 
 <x-website
-    :title="$blog->seo?->meta_title ?: (mb_strlen($blog->title) > 55 ? $blog->title : $blog->title . ' | ' . \App\Helpers\Settings::appName())"
+    :title="$blog->seo?->meta_title ?: (mb_strlen($blog->title) > 55 ? $blog->title : $blog->title . ' | ' . $appName)"
     :description="$blog->seo?->meta_description ?: $blog->excerpt"
     :image="$blog->featured_image_url"
     og-type="article"
 >
     @push("heads")
-        <script type="application/ld+json">
-            {!! json_encode($articleSchema, JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE | JSON_HEX_TAG) !!}
-        </script>
+        <x-website.json-ld :data="\App\Support\StructuredData::blogPosting($blog, $authorName)" />
         <meta property="article:published_time" content="{{ $blog->published_date->toAtomString() }}" />
         @foreach ($blog->categories as $category)
             <meta property="article:tag" content="{{ $category->name }}" />
@@ -118,14 +101,14 @@
 
                 {{-- Contents for small screens (the sidebar version is desktop-only) --}}
                 @if (count($toc))
-                    <details class="mt-space-lg bg-surface-container-lowest group rounded-lg border border-[#E1E5EA] lg:hidden">
+                    <details class="mt-space-lg bg-surface-container-lowest group border-line rounded-lg border lg:hidden">
                         <summary
                             class="font-label-sm text-label-sm text-on-surface flex cursor-pointer list-none items-center justify-between px-4 py-3 font-semibold tracking-widest uppercase"
                         >
                             Table of Contents
                             <span class="text-outline transition-transform group-open:rotate-180" aria-hidden="true">▾</span>
                         </summary>
-                        <div class="border-t border-[#E1E5EA] p-2">
+                        <div class="border-line border-t p-2">
                             @include("website.blog.partials.toc")
                         </div>
                     </details>
@@ -136,75 +119,7 @@
                 </article>
             </div>
 
-            {{-- Right: author, contents and sharing, pinned while the article scrolls --}}
-            <aside class="lg:col-span-4">
-                <div class="space-y-space-md lg:sticky lg:top-24 lg:max-h-[calc(100vh-7rem)] lg:overflow-y-auto">
-                    <div class="bg-surface-container-lowest rounded-lg p-4 shadow-sm">
-                        <span class="font-label-sm text-label-sm text-outline tracking-widest uppercase">Written by</span>
-                        <div class="mt-space-md flex items-center gap-3">
-                            <x-website.avatar :user="$blog->author" size="h-12 w-12" text="font-headline-sm text-headline-sm" class="rounded-full" />
-                            <div class="min-w-0">
-                                <p class="font-headline-sm text-headline-sm text-on-surface truncate font-semibold">{{ $authorName }}</p>
-                                @if ($authorPostCount)
-                                    <p class="font-label-sm text-label-sm text-secondary tracking-wider uppercase">
-                                        {{ $authorPostCount }} {{ Str::plural("Article", $authorPostCount) }}
-                                    </p>
-                                @endif
-                            </div>
-                        </div>
-                        @if ($blog->author?->bio)
-                            <p class="mt-space-md font-body-sm text-body-sm text-on-surface-variant leading-relaxed">{{ $blog->author->bio }}</p>
-                        @endif
-                    </div>
-
-                    @if (count($toc))
-                        <div class="bg-surface-container-lowest hidden rounded-lg p-4 shadow-sm lg:block">
-                            <div class="mb-space-sm flex items-center justify-between">
-                                <span class="font-label-sm text-label-sm text-outline tracking-widest uppercase">Table of Contents</span>
-                                <span class="font-label-sm text-label-sm text-primary">
-                                    {{ count($toc) }} {{ Str::plural("Section", count($toc)) }}
-                                </span>
-                            </div>
-                            @include("website.blog.partials.toc")
-                        </div>
-                    @endif
-
-                    <div x-data="{ copied: false }" class="bg-surface-container-lowest rounded-lg p-4 shadow-sm">
-                        <span class="font-label-sm text-label-sm text-outline tracking-widest uppercase">Share</span>
-                        <div class="mt-space-sm flex gap-2">
-                            <button
-                                type="button"
-                                x-on:click="
-                                    navigator.clipboard?.writeText(window.location.href)
-                                    copied = true
-                                    setTimeout(() => (copied = false), 2000)
-                                "
-                                class="{{ $shareButton }}"
-                            >
-                                <span x-text="copied ? 'Copied ✓' : 'Copy Link'">Copy Link</span>
-                            </button>
-                            <a
-                                href="https://twitter.com/intent/tweet?url={{ $shareUrl }}&text={{ $shareTitle }}"
-                                target="_blank"
-                                rel="noopener noreferrer"
-                                class="{{ $shareButton }}"
-                                aria-label="Share on X"
-                            >
-                                X
-                            </a>
-                            <a
-                                href="https://www.linkedin.com/sharing/share-offsite/?url={{ $shareUrl }}"
-                                target="_blank"
-                                rel="noopener noreferrer"
-                                class="{{ $shareButton }}"
-                                aria-label="Share on LinkedIn"
-                            >
-                                LinkedIn
-                            </a>
-                        </div>
-                    </div>
-                </div>
-            </aside>
+            @include("website.blog.partials.sidebar")
         </div>
     </section>
 

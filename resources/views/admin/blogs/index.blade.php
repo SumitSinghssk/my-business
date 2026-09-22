@@ -5,6 +5,9 @@
     $canDelete = auth()
         ->user()
         ->can('admin.blogs.delete');
+    $canToggle = auth()
+        ->user()
+        ->can('admin.blogs.toogle-status');
     $canManage = $canEdit || $canDelete;
 
     $headers = ['Post', 'Categories', 'Status', 'Published', 'Author'];
@@ -16,122 +19,113 @@
 <x-admin :breadcrumb="[
     ['label' => 'Blogs', 'url' => route('admin.blogs.index')]
 ]">
-    <x-admin.card title="Blog Posts" text="Manage your blog posts">
+    <x-admin.page-header
+        title="Blog posts"
+        description="Write, schedule and organise the articles on your blog."
+        icon="newspaper"
+        :count="$blogs->total()"
+    >
         @can('admin.blogs.create')
-            <x-slot name="actions">
-                <a href="{{ route('admin.blogs.create') }}">
-                    <x-admin.button variant="primary">
-                        <span class="flex items-center gap-1.5">
-                            <span class="text-lg">+</span>
-                            Create Post
-                        </span>
-                    </x-admin.button>
-                </a>
+            <x-slot:actions>
+                <x-admin.button :href="route('admin.blogs.create')" icon="plus">New post</x-admin.button>
             </x-slot>
         @endcan
+    </x-admin.page-header>
 
-        @include('admin.blogs.partials.filters')
+    <x-admin.table :headers="$headers" :data="$blogs" emptyMessage="No blog posts found" emptyIcon="newspaper">
+        <x-slot:toolbar>
+            @include('admin.blogs.partials.filters')
+        </x-slot>
 
-        <x-admin.table :headers="$headers" :data="$blogs" emptyMessage="No blog posts found.">
-            @foreach ($blogs as $blog)
-                <tr class="group transition-colors hover:bg-slate-50/50 dark:hover:bg-slate-800/30">
-                    <td class="px-6 py-4">
-                        <div class="flex items-center gap-3">
-                            @if ($blog->featured_image)
-                                <img
-                                    src="{{ asset('storage/' . $blog->featured_image) }}"
-                                    alt="{{ $blog->title }}"
-                                    class="h-10 w-10 shrink-0 rounded-lg object-cover ring-1 ring-slate-200 dark:ring-slate-700"
-                                />
-                            @else
-                                <div class="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-slate-100 dark:bg-slate-800">
-                                    <x-icons.pages class="h-5 w-5 text-slate-400" />
-                                </div>
-                            @endif
+        @foreach ($blogs as $blog)
+            <tr>
+                <td class="max-w-md">
+                    <div class="flex items-center gap-3">
+                        <x-admin.thumb :src="$blog->featured_image ? asset('storage/' . $blog->featured_image) : null" class="h-10 w-14" />
 
-                            <div class="flex flex-col">
-                                <span class="text-sm font-bold text-slate-900 dark:text-white">
-                                    {{ $blog->title }}
-                                </span>
-                                <span class="text-xs font-medium text-slate-400 dark:text-slate-500">
-                                    {{ $blog->slug }}
-                                </span>
-                            </div>
-                        </div>
-                    </td>
-
-                    <td class="px-6 py-4">
-                        <div class="flex flex-wrap gap-1">
-                            @forelse ($blog->categories as $category)
-                                <span
-                                    class="inline-flex items-center rounded-md bg-slate-100 px-2 py-0.5 text-xs font-medium text-slate-600 dark:bg-slate-700 dark:text-slate-300"
+                        <div class="min-w-0">
+                            @if ($canEdit)
+                                <a
+                                    href="{{ route('admin.blogs.edit', $blog) }}"
+                                    class="line-clamp-1 font-medium text-slate-900 hover:text-blue-600 dark:text-white dark:hover:text-blue-400"
                                 >
-                                    {{ $category->name }}
-                                </span>
-                            @empty
-                                <span class="text-xs text-slate-400 italic">—</span>
-                            @endforelse
+                                    {{ $blog->title }}
+                                </a>
+                            @else
+                                <span class="line-clamp-1 font-medium text-slate-900 dark:text-white">{{ $blog->title }}</span>
+                            @endif
+                            <span class="mt-0.5 flex items-center gap-1 text-xs text-slate-400">
+                                <x-admin.icon name="link" class="h-3 w-3" />
+                                <span class="truncate">/{{ $blog->slug }}</span>
+                            </span>
                         </div>
-                    </td>
+                    </div>
+                </td>
 
-                    <td class="px-6 py-4">
-                        @can('admin.blogs.toogle-status')
-                            <div
-                                x-data="{ status: '{{ $blog->status }}', loading: false }"
-                                x-on:click="
-                                    if (loading) return
-                                    loading = true
-
-                                    axios
-                                        .patch('{{ route('admin.blogs.toggle-status', $blog->id) }}')
-                                        .then((res) => {
-                                            status = res.data.status
-                                        })
-                                        .catch((err) => console.error(err))
-                                        .finally(() => (loading = false))
-                                "
-                                :class="loading ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer inline'"
+                <td>
+                    <div class="flex flex-wrap gap-1">
+                        @forelse ($blog->categories->take(2) as $category)
+                            <span
+                                class="inline-flex items-center gap-1 rounded-md border border-slate-200 bg-white px-1.5 py-0.5 text-xs font-medium whitespace-nowrap text-slate-600 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-300"
                             >
-                                <template x-if="status === 'active'">
-                                    <x-admin.status-badge status="active" />
-                                </template>
+                                <x-admin.icon name="tag" class="h-3 w-3 text-slate-400" />
+                                {{ $category->name }}
+                            </span>
+                        @empty
+                            <span class="text-xs text-slate-400">—</span>
+                        @endforelse
 
-                                <template x-if="status === 'inactive'">
-                                    <x-admin.status-badge status="inactive" />
-                                </template>
-                            </div>
-                        @else
-                            <x-admin.status-badge :status="$blog->status" />
-                        @endcan
-                    </td>
+                        @if ($blog->categories->count() > 2)
+                            <span
+                                class="inline-flex items-center rounded-md bg-slate-100 px-1.5 py-0.5 text-xs font-medium text-slate-500 dark:bg-slate-800 dark:text-slate-400"
+                                title="{{ $blog->categories->skip(2)->pluck('name')->implode(', ') }}"
+                            >
+                                +{{ $blog->categories->count() - 2 }}
+                            </span>
+                        @endif
+                    </div>
+                </td>
 
-                    <td class="px-6 py-4">
-                        <span class="text-xs text-slate-500 dark:text-slate-400">
-                            {{ $blog->published_at ? $blog->published_at->format('d M Y') : '—' }}
+                <td>
+                    <x-admin.status-toggle :url="route('admin.blogs.toggle-status', $blog->id)" :status="$blog->status" :can="$canToggle" />
+                </td>
+
+                <td class="whitespace-nowrap">
+                    @if ($blog->published_at)
+                        <span class="block text-slate-700 dark:text-slate-200">{{ $blog->published_at->format('d M Y') }}</span>
+                        <span class="text-xs text-slate-400">
+                            {{ $blog->published_at->isFuture() ? 'Scheduled' : $blog->published_at->diffForHumans() }}
                         </span>
-                    </td>
-
-                    <td class="px-6 py-4">
-                        <span class="text-xs text-slate-600 dark:text-slate-300">
-                            {{ $blog->author?->name ?? '—' }}
-                        </span>
-                    </td>
-
-                    @if ($canManage)
-                        <td class="px-6 py-4">
-                            <x-admin.row-actions
-                                size="sm"
-                                :viewRoute="$blog->slug ? route('blog.show', $blog->slug) : null"
-                                :editRoute="route('admin.blogs.edit', $blog)"
-                                :canEdit="$canEdit"
-                                :deleteRoute="route('admin.blogs.destroy', $blog)"
-                                :deleteId="$blog->id"
-                                :canDelete="$canDelete"
-                            />
-                        </td>
+                    @else
+                        <span class="text-slate-400">—</span>
                     @endif
-                </tr>
-            @endforeach
-        </x-admin.table>
-    </x-admin.card>
+                </td>
+
+                <td class="whitespace-nowrap">
+                    @if ($blog->author)
+                        <span class="flex items-center gap-2">
+                            <img src="{{ $blog->author->avatar_url }}" alt="" class="h-6 w-6 rounded-full object-cover" />
+                            <span class="text-slate-700 dark:text-slate-200">{{ $blog->author->name }}</span>
+                        </span>
+                    @else
+                        <span class="text-slate-400">—</span>
+                    @endif
+                </td>
+
+                @if ($canManage)
+                    <td>
+                        <x-admin.row-actions
+                            size="sm"
+                            :viewRoute="$blog->slug ? route('blog.show', $blog->slug) : null"
+                            :editRoute="route('admin.blogs.edit', $blog)"
+                            :canEdit="$canEdit"
+                            :deleteRoute="route('admin.blogs.destroy', $blog)"
+                            :deleteId="$blog->id"
+                            :canDelete="$canDelete"
+                        />
+                    </td>
+                @endif
+            </tr>
+        @endforeach
+    </x-admin.table>
 </x-admin>

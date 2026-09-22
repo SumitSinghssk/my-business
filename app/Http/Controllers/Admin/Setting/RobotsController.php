@@ -13,7 +13,7 @@ class RobotsController
         Gate::authorize('admin.settings.robots.update');
 
         $request->validate([
-            'content' => 'nullable|string',
+            'content' => 'nullable|string|max:65535',
         ]);
 
         try {
@@ -23,7 +23,7 @@ class RobotsController
         }
 
         if ($written === false) {
-            return back()->with('error', 'Failed to update robots.txt. Please check that the storage/app directory is writable.');
+            return back()->with('error', 'Failed to update robots.txt. Please check that the public directory is writable.');
         }
 
         return back()->with('success', 'Robots.txt updated successfully');

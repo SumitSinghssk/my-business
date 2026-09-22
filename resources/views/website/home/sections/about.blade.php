@@ -1,22 +1,14 @@
 @php
-    $stats = [
-        ['value' => '99.98%', 'label' => 'Historical SLA Production Uptime', 'highlight' => false],
-        ['value' => '$420M+', 'label' => 'Processed Client Volume (2024)', 'highlight' => true],
-        ['value' => '14', 'label' => 'Global Engineering & Design Awards', 'highlight' => false],
-    ];
+    $stats = \App\Support\WebsiteContent::homeStats();
 @endphp
 
-<section class="section-y w-full border-b border-[#E1E5EA]">
+<section class="section-y border-line w-full border-b">
     <div class="site-container">
-        <div class="section-head mx-auto lg:max-w-4xl lg:text-center">
-            <h2 class="font-headline-lg text-2xl font-semibold tracking-[-0.035em] text-[#0A0A0A] md:text-3xl lg:text-4xl">
-                We combine strategy, design and engineering to turn ideas into reliable digital products.
-            </h2>
-        </div>
+        <x-website.section-heading title="We combine strategy, design and engineering to turn ideas into reliable digital products." />
 
         <div class="gap-section grid grid-cols-1 items-stretch lg:grid-cols-12">
             <div
-                class="bg-surface-container-low relative aspect-4/3 w-full overflow-hidden rounded-lg border border-[#E1E5EA] sm:aspect-video lg:col-span-7 lg:aspect-auto lg:min-h-105"
+                class="bg-surface-container-low border-line relative aspect-4/3 w-full overflow-hidden rounded-lg border sm:aspect-video lg:col-span-7 lg:aspect-auto lg:min-h-105"
             >
                 <img
                     src="{{ asset('images/website/about/team-workspace.webp') }}"
@@ -37,17 +29,17 @@
                     </p>
                     <a
                         href="{{ route('about') }}"
-                        class="gap-space-xs font-label-md text-label-md hover:text-primary inline-flex items-center border-b border-[#0A0A0A] pb-1 font-semibold tracking-wider text-[#0A0A0A] uppercase transition-colors"
+                        class="gap-space-xs font-label-md text-label-md hover:text-primary border-ink text-ink inline-flex items-center border-b pb-1 font-semibold tracking-wider uppercase transition-colors"
                     >
                         Learn More About Us →
                     </a>
                 </div>
 
-                <div class="border-t border-[#E1E5EA]">
+                <div class="border-line border-t">
                     @foreach ($stats as $stat)
-                        <div class="grid grid-cols-[8rem_1fr] items-center gap-4 border-b border-[#E1E5EA] py-3">
+                        <div class="border-line grid grid-cols-[8rem_1fr] items-center gap-4 border-b py-3">
                             <span
-                                class="{{ $stat['highlight'] ? 'text-primary' : 'text-[#0A0A0A]' }} font-display text-3xl leading-none font-semibold lg:text-[34px]"
+                                class="{{ $stat['highlight'] ? 'text-primary' : 'text-ink' }} font-display text-3xl leading-none font-semibold lg:text-[34px]"
                             >
                                 {{ $stat['value'] }}
                             </span>

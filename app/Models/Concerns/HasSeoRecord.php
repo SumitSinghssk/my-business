@@ -29,6 +29,9 @@ trait HasSeoRecord
                 Seo::where('slug', static::seoPathFor($old))
                     ->whereNotExists(fn ($q) => $q->from('seos as taken')->where('taken.slug', static::seoPathFor($model->slug)))
                     ->update(['slug' => static::seoPathFor($model->slug)]);
+
+                // A query-builder update fires no Seo events, so clear the cached records here.
+                Seo::flushCache();
             }
         });
     }

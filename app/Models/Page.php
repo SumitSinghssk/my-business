@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Casts\SafeHtml;
 use App\Enums\CommonStatusEnum;
 use App\Models\Concerns\HasSeoRecord;
 use App\Support\ContentToc;
@@ -26,6 +27,7 @@ class Page extends Model
     ];
 
     protected $casts = [
+        'content' => SafeHtml::class,
         'published_at' => 'datetime',
         'deleted_data' => 'array',
         'status' => CommonStatusEnum::class,

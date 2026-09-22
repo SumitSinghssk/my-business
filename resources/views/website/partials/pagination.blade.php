@@ -2,8 +2,8 @@
 @if ($paginator->hasPages())
     @php
         $base = 'font-label-sm text-label-sm border px-3 py-1.5 tracking-wider uppercase transition-colors';
-        $idle = 'text-on-surface hover:bg-surface-container border-[#E1E5EA] bg-white';
-        $disabled = 'bg-surface text-outline cursor-not-allowed border-[#E1E5EA]';
+        $idle = 'text-on-surface hover:bg-surface-container border-line bg-white';
+        $disabled = 'bg-surface text-outline border-line cursor-not-allowed';
     @endphp
 
     <nav class="gap-space-md flex flex-col items-center justify-between sm:flex-row" aria-label="Pagination">
@@ -27,7 +27,7 @@
                 @if (is_array($element))
                     @foreach ($element as $page => $url)
                         @if ($page == $paginator->currentPage())
-                            <span class="{{ $base }} border-[#0A0A0A] bg-[#0A0A0A] text-white" aria-current="page">
+                            <span class="{{ $base }} border-ink bg-ink text-white" aria-current="page">
                                 {{ str_pad($page, 2, '0', STR_PAD_LEFT) }}
                             </span>
                         @else

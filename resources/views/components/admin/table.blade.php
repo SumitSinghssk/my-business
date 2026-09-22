@@ -1,44 +1,97 @@
+{{--
+    Data table in a bordered panel: optional `toolbar` slot (filters) on top, rows in the slot,
+    an empty state when there is no data, and pagination underneath.
+    
+    headers: ['Post', 'Status', …] or [['label' => 'Actions', 'class' => 'text-right'], …]
+    
+    <x-admin.table :headers="$headers" :data="$blogs" empty-message="No posts yet" empty-icon="newspaper">
+    <x-slot:toolbar>@include('admin.blogs.partials.filters')</x-slot>
+    @foreach ($blogs as $blog) <tr>…</tr> @endforeach
+    </x-admin.table>
+--}}
+
 @props([
     'headers' => [],
     'data',
     'emptyMessage' => 'No records found.',
+    'emptyText' => null,
+    'emptyIcon' => 'inbox',
     'wrapperClass' => '',
 ])
 
-@if (count($data) > 0)
-    <div class="admin-table overflow-hidden rounded-xl border border-slate-200/80 bg-white shadow-xs dark:border-slate-800 dark:bg-slate-900">
-        <div class="{{ $wrapperClass }} overflow-x-auto">
+@php
+    $filtered = collect(request()->except(['page', 'per_page']))
+        ->filter(fn ($v) => filled($v))
+        ->isNotEmpty();
+    $emptyText ??= $filtered ? 'Nothing matches these filters. Try changing or clearing them.' : 'Records you add will show up here.';
+@endphp
+
+<div
+    {{ $attributes->class(['admin-table rounded-xl border border-slate-200/80 bg-white shadow-xs dark:border-slate-800 dark:bg-slate-900', 'overflow-hidden' => ! isset($toolbar)]) }}
+>
+    @isset($toolbar)
+        <div class="border-b border-slate-100 px-3 py-2.5 sm:px-4 dark:border-slate-800">
+            {{ $toolbar }}
+        </div>
+    @endisset
+
+    @if (count($data) > 0)
+        <div class="{{ $wrapperClass }} overflow-x-auto rounded-b-xl">
             <table class="min-w-full border-separate border-spacing-0">
-                <thead class="bg-slate-50 dark:bg-slate-800/40">
+                <thead>
                     <tr>
                         @foreach ($headers as $header)
+                            @php
+                                $label = is_array($header) ? $header['label'] ?? '' : $header;
+                                $class = is_array($header) ? $header['class'] ?? '' : '';
+                            @endphp
+
                             <th
-                                class="border-b border-slate-200/80 px-4 py-2.5 text-left text-[11px] font-semibold tracking-wide text-slate-500 uppercase dark:border-slate-800 dark:text-slate-400"
+                                scope="col"
+                                @class([
+                                    'border-b border-slate-100 bg-slate-50/70 px-4 py-2.5 text-left text-xs font-medium whitespace-nowrap text-slate-500 dark:border-slate-800 dark:bg-slate-900/60 dark:text-slate-400',
+                                    'text-right' => $label === 'Actions',
+                                    $class,
+                                ])
                             >
-                                {{ $header }}
+                                {{ $label }}
                             </th>
                         @endforeach
                     </tr>
                 </thead>
-                <tbody class="divide-y divide-slate-100 dark:divide-slate-800">
+                <tbody class="divide-y divide-slate-100 dark:divide-slate-800/80">
                     {{ $slot }}
                 </tbody>
             </table>
         </div>
+
         @if (is_object($data) && method_exists($data, 'links'))
-            <div class="border-t border-slate-100 px-4 py-2.5 dark:border-slate-800 dark:bg-slate-800/40">
+            <div class="border-t border-slate-100 px-4 py-3 dark:border-slate-800">
                 {{ $data->links('vendor.pagination.tailwind') }}
             </div>
         @endif
-    </div>
-@else
-    <div
-        class="flex flex-col items-center justify-center rounded-xl border border-dashed border-slate-300 bg-white px-4 py-12 dark:border-slate-800 dark:bg-slate-900"
-    >
-        <div class="mb-3 flex h-12 w-12 items-center justify-center rounded-full bg-blue-50 text-blue-500 dark:bg-slate-800">
-            <x-icons.search class="h-5 w-5" />
+    @else
+        <div class="flex flex-col items-center justify-center px-4 py-16 text-center">
+            <div class="relative mb-4">
+                <div
+                    class="flex h-12 w-12 items-center justify-center rounded-xl border border-slate-200 bg-white text-slate-400 shadow-xs dark:border-slate-700 dark:bg-slate-800"
+                >
+                    <x-admin.icon :name="$filtered ? 'search' : $emptyIcon" class="h-5 w-5" />
+                </div>
+            </div>
+            <h3 class="text-sm font-semibold text-slate-900 dark:text-white">{{ $emptyMessage }}</h3>
+            <p class="mt-1 max-w-sm text-sm text-slate-500 dark:text-slate-400">{{ $emptyText }}</p>
+            @if ($filtered)
+                <a
+                    href="{{ url()->current() }}"
+                    class="mt-4 inline-flex items-center gap-1.5 rounded-lg border border-slate-200 bg-white px-3 py-1.5 text-xs font-semibold text-slate-700 shadow-xs transition hover:bg-slate-50 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-200 dark:hover:bg-slate-700"
+                >
+                    <x-admin.icon name="x" class="h-3.5 w-3.5" />
+                    Clear filters
+                </a>
+            @elseif (isset($emptyAction))
+                <div class="mt-4">{{ $emptyAction }}</div>
+            @endif
         </div>
-        <h3 class="text-sm font-bold text-slate-900 dark:text-white">{{ $emptyMessage }}</h3>
-        <p class="mt-1 text-xs text-slate-500">Try adjusting your filters or adding a new record.</p>
-    </div>
-@endif
+    @endif
+</div>

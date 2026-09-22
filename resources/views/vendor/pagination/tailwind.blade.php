@@ -2,47 +2,44 @@
     $hasPages = $paginator->hasPages();
     $hasTotals = method_exists($paginator, 'total') && method_exists($paginator, 'firstItem');
 
-    $btnBase = 'inline-flex h-9 min-w-9 items-center justify-center rounded-md border px-2.5 text-xs font-semibold transition-all';
-    $btnIdle = 'border-slate-200 bg-white text-slate-600 hover:border-slate-300 hover:bg-slate-50 hover:text-slate-900 active:scale-90 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-400 dark:hover:bg-slate-700 dark:hover:text-white';
-    $btnDisabled = 'cursor-not-allowed border-slate-100 bg-slate-50 text-slate-300 dark:border-slate-800 dark:bg-slate-900 dark:text-slate-700';
-    $btnActive = 'border-slate-900 bg-slate-900 text-white dark:border-white dark:bg-white dark:text-slate-900';
+    $btnBase = 'tabular inline-flex h-8 min-w-8 items-center justify-center rounded-lg px-2 text-xs font-semibold transition-colors';
+    $btnIdle = 'text-slate-600 hover:bg-slate-100 hover:text-slate-900 dark:text-slate-400 dark:hover:bg-slate-800 dark:hover:text-white';
+    $btnActive = 'bg-slate-100 text-slate-900 ring-1 ring-slate-200 ring-inset dark:bg-slate-800 dark:text-white dark:ring-slate-700';
+    $navBase = 'inline-flex h-8 items-center gap-1 rounded-lg border px-2.5 text-xs font-semibold shadow-xs transition-colors';
+    $navIdle = 'border-slate-200 bg-white text-slate-700 hover:bg-slate-50 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-200 dark:hover:bg-slate-700';
+    $navDisabled = 'cursor-not-allowed border-slate-100 bg-white text-slate-300 shadow-none dark:border-slate-800 dark:bg-slate-900 dark:text-slate-600';
 @endphp
 
 <nav role="navigation" aria-label="{{ __('Pagination Navigation') }}" class="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-    {{-- Results summary (always visible) --}}
     <p class="text-xs text-slate-500 dark:text-slate-400">
         @if ($hasTotals && $paginator->total() > 0)
-            {!! __('Showing') !!}
-            <span class="font-semibold text-slate-700 dark:text-slate-200">{{ $paginator->firstItem() }}</span>
-            {!! __('to') !!}
-            <span class="font-semibold text-slate-700 dark:text-slate-200">{{ $paginator->lastItem() }}</span>
-            {!! __('of') !!}
-            <span class="font-semibold text-slate-700 dark:text-slate-200">{{ $paginator->total() }}</span>
-            {!! __('results') !!}
+            Showing
+            <span class="tabular font-semibold text-slate-700 dark:text-slate-200">{{ $paginator->firstItem() }}–{{ $paginator->lastItem() }}</span>
+            of
+            <span class="tabular font-semibold text-slate-700 dark:text-slate-200">{{ number_format($paginator->total()) }}</span>
         @endif
     </p>
 
     @if ($hasPages)
         <div class="flex items-center gap-1">
-            {{-- Previous --}}
-
             @if ($paginator->onFirstPage())
-                <span aria-disabled="true" aria-label="{{ __('pagination.previous') }}" class="{{ $btnBase }} {{ $btnDisabled }}">
-                    <x-icons.chevron-left-mini class="h-4 w-4" />
+                <span aria-disabled="true" aria-label="{{ __('pagination.previous') }}" class="{{ $navBase }} {{ $navDisabled }}">
+                    <x-admin.icon name="arrow-left" class="h-3.5 w-3.5" />
+                    <span class="hidden sm:inline">Previous</span>
                 </span>
             @else
                 <a
                     href="{{ $paginator->previousPageUrl() }}"
                     rel="prev"
                     aria-label="{{ __('pagination.previous') }}"
-                    class="{{ $btnBase }} {{ $btnIdle }}"
+                    class="{{ $navBase }} {{ $navIdle }}"
                 >
-                    <x-icons.chevron-left-mini class="h-4 w-4" />
+                    <x-admin.icon name="arrow-left" class="h-3.5 w-3.5" />
+                    <span class="hidden sm:inline">Previous</span>
                 </a>
             @endif
 
-            {{-- Numbered pages (desktop) --}}
-            <div class="hidden items-center gap-1 sm:flex">
+            <div class="mx-1 hidden items-center gap-0.5 sm:flex">
                 @foreach ($elements as $element)
                     @if (is_string($element))
                         <span aria-disabled="true" class="px-1.5 text-xs font-medium text-slate-400 dark:text-slate-600">{{ $element }}</span>
@@ -66,27 +63,26 @@
                 @endforeach
             </div>
 
-            {{-- Compact indicator (mobile) --}}
             @if ($hasTotals)
-                <span class="px-2 text-xs font-medium text-slate-500 sm:hidden dark:text-slate-400">
+                <span class="tabular px-2 text-xs font-medium text-slate-500 sm:hidden dark:text-slate-400">
                     {{ $paginator->currentPage() }} / {{ $paginator->lastPage() }}
                 </span>
             @endif
-
-            {{-- Next --}}
 
             @if ($paginator->hasMorePages())
                 <a
                     href="{{ $paginator->nextPageUrl() }}"
                     rel="next"
                     aria-label="{{ __('pagination.next') }}"
-                    class="{{ $btnBase }} {{ $btnIdle }}"
+                    class="{{ $navBase }} {{ $navIdle }}"
                 >
-                    <x-icons.chevron-right-mini class="h-4 w-4" />
+                    <span class="hidden sm:inline">Next</span>
+                    <x-admin.icon name="arrow-right" class="h-3.5 w-3.5" />
                 </a>
             @else
-                <span aria-disabled="true" aria-label="{{ __('pagination.next') }}" class="{{ $btnBase }} {{ $btnDisabled }}">
-                    <x-icons.chevron-right-mini class="h-4 w-4" />
+                <span aria-disabled="true" aria-label="{{ __('pagination.next') }}" class="{{ $navBase }} {{ $navDisabled }}">
+                    <span class="hidden sm:inline">Next</span>
+                    <x-admin.icon name="arrow-right" class="h-3.5 w-3.5" />
                 </span>
             @endif
         </div>

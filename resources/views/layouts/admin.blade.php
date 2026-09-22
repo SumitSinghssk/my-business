@@ -1,16 +1,35 @@
-@props(['breadcrumb' => []])
+@props(['breadcrumb' => [], 'title' => null])
+
+@php
+    // Tab title: explicit title, else the breadcrumb trail ("Edit Post · Blogs"), else Dashboard / Login.
+    $pageTitle =
+        $title ?:
+        (collect($breadcrumb)
+            ->pluck('label')
+            ->filter()
+            ->reverse()
+            ->implode(' · ') ?:
+        (request()->is('admin/login')
+            ? 'Login'
+            : 'Dashboard'));
+@endphp
 
 <x-app>
     @push('heads')
         <meta name="robots" content="noindex, nofollow" />
+        <title>{{ $pageTitle }} · {{ \App\Helpers\Settings::appName() }} Admin</title>
         <script>
             (() => {
+                const root = document.documentElement;
                 const theme = localStorage.getItem('admin-theme');
                 const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
                 const isDark = theme ? theme === 'dark' : prefersDark;
 
-                document.documentElement.classList.toggle('dark', isDark);
-                document.documentElement.style.colorScheme = isDark ? 'dark' : 'light';
+                root.classList.toggle('dark', isDark);
+                root.style.colorScheme = isDark ? 'dark' : 'light';
+
+                // Folded desktop sidebar, applied before paint so the page doesn't jump.
+                if (localStorage.getItem('admin-sidebar') === 'collapsed') root.dataset.sidebar = 'collapsed';
             })();
         </script>
     @endpush
@@ -18,40 +37,90 @@
     @push('head-scripts')
         <link rel="preconnect" href="https://fonts.googleapis.com" />
         <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-        <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
+        <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet" />
         @vite(['resources/css/app.css', 'resources/js/admin.js'])
     @endpush
 
     @if (request()->is('admin/login'))
-        <div class="admin-theme min-h-screen bg-slate-50 dark:bg-slate-950">
+        <div class="admin-theme min-h-screen bg-white text-slate-700 dark:bg-slate-950 dark:text-slate-300">
             {{ $slot }}
+            {{-- Dropdown menus of admin form controls open here (inside .admin-theme, above everything). --}}
+            <div id="admin-portal" class="relative z-[120]"></div>
         </div>
     @else
         <div
-            x-data="{ sidebarOpen: false }"
-            class="admin-theme relative min-h-screen bg-slate-50 text-slate-700 dark:bg-slate-950 dark:text-slate-300"
+            x-data="{
+                sidebarOpen: false,
+                desktop: window.matchMedia('(min-width: 1024px)').matches,
+                collapsed: document.documentElement.dataset.sidebar === 'collapsed',
+                toggleCollapsed() {
+                    this.collapsed = ! this.collapsed
+                    document.documentElement.dataset.sidebar = this.collapsed
+                        ? 'collapsed'
+                        : ''
+                    try {
+                        localStorage.setItem(
+                            'admin-sidebar',
+                            this.collapsed ? 'collapsed' : 'expanded',
+                        )
+                    } catch (e) {}
+                },
+            }"
+            x-on:resize.window="
+                desktop = window.matchMedia('(min-width: 1024px)').matches
+                if (desktop) sidebarOpen = false
+            "
+            x-on:keydown.escape.window="sidebarOpen = false"
+            x-effect="
+                document.documentElement.classList.toggle(
+                    'overflow-hidden',
+                    sidebarOpen && ! desktop,
+                )
+            "
+            class="admin-theme relative min-h-screen bg-slate-100/80 text-slate-700 dark:bg-black dark:text-slate-300"
         >
             <div
                 x-show="sidebarOpen"
                 x-cloak
                 x-transition.opacity.duration.200ms
                 x-on:click="sidebarOpen = false"
-                class="fixed inset-0 z-40 bg-slate-900/40 backdrop-blur-[2px] lg:hidden"
+                class="fixed inset-0 z-40 bg-slate-950/40 backdrop-blur-[2px] lg:hidden"
             ></div>
 
             @include('layouts.partials.admin.sidebar')
 
-            <div class="flex min-h-screen flex-col lg:pl-60">
-                @include('layouts.partials.admin.header', ['breadcrumb' => $breadcrumb ?? []])
+            {{-- Content canvas: an inset, rounded panel beside the sidebar on desktop. --}}
+            <div class="lg:collapsed:pl-17 flex min-h-screen flex-col transition-[padding] duration-200 lg:pl-62">
+                <div
+                    class="flex min-h-screen flex-1 flex-col bg-slate-50 lg:my-2 lg:mr-2 lg:min-h-[calc(100vh-1rem)] lg:rounded-2xl lg:border lg:border-slate-200/80 lg:shadow-xs dark:bg-slate-950 dark:lg:border-slate-800/80"
+                >
+                    @include('layouts.partials.admin.header', ['breadcrumb' => $breadcrumb ?? []])
 
-                <main class="mx-auto w-full max-w-[1600px] flex-1 p-3 sm:p-5 lg:p-6">
-                    {{ $slot }}
-                </main>
+                    <main class="mx-auto w-full max-w-[1480px] flex-1 px-4 py-5 sm:px-6 lg:px-8 lg:py-7">
+                        {{ $slot }}
+                    </main>
 
-                <footer class="px-3 pb-4 text-center text-xs text-slate-400 sm:px-5 lg:px-6 dark:text-slate-500">
-                    © {{ date('Y') }} {{ \App\Helpers\Settings::appName() }} · Admin
-                </footer>
+                    <footer
+                        class="flex flex-wrap items-center justify-between gap-2 border-t border-slate-200/70 px-4 py-3 text-xs text-slate-400 sm:px-6 lg:px-8 dark:border-slate-800/70 dark:text-slate-500"
+                    >
+                        <span>© {{ date('Y') }} {{ \App\Helpers\Settings::appName() }}</span>
+                        <span class="hidden items-center gap-1.5 sm:inline-flex">
+                            Press
+                            <kbd
+                                class="rounded border border-slate-200 bg-white px-1 font-sans text-[10px] font-semibold text-slate-500 dark:border-slate-700 dark:bg-slate-900"
+                            >
+                                Ctrl K
+                            </kbd>
+                            to jump anywhere
+                        </span>
+                    </footer>
+                </div>
             </div>
+
+            @include('layouts.partials.admin.command-palette')
+
+            {{-- Dropdown menus of admin form controls open here (inside .admin-theme, above everything). --}}
+            <div id="admin-portal" class="relative z-[120]"></div>
         </div>
 
         @push('scripts')
@@ -60,6 +129,15 @@
                 .tox-promotion,
                 .tox-statusbar__branding {
                     display: none;
+                }
+
+                .admin-theme .tox-tinymce {
+                    border-radius: 10px;
+                    border-color: var(--color-slate-200);
+                }
+
+                .dark .admin-theme .tox-tinymce {
+                    border-color: var(--color-slate-700);
                 }
             </style>
             <script defer>

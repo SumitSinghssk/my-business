@@ -3,9 +3,9 @@
 @php($heading = $heading ?? "h3")
 
 <article
-    class="group hover:border-primary-container relative flex flex-col overflow-hidden rounded-lg border border-[#E1E5EA] bg-white shadow-sm transition-all duration-200 hover:-translate-y-0.5 hover:shadow-md"
+    class="group hover:border-primary-container border-line relative flex flex-col overflow-hidden rounded-lg border bg-white shadow-sm transition-all duration-200 hover:-translate-y-0.5 hover:shadow-md"
 >
-    <div class="bg-surface-container-low relative aspect-16/10 overflow-hidden border-b border-[#E1E5EA]">
+    <div class="bg-surface-container-low border-line relative aspect-16/10 overflow-hidden border-b">
         @if ($project->featured_image_url)
             <img
                 src="{{ $project->featured_image_url }}"
@@ -41,7 +41,7 @@
                 <div class="flex flex-wrap gap-1.5 pt-1">
                     @foreach (array_slice($project->tags, 0, 4) as $tag)
                         <span
-                            class="font-label-sm rounded border border-[#E1E5EA] bg-white px-2 py-0.5 text-[10px] tracking-wider text-[#434655] uppercase"
+                            class="font-label-sm border-line text-on-surface-variant rounded border bg-white px-2 py-0.5 text-[10px] tracking-wider uppercase"
                         >
                             {{ $tag }}
                         </span>
@@ -51,7 +51,7 @@
         </div>
 
         <div
-            class="font-label-sm text-on-surface mt-3 flex items-center justify-between border-t border-[#E1E5EA] pt-3 text-[11px] font-semibold tracking-wider uppercase"
+            class="font-label-sm text-on-surface border-line mt-3 flex items-center justify-between border-t pt-3 text-[11px] font-semibold tracking-wider uppercase"
         >
             <span class="group-hover:text-primary-container transition-colors">View Case Study</span>
             <span class="transition-transform group-hover:translate-x-1" aria-hidden="true">→</span>

@@ -97,9 +97,14 @@ class BlogController extends Controller
 
         $blog->load(['seo', 'categories']);
 
+        // Categories the post already has stay pickable even if they were deactivated since.
+        $selected = $blog->categories->pluck('id');
+
         $categories = BlogCategory::whereNull('parent_id')
-            ->where('status', 'active')
-            ->with(['children' => fn ($q) => $q->where('status', 'active')->orderBy('name')])
+            ->where(fn ($q) => $q->where('status', 'active')
+                ->orWhereIn('id', $selected)
+                ->orWhereHas('children', fn ($c) => $c->whereIn('id', $selected)))
+            ->with(['children' => fn ($q) => $q->where(fn ($w) => $w->where('status', 'active')->orWhereIn('id', $selected))->orderBy('name')])
             ->orderBy('name')
             ->get();
 

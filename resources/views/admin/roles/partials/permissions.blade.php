@@ -1,84 +1,77 @@
 @can('admin.permissions.view')
-    <div x-show="activeTab === 'permissions'" x-cloak class="space-y-8">
+    <div x-show="activeTab === 'permissions'" x-cloak class="grid grid-cols-1 items-start gap-6 xl:grid-cols-[minmax(0,1fr)_20rem]">
         @can('admin.permissions.create')
-            <div class="rounded-xl border border-slate-200 bg-slate-50 p-5 dark:border-slate-700 dark:bg-slate-800/50">
-                <h3 class="mb-4 text-sm font-semibold text-slate-700 dark:text-slate-300">Create New Permission</h3>
-                <form method="POST" action="{{ route('admin.permissions.store') }}" class="flex flex-col gap-3 sm:flex-row sm:items-end">
+            <x-admin.card
+                title="New permission"
+                text="Add a permission, then grant it to roles."
+                icon="plus"
+                class="xl:sticky xl:top-20 xl:order-last"
+            >
+                <form method="POST" action="{{ route('admin.permissions.store') }}" class="space-y-4">
                     @csrf
-                    <div class="flex-1">
-                        <x-admin.form-label for="permission_name" label="Permission Name" />
+                    <x-admin.form.input id="permission_name" name="name" label="Permission name" placeholder="e.g. admin.posts.create">
+                        <x-slot:leftIcon>
+                            <x-admin.icon name="key" class="h-4 w-4" />
+                        </x-slot>
+                    </x-admin.form.input>
 
-                        <x-admin.form-input
-                            type="text"
-                            id="permission_name"
-                            name="name"
-                            :value="old('name')"
-                            placeholder="e.g. admin.posts.create"
-                            :error="$errors->first('name')"
-                        >
-                            <x-slot:leftIcon>
-                                <x-icons.key class="h-5 w-5" />
-                            </x-slot>
-                        </x-admin.form-input>
+                    <p class="flex items-start gap-1.5 text-xs leading-relaxed text-slate-500 dark:text-slate-400">
+                        <x-admin.icon name="info" class="mt-0.5 h-3.5 w-3.5 shrink-0" />
+                        <span>
+                            Use dot-notation:
+                            <code class="rounded bg-slate-100 px-1 py-px font-mono text-[11px] dark:bg-slate-800">module.resource.action</code>
+                            — e.g.
+                            <code class="rounded bg-slate-100 px-1 py-px font-mono text-[11px] dark:bg-slate-800">admin.posts.delete</code>
+                        </span>
+                    </p>
 
-                        <x-admin.form-error for="name" />
-                    </div>
-                    <x-admin.button type="submit" variant="primary">Create Permission</x-admin.button>
+                    <x-admin.button type="submit" variant="primary" icon="plus" full>Create permission</x-admin.button>
                 </form>
-                <p class="mt-2 text-xs text-slate-400 dark:text-slate-500">
-                    Use dot-notation:
-                    <code class="rounded bg-slate-200 px-1 py-0.5 dark:bg-slate-700">module.resource.action</code>
-                    — e.g.
-                    <code class="rounded bg-slate-200 px-1 py-0.5 dark:bg-slate-700">admin.posts.delete</code>
-                </p>
-            </div>
+            </x-admin.card>
         @endcan
 
-        <div class="space-y-4">
-            <h3 class="text-sm font-semibold text-slate-700 dark:text-slate-300">
-                All Permissions
-                <span
-                    class="ml-2 inline-flex items-center rounded-sm bg-blue-100 px-2 py-0.5 text-xs font-semibold text-blue-700 dark:bg-blue-900/40 dark:text-blue-400"
-                >
-                    {{ $permissions->count() }}
-                </span>
-            </h3>
-
+        <div class="min-w-0">
             @if ($groupedPermissions->isEmpty())
-                <div
-                    class="flex flex-col items-center justify-center rounded-xl border border-dashed border-slate-300 py-12 text-center dark:border-slate-700"
-                >
-                    <x-icons.key class="mb-3 h-10 w-10 text-slate-300 dark:text-slate-600" />
-                    <p class="text-sm font-medium text-slate-500 dark:text-slate-400">No permissions found</p>
-                    <p class="mt-1 text-xs text-slate-400 dark:text-slate-500">Create your first permission using the form above.</p>
-                </div>
+                <x-admin.card>
+                    <div class="flex flex-col items-center justify-center py-10 text-center">
+                        <span
+                            class="mb-3 flex h-10 w-10 items-center justify-center rounded-xl bg-slate-100 text-slate-400 dark:bg-slate-800 dark:text-slate-500"
+                        >
+                            <x-admin.icon name="key" class="h-5 w-5" />
+                        </span>
+                        <p class="text-sm font-medium text-slate-700 dark:text-slate-300">No permissions found</p>
+                        <p class="mt-1 text-xs text-slate-500 dark:text-slate-400">Create your first permission using the form.</p>
+                    </div>
+                </x-admin.card>
             @else
-                <div class="space-y-4">
+                <div class="gap-4 lg:columns-2">
                     @foreach ($groupedPermissions as $group => $groupPerms)
-                        <div class="overflow-hidden rounded-xl border border-slate-200 bg-white dark:border-slate-700 dark:bg-slate-900">
-                            <div
-                                class="flex items-center justify-between border-b border-slate-100 bg-slate-50 px-5 py-3 dark:border-slate-800 dark:bg-slate-800/50"
-                            >
-                                <h4 class="text-xs font-semibold tracking-wider text-slate-500 uppercase dark:text-slate-400">
-                                    {{ $group }}
-                                </h4>
-                                <span class="text-xs text-slate-400">
+                        <x-admin.card :title="$group" :icon="$groupIcons[$group] ?? 'key'" :padded="false" class="mb-4 break-inside-avoid">
+                            <x-slot:extra>
+                                <span class="tabular text-xs text-slate-500 dark:text-slate-400">
                                     {{ $groupPerms->count() }} item{{ $groupPerms->count() !== 1 ? 's' : '' }}
                                 </span>
-                            </div>
+                            </x-slot>
+
                             <div class="divide-y divide-slate-100 dark:divide-slate-800">
                                 @foreach ($groupPerms as $permission)
-                                    <div class="flex items-center justify-between px-5 py-3">
-                                        <div class="flex items-center gap-3">
-                                            <div class="flex h-7 w-7 items-center justify-center rounded-md bg-slate-100 dark:bg-slate-800">
-                                                <x-icons.key class="h-3.5 w-3.5 text-slate-500 dark:text-slate-400" />
-                                            </div>
-                                            <div>
-                                                <p class="text-sm font-medium text-slate-800 dark:text-slate-200">
-                                                    {{ $permission->name }}
+                                    <div class="flex items-center justify-between gap-3 px-4 py-2.5 sm:px-5">
+                                        <div class="flex min-w-0 items-center gap-3">
+                                            <span
+                                                class="flex h-7 w-7 shrink-0 items-center justify-center rounded-md bg-slate-100 text-slate-500 dark:bg-slate-800 dark:text-slate-400"
+                                            >
+                                                <x-admin.icon :name="$permissionIcon($permission->name)" class="h-3.5 w-3.5" />
+                                            </span>
+                                            <div class="min-w-0">
+                                                <p class="truncate text-sm font-medium text-slate-900 dark:text-white">
+                                                    {{ $permissionLabel($permission->name) }}
                                                 </p>
-                                                <p class="text-xs text-slate-400">
-                                                    Used by {{ $permission->roles->count() }} role{{ $permission->roles->count() !== 1 ? 's' : '' }}
+                                                <p class="flex min-w-0 items-center gap-1.5 text-xs text-slate-500 dark:text-slate-400">
+                                                    <code class="truncate font-mono text-[11px]">{{ $permission->name }}</code>
+                                                    <span class="shrink-0 text-slate-300 dark:text-slate-600">·</span>
+                                                    <span class="shrink-0">
+                                                        {{ $permission->roles_count }} role{{ $permission->roles_count !== 1 ? 's' : '' }}
+                                                    </span>
                                                 </p>
                                             </div>
                                         </div>
@@ -93,17 +86,18 @@
                                                 @method('DELETE')
                                                 <button
                                                     type="submit"
-                                                    class="flex h-7 w-7 cursor-pointer items-center justify-center rounded-lg text-slate-400 hover:bg-red-50 hover:text-red-500 dark:hover:bg-red-900/20 dark:hover:text-red-400"
+                                                    class="flex h-7.5 w-7.5 cursor-pointer items-center justify-center rounded-lg text-slate-400 transition hover:bg-red-50 hover:text-red-600 dark:hover:bg-red-500/10 dark:hover:text-red-400"
                                                     title="Delete permission"
+                                                    aria-label="Delete permission {{ $permission->name }}"
                                                 >
-                                                    <x-icons.delete class="h-3.5 w-3.5" />
+                                                    <x-admin.icon name="trash" class="h-4 w-4" />
                                                 </button>
                                             </form>
                                         @endcan
                                     </div>
                                 @endforeach
                             </div>
-                        </div>
+                        </x-admin.card>
                     @endforeach
                 </div>
             @endif

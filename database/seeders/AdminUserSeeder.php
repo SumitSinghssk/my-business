@@ -6,6 +6,7 @@ use App\Enums\CommonStatusEnum;
 use App\Models\User;
 use Illuminate\Database\Seeder;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Str;
 
 class AdminUserSeeder extends Seeder
 {
@@ -36,14 +37,33 @@ class AdminUserSeeder extends Seeder
                 continue;
             }
 
+            $password = $this->password();
+
             $user = User::create([
                 'email' => $userData['email'],
                 'name' => $userData['name'],
-                'password' => Hash::make('password'),
+                'password' => Hash::make($password),
                 'status' => CommonStatusEnum::ACTIVE->value,
             ]);
 
             $user->assignRole($userData['role']);
+
+            if (! app()->environment('local', 'testing')) {
+                $this->command?->warn("Created {$userData['email']} with password: {$password}  (change it after logging in)");
+            }
         }
+    }
+
+    /**
+     * "password" only on local and test machines. Anywhere else a known password would be a
+     * ready-made way in, so use ADMIN_SEED_PASSWORD from .env or a random one (printed above).
+     */
+    private function password(): string
+    {
+        if (app()->environment('local', 'testing')) {
+            return 'password';
+        }
+
+        return env('ADMIN_SEED_PASSWORD') ?: Str::password(20);
     }
 }

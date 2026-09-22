@@ -18,6 +18,12 @@ class ContactRequest extends FormRequest
         return Service::active()->ordered()->pluck('title', 'slug')->all() + ['other' => 'Something Else'];
     }
 
+    /** Send the visitor back to the form itself, so the errors are on screen (not the page hero). */
+    protected function getRedirectUrl(): string
+    {
+        return route('contact').'#contact-form';
+    }
+
     public function authorize(): bool
     {
         return true;
@@ -42,6 +48,18 @@ class ContactRequest extends FormRequest
         return [
             'phone.regex' => 'Please enter a valid phone number.',
             'message.min' => 'Please tell us a little more about your project (at least 10 characters).',
+            'website.max' => 'Your message could not be sent. Please try again.',
+        ];
+    }
+
+    /** Field names as the visitor sees them on the form ("The work email field…", not "The email field…"). */
+    public function attributes(): array
+    {
+        return [
+            'name' => 'full name',
+            'email' => 'work email',
+            'service' => 'service',
+            'message' => 'project details',
         ];
     }
 }

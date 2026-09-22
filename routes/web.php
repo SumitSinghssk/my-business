@@ -3,9 +3,7 @@
 use App\Http\Controllers\BlogController;
 use App\Http\Controllers\ContactController;
 use App\Http\Controllers\PageController;
-use App\Http\Controllers\RobotsController;
 use App\Http\Controllers\ServiceController;
-use App\Http\Controllers\SitemapController;
 use App\Http\Controllers\WebsiteController;
 use App\Http\Controllers\WorkController;
 use Illuminate\Support\Facades\Route;
@@ -22,9 +20,6 @@ Route::post('/contact', [ContactController::class, 'store'])->middleware('thrott
 
 Route::get('/insights', [BlogController::class, 'index'])->name('blog.index');
 Route::get('/insights/{slug}', [BlogController::class, 'show'])->name('blog.show');
-
-Route::get('/sitemap.xml', SitemapController::class)->name('sitemap');
-Route::get('/robots.txt', RobotsController::class)->name('robots');
 
 Route::get('/admin', fn () => redirect()->route('admin.dashboard'));
 

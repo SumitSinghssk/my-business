@@ -17,13 +17,10 @@
     <img
         src="{{ asset('storage/' . $user->avatar) }}"
         alt="{{ $name }}"
-        {{ $attributes->class([$size, 'shrink-0 border border-[#E1E5EA] object-cover']) }}
+        {{ $attributes->class([$size, 'border-line shrink-0 border object-cover']) }}
     />
 @else
-    <span
-        {{ $attributes->class([$size, $text, 'flex shrink-0 items-center justify-center bg-[#0A0A0A] font-semibold text-white']) }}
-        aria-hidden="true"
-    >
+    <span {{ $attributes->class([$size, $text, 'bg-ink flex shrink-0 items-center justify-center font-semibold text-white']) }} aria-hidden="true">
         {{ $initials }}
     </span>
 @endif

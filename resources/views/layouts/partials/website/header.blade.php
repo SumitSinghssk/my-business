@@ -1,24 +1,34 @@
-@php
-    use App\Helpers\Settings;
-
-    $appName = Settings::appName();
-    $logo = Settings::logoLight();
-    // Intrinsic size so the browser reserves the logo's space before it loads (no layout shift).
-    [$logoWidth, $logoHeight] = ($logoPath = settings('basic_settings.logo.light')) ? (@getimagesize(storage_path('app/public/' . $logoPath)) ?: [null, null]) : [null, null];
-
-    $links = [
-        ['label' => 'Services', 'url' => route('services'), 'pattern' => 'services*'],
-        ['label' => 'Work', 'url' => route('work.index'), 'pattern' => 'work*'],
-        ['label' => 'About', 'url' => route('about'), 'pattern' => 'about'],
-        ['label' => 'Insights', 'url' => route('blog.index'), 'pattern' => 'insights*'],
-    ];
-@endphp
-
+{{-- Website header with the main and mobile navigation. Data comes from App\View\Composers\WebsiteHeaderComposer. --}}
 <header
-    x-data="{ mobileMenuOpen: false }"
-    x-on:keydown.escape.window="mobileMenuOpen = false"
+    x-data="{
+        mobileMenuOpen: false,
+        openMenu() {
+            this.mobileMenuOpen = true
+            this.$nextTick(() => this.$refs.closeMenu.focus())
+        },
+        closeMenu() {
+            if (! this.mobileMenuOpen) return
+            this.mobileMenuOpen = false
+            this.$nextTick(() => this.$refs.menuToggle.focus())
+        },
+        {{-- Keep Tab inside the open panel (it is a modal dialog). --}}
+        trapFocus(event) {
+            const items = [...this.$refs.menuPanel.querySelectorAll('a[href], button:not([disabled])')]
+            const first = items[0]
+            const last = items[items.length - 1]
+            if (event.shiftKey && document.activeElement === first) {
+                event.preventDefault()
+                last.focus()
+            } else if (! event.shiftKey && document.activeElement === last) {
+                event.preventDefault()
+                first.focus()
+            }
+        },
+    }"
+    x-on:keydown.escape.window="closeMenu()"
+    x-on:resize.window="if (window.innerWidth >= 768) mobileMenuOpen = false"
     x-effect="document.documentElement.classList.toggle('overflow-hidden', mobileMenuOpen)"
-    class="bg-surface-container-lowest sticky top-0 z-50 w-full border-b border-[#E1E5EA]"
+    class="bg-surface-container-lowest border-line sticky top-0 z-50 w-full border-b"
 >
     <div class="site-container gap-gutter flex items-center justify-between p-4">
         <div class="gap-space-md flex items-center">
@@ -56,18 +66,19 @@
         <div class="gap-space-md flex items-center">
             <a
                 href="{{ route('contact') }}"
-                class="px-space-lg font-label-md text-label-md text-on-primary hover:border-primary-container hover:bg-primary-container hidden items-center justify-center border border-[#0A0A0A] bg-[#0A0A0A] py-3 tracking-wider uppercase transition-all sm:inline-flex"
+                class="px-space-lg font-label-md text-label-md text-on-primary hover:border-primary-container hover:bg-primary-container border-ink bg-ink hidden items-center justify-center border py-3 tracking-wider uppercase transition-all sm:inline-flex"
             >
                 Let's Talk →
             </a>
 
             <button
                 type="button"
-                x-on:click="mobileMenuOpen = !mobileMenuOpen"
+                x-ref="menuToggle"
+                x-on:click="mobileMenuOpen ? closeMenu() : openMenu()"
                 :aria-expanded="mobileMenuOpen.toString()"
                 aria-controls="mobile-navigation"
                 aria-label="Toggle navigation menu"
-                class="text-on-surface focus-visible:ring-primary-container inline-flex h-10 w-10 items-center justify-center border border-[#E1E5EA] transition-colors hover:border-[#0A0A0A] focus:outline-none focus-visible:ring-2 md:hidden"
+                class="text-on-surface focus-visible:ring-primary-container border-line hover:border-ink inline-flex h-10 w-10 items-center justify-center border transition-colors focus:outline-none focus-visible:ring-2 md:hidden"
             >
                 <x-icons.menu-lines x-show="!mobileMenuOpen" class="h-5 w-5" aria-hidden="true" />
                 <x-icons.close x-show="mobileMenuOpen" x-cloak class="h-5 w-5" aria-hidden="true" stroke-width="1.75" />
@@ -79,14 +90,16 @@
         x-show="mobileMenuOpen"
         x-cloak
         x-transition.opacity.duration.200ms
-        x-on:click="mobileMenuOpen = false"
-        class="fixed inset-0 z-40 h-screen bg-[#0A0A0A]/40 md:hidden"
+        x-on:click="closeMenu()"
+        class="bg-ink/40 fixed inset-0 z-40 h-screen md:hidden"
         aria-hidden="true"
     ></div>
 
     <div
         id="mobile-navigation"
+        x-ref="menuPanel"
         x-show="mobileMenuOpen"
+        x-on:keydown.tab="trapFocus($event)"
         x-cloak
         x-transition:enter="transition duration-200 ease-out"
         x-transition:enter-start="translate-x-full"
@@ -94,18 +107,19 @@
         x-transition:leave="transition duration-150 ease-in"
         x-transition:leave-start="translate-x-0"
         x-transition:leave-end="translate-x-full"
-        class="bg-surface-container-lowest fixed top-0 right-0 z-50 flex h-screen w-80 max-w-[85vw] flex-col border-l border-[#E1E5EA] md:hidden"
+        class="bg-surface-container-lowest border-line fixed top-0 right-0 z-50 flex h-screen w-80 max-w-[85vw] flex-col border-l md:hidden"
         role="dialog"
         aria-modal="true"
         aria-label="Mobile navigation"
     >
-        <div class="px-margin-mobile flex h-19 items-center justify-between border-b border-[#E1E5EA]">
+        <div class="px-margin-mobile border-line flex h-19 items-center justify-between border-b">
             <span class="font-label-sm text-label-sm text-outline tracking-widest uppercase">Menu</span>
             <button
                 type="button"
-                x-on:click="mobileMenuOpen = false"
+                x-ref="closeMenu"
+                x-on:click="closeMenu()"
                 aria-label="Close menu"
-                class="text-on-surface inline-flex h-10 w-10 items-center justify-center border border-[#E1E5EA] hover:border-[#0A0A0A] focus:outline-none"
+                class="text-on-surface border-line hover:border-ink focus-visible:ring-primary-container inline-flex h-10 w-10 items-center justify-center border focus:outline-none focus-visible:ring-2"
             >
                 <x-icons.close class="h-5 w-5" aria-hidden="true" stroke-width="1.75" />
             </button>
@@ -118,7 +132,7 @@
                     href="{{ $link['url'] }}"
                     @if ($active) aria-current="page" @endif
                     x-on:click="mobileMenuOpen = false"
-                    class="{{ $active ? 'border-l-primary-container bg-surface-container-low text-on-surface border-l-2' : 'text-on-surface-variant hover:text-on-surface hover:bg-[#F7F8FA]' }} px-margin-mobile py-space-md font-label-md text-label-md flex items-center justify-between border-b border-[#E1E5EA] tracking-wider uppercase transition-colors"
+                    class="{{ $active ? 'border-l-primary-container bg-surface-container-low text-on-surface border-l-2' : 'text-on-surface-variant hover:text-on-surface hover:bg-canvas' }} px-margin-mobile py-space-md font-label-md text-label-md border-line flex items-center justify-between border-b tracking-wider uppercase transition-colors"
                 >
                     <span>{{ $link['label'] }}</span>
                     <span aria-hidden="true">→</span>
@@ -126,11 +140,11 @@
             @endforeach
         </nav>
 
-        <div class="p-margin-mobile border-t border-[#E1E5EA]">
+        <div class="p-margin-mobile border-line border-t">
             <a
                 href="{{ route('contact') }}"
                 x-on:click="mobileMenuOpen = false"
-                class="px-space-lg font-label-md text-label-md hover:bg-primary-container flex w-full items-center justify-center bg-[#0A0A0A] py-4 tracking-wider text-white uppercase transition-colors"
+                class="px-space-lg font-label-md text-label-md hover:bg-primary-container bg-ink flex w-full items-center justify-center py-4 tracking-wider text-white uppercase transition-colors"
             >
                 Let's Talk →
             </a>

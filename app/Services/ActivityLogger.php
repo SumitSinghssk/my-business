@@ -7,6 +7,7 @@ use App\Models\User;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Request as RequestFacade;
@@ -178,6 +179,12 @@ class ActivityLogger
     }
 
     private static function getLocation(string $ip): array
+    {
+        // One lookup per IP per day: repeated logins (or a brute-force run) don't keep calling the geo-IP services.
+        return Cache::remember('geoip:'.$ip, now()->addDay(), fn () => self::lookupLocation($ip));
+    }
+
+    private static function lookupLocation(string $ip): array
     {
         $blank = [
             'country' => null, 'country_code' => null, 'region' => null,

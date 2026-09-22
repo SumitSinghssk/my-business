@@ -5,6 +5,9 @@
     $canDelete = auth()
         ->user()
         ->can('admin.services.delete');
+    $canToggle = auth()
+        ->user()
+        ->can('admin.services.toogle-status');
     $canManage = $canEdit || $canDelete;
 
     $headers = ['Service', 'Status', 'Order', 'Updated'];
@@ -16,98 +19,94 @@
 <x-admin :breadcrumb="[
     ['label' => 'Services', 'url' => route('admin.services.index')]
 ]">
-    <x-admin.card title="Services" text="Manage the services shown on the website and their detail pages">
+    <x-admin.page-header
+        title="Services"
+        description="The services shown on your website and their detail pages."
+        icon="layers"
+        :count="$services->total()"
+    >
         @can('admin.services.create')
-            <x-slot name="actions">
-                <a href="{{ route('admin.services.create') }}">
-                    <x-admin.button variant="primary">
-                        <span class="flex items-center gap-1.5">
-                            <span class="text-lg">+</span>
-                            Create Service
-                        </span>
-                    </x-admin.button>
-                </a>
+            <x-slot:actions>
+                <x-admin.button :href="route('admin.services.create')" icon="plus">New service</x-admin.button>
             </x-slot>
         @endcan
+    </x-admin.page-header>
 
-        @include('admin.services.partials.filters')
+    <x-admin.table :headers="$headers" :data="$services" emptyMessage="No services found" emptyIcon="layers">
+        <x-slot:toolbar>
+            @include('admin.services.partials.filters')
+        </x-slot>
 
-        <x-admin.table :headers="$headers" :data="$services" emptyMessage="No services found.">
-            @foreach ($services as $service)
-                <tr class="group transition-colors hover:bg-slate-50/50 dark:hover:bg-slate-800/30">
-                    <td class="px-6 py-4">
-                        <div class="flex items-center gap-3">
-                            @if ($service->featured_image)
-                                <img
-                                    src="{{ asset('storage/' . $service->featured_image) }}"
-                                    alt="{{ $service->title }}"
-                                    class="aspect-16/10 w-16 shrink-0 rounded-lg object-cover ring-1 ring-slate-200 dark:ring-slate-700"
-                                />
+        @foreach ($services as $service)
+            <tr>
+                <td class="max-w-md">
+                    <div class="flex items-center gap-3">
+                        <x-admin.thumb
+                            :src="$service->featured_image ? asset('storage/' . $service->featured_image) : null"
+                            icon="layers"
+                            class="h-10 w-14"
+                        />
+
+                        <div class="min-w-0">
+                            @if ($canEdit)
+                                <a
+                                    href="{{ route('admin.services.edit', $service) }}"
+                                    class="line-clamp-1 font-medium text-slate-900 hover:text-blue-600 dark:text-white dark:hover:text-blue-400"
+                                >
+                                    {{ $service->title }}
+                                </a>
                             @else
-                                <div class="flex aspect-16/10 w-16 shrink-0 items-center justify-center rounded-lg bg-slate-100 dark:bg-slate-800">
-                                    <x-icons.desktop class="h-5 w-5 text-slate-400" />
-                                </div>
+                                <span class="line-clamp-1 font-medium text-slate-900 dark:text-white">{{ $service->title }}</span>
                             @endif
-
-                            <div class="flex min-w-0 flex-col">
-                                <span class="text-sm font-bold text-slate-900 dark:text-white">{{ $service->title }}</span>
-                                <span class="text-xs font-medium text-slate-400 dark:text-slate-500">/services/{{ $service->slug }}</span>
-                            </div>
+                            <span class="mt-0.5 flex items-center gap-1 text-xs text-slate-400">
+                                <x-admin.icon name="link" class="h-3 w-3 shrink-0" />
+                                <span class="truncate">/services/{{ $service->slug }}</span>
+                            </span>
                         </div>
-                    </td>
+                    </div>
+                </td>
 
-                    <td class="px-6 py-4">
-                        @can('admin.services.toogle-status')
-                            <div
-                                x-data="{ status: '{{ $service->status->value }}', loading: false }"
-                                x-on:click="
-                                    if (loading) return
-                                    loading = true
-                                    axios
-                                        .patch('{{ route('admin.services.toggle-status', $service->id) }}')
-                                        .then((res) => {
-                                            status = res.data.status
-                                        })
-                                        .catch((err) => console.error(err))
-                                        .finally(() => (loading = false))
-                                "
-                                :class="loading ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer inline'"
-                            >
-                                <template x-if="status === 'active'">
-                                    <x-admin.status-badge status="active" />
-                                </template>
-                                <template x-if="status === 'inactive'">
-                                    <x-admin.status-badge status="inactive" />
-                                </template>
-                            </div>
-                        @else
-                            <x-admin.status-badge :status="$service->status" />
-                        @endcan
-                    </td>
+                <td>
+                    <x-admin.status-toggle
+                        :url="route('admin.services.toggle-status', $service->id)"
+                        :status="$service->status"
+                        :can="$canToggle"
+                    />
+                </td>
 
-                    <td class="px-6 py-4">
-                        <span class="text-xs font-semibold text-slate-600 dark:text-slate-300">{{ $service->sort_order }}</span>
-                    </td>
+                <td>
+                    <span
+                        class="inline-flex items-center gap-1 rounded-md bg-slate-100 px-1.5 py-0.5 text-xs font-medium text-slate-600 tabular-nums dark:bg-slate-800 dark:text-slate-300"
+                        title="Display order"
+                    >
+                        <x-admin.icon name="hash" class="h-3 w-3 text-slate-400" />
+                        {{ $service->sort_order }}
+                    </span>
+                </td>
 
-                    <td class="px-6 py-4">
-                        <span class="text-xs text-slate-500 dark:text-slate-400">{{ $service->updated_at?->format('d M Y') ?? '—' }}</span>
-                    </td>
-
-                    @if ($canManage)
-                        <td class="px-6 py-4">
-                            <x-admin.row-actions
-                                size="sm"
-                                :viewRoute="$service->slug ? route('services.show', $service->slug) : null"
-                                :editRoute="route('admin.services.edit', $service)"
-                                :canEdit="$canEdit"
-                                :deleteRoute="route('admin.services.destroy', $service)"
-                                :deleteId="$service->id"
-                                :canDelete="$canDelete"
-                            />
-                        </td>
+                <td class="whitespace-nowrap">
+                    @if ($service->updated_at)
+                        <span class="block text-slate-700 dark:text-slate-200">{{ $service->updated_at->format('d M Y') }}</span>
+                        <span class="text-xs text-slate-400">{{ $service->updated_at->diffForHumans() }}</span>
+                    @else
+                        <span class="text-slate-400">—</span>
                     @endif
-                </tr>
-            @endforeach
-        </x-admin.table>
-    </x-admin.card>
+                </td>
+
+                @if ($canManage)
+                    <td>
+                        <x-admin.row-actions
+                            size="sm"
+                            :viewRoute="$service->slug ? route('services.show', $service->slug) : null"
+                            :editRoute="route('admin.services.edit', $service)"
+                            :canEdit="$canEdit"
+                            :deleteRoute="route('admin.services.destroy', $service)"
+                            :deleteId="$service->id"
+                            :canDelete="$canDelete"
+                        />
+                    </td>
+                @endif
+            </tr>
+        @endforeach
+    </x-admin.table>
 </x-admin>

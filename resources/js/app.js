@@ -54,6 +54,64 @@ Alpine.data('blogListing', ({ titles }) => ({
     },
 }));
 
+// Contact form: sends with fetch and shows the result in place. Without JavaScript it is a normal POST.
+const FIELD_ERRORS = 'Please check the highlighted fields and try again.';
+
+Alpine.data('contactForm', ({ errors = {}, success = '' } = {}) => ({
+    submitting: false,
+    errors,
+    success,
+    failed: Object.keys(errors).length ? FIELD_ERRORS : '',
+
+    error(name) {
+        return this.errors[name]?.[0] ?? '';
+    },
+
+    clear(name) {
+        if (this.errors[name]) delete this.errors[name];
+    },
+
+    async submit(form) {
+        if (this.submitting) return;
+
+        this.submitting = true;
+        this.failed = '';
+        this.success = '';
+
+        try {
+            const response = await fetch(form.action, {
+                method: 'POST',
+                headers: { Accept: 'application/json', 'X-Requested-With': 'XMLHttpRequest' },
+                body: new FormData(form),
+            });
+            const data = await response.json().catch(() => ({}));
+
+            if (response.ok) {
+                this.errors = {};
+                this.success = data.message;
+                form.reset();
+                this.$nextTick(() => this.$refs.success.focus());
+            } else if (response.status === 422) {
+                this.errors = data.errors ?? {};
+                this.failed = FIELD_ERRORS;
+                this.$nextTick(() => form.querySelector('[aria-invalid="true"]')?.focus());
+            } else {
+                this.failed =
+                    {
+                        419: 'Your session has expired. Please refresh the page and try again.',
+                        429: 'You have sent several messages in a short time. Please wait a minute and try again.',
+                    }[response.status] ?? 'Something went wrong while sending your message. Please try again.';
+            }
+        } catch {
+            this.failed = 'We could not reach the server. Please check your connection and try again.';
+        } finally {
+            this.submitting = false;
+            // Field errors move focus to the first invalid field; any other failure brings the message into view.
+            if (this.failed && !Object.keys(this.errors).length) this.$nextTick(() => this.$refs.failed.focus());
+        }
+    },
+}));
+
 Alpine.start();
 
 // Testimonials slider (home page only): Swiper and its CSS load when the section comes near the viewport,

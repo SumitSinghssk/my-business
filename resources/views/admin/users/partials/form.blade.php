@@ -1,17 +1,54 @@
 @php
     $isEdit = isset($user);
+
+    $groupIcons = [
+        'Activity logs' => 'history',
+        'Blog categories' => 'folder-tree',
+        'Blogs' => 'newspaper',
+        'Dashboard' => 'dashboard',
+        'Enquiries' => 'inbox',
+        'Log settings' => 'scroll',
+        'Notifications' => 'bell',
+        'Pages' => 'file-text',
+        'Permissions' => 'key',
+        'Profile' => 'user-circle',
+        'Projects' => 'briefcase',
+        'Roles' => 'shield',
+        'Seo' => 'globe',
+        'Services' => 'layers',
+        'Settings' => 'settings',
+        'Users' => 'users',
+    ];
+
+    $actionIcons = [
+        'create' => 'plus',
+        'edit' => 'pencil',
+        'update' => 'pencil',
+        'delete' => 'trash',
+        'clear' => 'trash',
+        'view' => 'eye',
+        'toogle-status' => 'toggle',
+        'download-db' => 'download',
+        'clear-cache' => 'refresh',
+        'mark-all-as-read' => 'check-circle',
+        'update-password' => 'lock',
+    ];
+
+    // "admin.settings.basic-details.update" → "Basic details · update" (the group is shown above it).
+    $permissionLabel = function (string $name) {
+        $parts = explode('.', $name);
+        $rest = $parts[0] === 'admin' && isset($parts[1]) ? array_slice($parts, 2) : array_slice($parts, 1);
+
+        return $rest ? ucfirst(str_replace(['toogle', '-'], ['toggle', ' '], implode(' · ', $rest))) : $name;
+    };
+
+    $permissionIcon = fn (string $name) => $actionIcons[\Illuminate\Support\Str::afterLast($name, '.')] ?? 'key';
+
+    $totalPermissions = $groupedPermissions->sum(fn ($perms) => $perms->count());
 @endphp
 
 <div
     x-data="{
-        activeTab: 'details',
-        tabs: [
-            { id: 'details', label: 'Details', icon: 'user' },
-            { id: 'password', label: 'Password', icon: 'lock' },
-            { id: 'roles', label: 'Roles', icon: 'shield' },
-            { id: 'permissions', label: 'Permissions', icon: 'key' },
-        ],
-
         allRoles: {{ Js::from($rolesWithPermissions) }},
         selectedRoles: {{ Js::from(old('roles', $userRoles ?? [])) }},
         directPermissions:
@@ -75,7 +112,6 @@
             return this.selectedRoles.includes(roleName)
         },
     }"
-    class="space-y-6"
 >
     <template x-for="role in selectedRoles" :key="'r_' + role">
         <input type="hidden" name="roles[]" :value="role" />
@@ -84,276 +120,314 @@
         <input type="hidden" name="permissions[]" :value="perm" />
     </template>
 
-    <div class="sticky top-24 z-20 border-b border-slate-200 backdrop-blur-md sm:mx-0 dark:border-slate-800 dark:bg-slate-900/80">
-        <nav class="scrollbar-hide -mb-px flex items-center gap-2 overflow-x-auto whitespace-nowrap" aria-label="Tabs">
-            <template x-for="tab in tabs" :key="tab.id">
-                <button
-                    type="button"
-                    x-on:click="activeTab = tab.id"
-                    :class="activeTab === tab.id
-                        ? 'text-blue-600 dark:text-blue-400'
-                        : 'border-transparent text-slate-500 hover:text-slate-700 dark:text-slate-400 dark:hover:text-slate-200'"
-                    class="group relative flex cursor-pointer items-center gap-2.5 px-4 py-4 text-sm font-bold transition-all duration-200 focus:outline-none"
-                >
-                    <div
-                        :class="activeTab === tab.id
-                            ? 'text-blue-600 dark:text-blue-400'
-                            : 'text-slate-400 group-hover:text-slate-600 dark:group-hover:text-slate-300'"
-                        class="transition-colors duration-200"
+    <x-admin.form-grid>
+        <x-admin.card title="Profile" text="Who this person is and how they sign in." icon="user">
+            <div class="space-y-5">
+                <div class="grid grid-cols-1 gap-5 sm:grid-cols-2">
+                    <x-admin.form.input name="name" label="Full name" required :value="$user->name ?? ''" placeholder="e.g. John Doe">
+                        <x-slot:leftIcon>
+                            <x-admin.icon name="user" class="h-4 w-4" />
+                        </x-slot>
+                    </x-admin.form.input>
+
+                    <x-admin.form.input
+                        type="email"
+                        name="email"
+                        label="Email address"
+                        required
+                        :value="$user->email ?? ''"
+                        placeholder="e.g. john@example.com"
                     >
-                        <template x-if="tab.icon === 'user'">
-                            <x-icons.account-circle class="h-4 w-4" />
-                        </template>
-                        <template x-if="tab.icon === 'lock'">
-                            <x-icons.lock class="h-4 w-4" />
-                        </template>
-                        <template x-if="tab.icon === 'shield'">
-                            <x-icons.verified-user class="h-4 w-4" />
-                        </template>
-                        <template x-if="tab.icon === 'key'">
-                            <x-icons.key class="h-4 w-4" />
-                        </template>
-                    </div>
-                    <span x-text="tab.label" class="tracking-tight"></span>
-                    <div
-                        x-show="activeTab === tab.id"
-                        x-transition:enter="transition duration-300 ease-out"
-                        x-transition:enter-start="scale-x-0 opacity-0"
-                        x-transition:enter-end="scale-x-100 opacity-100"
-                        class="absolute inset-x-0 bottom-0 h-0.5 bg-blue-600 shadow-[0_-2px_10px_rgba(37,99,235,0.4)] dark:bg-blue-500"
-                    ></div>
-                </button>
-            </template>
-        </nav>
-    </div>
+                        <x-slot:leftIcon>
+                            <x-admin.icon name="mail" class="h-4 w-4" />
+                        </x-slot>
+                    </x-admin.form.input>
+                </div>
 
-    <div x-show="activeTab === 'details'" x-cloak class="space-y-5">
-        <x-admin.image-upload
-            name="avatar"
-            preset="avatar"
-            remove-name="remove_avatar"
-            label="Avatar"
-            class="max-w-xs"
-            :current="isset($user) && $user->avatar ? asset('storage/' . $user->avatar) : null"
-        />
-
-        <div class="grid grid-cols-1 gap-5 sm:grid-cols-2">
-            <div>
-                <x-admin.form-label for="name" label="Full Name" required />
-                <x-admin.form-input
-                    type="text"
-                    name="name"
-                    id="name"
-                    :value="old('name', $user->name ?? '')"
-                    placeholder="e.g. John Doe"
-                    :error="$errors->first('name')"
-                >
-                    <x-slot:leftIcon>
-                        <x-icons.account-circle class="h-5 w-5" />
-                    </x-slot>
-                </x-admin.form-input>
-                <x-admin.form-error for="name" />
+                <x-admin.form.textarea name="bio" label="Bio" rows="3" :value="$user->bio ?? ''" placeholder="Short bio or description..." />
             </div>
+        </x-admin.card>
 
-            <div>
-                <x-admin.form-label for="email" label="Email Address" required />
-                <x-admin.form-input
-                    type="email"
-                    name="email"
-                    id="email"
-                    :value="old('email', $user->email ?? '')"
-                    placeholder="e.g. john@example.com"
-                    :error="$errors->first('email')"
-                >
-                    <x-slot:leftIcon>
-                        <x-icons.mail class="h-5 w-5" />
-                    </x-slot>
-                </x-admin.form-input>
-                <x-admin.form-error for="email" />
-            </div>
-        </div>
-
-        <div>
-            <x-admin.form-label for="status" label="Status" required />
-            @php
-                use App\Enums\CommonStatusEnum;
-
-                $status = old('status', $user->status->value ?? CommonStatusEnum::ACTIVE->value);
-            @endphp
-
-            <x-admin.form-select name="status" id="status">
-                @foreach (CommonStatusEnum::cases() as $case)
-                    <option value="{{ $case->value }}" @selected($status === $case->value)>
-                        {{ $case->label() }}
-                    </option>
-                @endforeach
-            </x-admin.form-select>
-            <x-admin.form-error for="status" />
-        </div>
-
-        <div>
-            <x-admin.form-label for="bio" label="Bio" />
-            <x-admin.form-textarea name="bio" id="bio" rows="3" placeholder="Short bio or description...">
-                {{ old('bio', $user->bio ?? '') }}
-            </x-admin.form-textarea>
-            <x-admin.form-error for="bio" />
-        </div>
-    </div>
-
-    <div x-show="activeTab === 'password'" x-cloak class="space-y-5">
-        @if ($isEdit)
-            <div
-                class="flex items-start gap-3 rounded-lg border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-700 dark:border-amber-800 dark:bg-amber-900/20 dark:text-amber-400"
-            >
-                <x-icons.lock class="h-4 w-4" />
-                Leave blank to keep the current password unchanged.
-            </div>
-        @endif
-
-        <div class="grid grid-cols-1 gap-5 sm:grid-cols-2">
-            <div>
-                <x-admin.form-label for="password" label="Password" :required="!$isEdit" />
-                <x-admin.form-input
+        <x-admin.card
+            title="Password"
+            :text="$isEdit ? 'Leave both fields blank to keep the current password.' : 'At least 8 characters.'"
+            icon="lock"
+        >
+            <div class="grid grid-cols-1 gap-5 sm:grid-cols-2">
+                <x-admin.form.input
                     type="password"
                     name="password"
-                    id="password"
+                    label="Password"
+                    :required="! $isEdit"
                     autocomplete="new-password"
                     :placeholder="$isEdit ? 'Leave blank to keep current' : 'Min. 8 characters'"
-                    :error="$errors->first('password')"
                 >
                     <x-slot:leftIcon>
-                        <x-icons.lock class="h-5 w-5" />
+                        <x-admin.icon name="lock" class="h-4 w-4" />
                     </x-slot>
-                </x-admin.form-input>
-                <x-admin.form-error for="password" />
-            </div>
+                </x-admin.form.input>
 
-            <div>
-                <x-admin.form-label for="password_confirmation" label="Confirm Password" :required="!$isEdit" />
-                <x-admin.form-input
+                <x-admin.form.input
                     type="password"
                     name="password_confirmation"
-                    id="password_confirmation"
+                    label="Confirm password"
+                    :required="! $isEdit"
+                    autocomplete="new-password"
                     :placeholder="$isEdit ? 'Leave blank to keep current' : 'Repeat password'"
                 >
                     <x-slot:leftIcon>
-                        <x-icons.lock class="h-5 w-5" />
+                        <x-admin.icon name="lock" class="h-4 w-4" />
                     </x-slot>
-                </x-admin.form-input>
+                </x-admin.form.input>
             </div>
-        </div>
-    </div>
+        </x-admin.card>
 
-    <div x-show="activeTab === 'roles'" x-cloak class="space-y-5">
-        <p class="text-xs text-slate-500 dark:text-slate-400">
-            Assign one or more roles. Permissions from selected roles will be automatically checked in the Permissions tab.
-        </p>
+        <x-admin.card title="Roles" text="Selecting a role also ticks all of its permissions below." icon="shield">
+            <x-slot:extra>
+                <span
+                    class="tabular inline-flex items-center gap-1 rounded-full border border-slate-200 bg-white px-2 py-px text-xs font-medium text-slate-600 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-300"
+                >
+                    <span x-text="selectedRoles.length">0</span>
+                    selected
+                </span>
+            </x-slot>
 
-        @if ($roles->isEmpty())
-            <div
-                class="flex flex-col items-center justify-center rounded-xl border border-dashed border-slate-300 py-12 text-center dark:border-slate-700"
-            >
-                <x-icons.verified-user class="mb-3 h-10 w-10 text-slate-300 dark:text-slate-600" />
-                <p class="text-sm font-medium text-slate-500 dark:text-slate-400">No roles available</p>
-                <p class="mt-1 text-xs text-slate-400 dark:text-slate-500">
-                    <a href="{{ route('admin.roles.index') }}" class="text-blue-500 hover:underline">Create roles</a>
-                    first.
-                </p>
-            </div>
-        @else
-            <div class="grid grid-cols-1 gap-2 sm:grid-cols-2 lg:grid-cols-3">
-                @foreach ($roles as $role)
-                    <label
-                        x-on:click.prevent="toggleRole('{{ $role->name }}')"
-                        :class="isRoleSelected('{{ $role->name }}')
-                            ? 'border-blue-200 bg-blue-50 dark:border-blue-800 dark:bg-blue-900/20'
-                            : 'border-slate-200 bg-white hover:border-slate-300 dark:border-slate-700 dark:bg-slate-800/50 dark:hover:border-slate-600'"
-                        class="flex cursor-pointer items-center gap-3 rounded-xl border px-4 py-3 transition-colors"
+            @if ($roles->isEmpty())
+                <div
+                    class="flex flex-col items-center justify-center rounded-xl border border-dashed border-slate-300 py-10 text-center dark:border-slate-700"
+                >
+                    <span
+                        class="mb-3 flex h-10 w-10 items-center justify-center rounded-xl bg-slate-100 text-slate-400 dark:bg-slate-800 dark:text-slate-500"
                     >
-                        <span
-                            class="flex h-4 w-4 shrink-0 items-center justify-center rounded border transition-colors"
+                        <x-admin.icon name="shield" class="h-5 w-5" />
+                    </span>
+                    <p class="text-sm font-medium text-slate-700 dark:text-slate-300">No roles available</p>
+                    <p class="mt-1 text-xs text-slate-500 dark:text-slate-400">
+                        <a href="{{ route('admin.roles.index') }}" class="font-medium text-blue-600 hover:underline dark:text-blue-400">
+                            Create roles
+                        </a>
+                        first.
+                    </p>
+                </div>
+            @else
+                <div class="grid grid-cols-1 gap-3 sm:grid-cols-2 2xl:grid-cols-3">
+                    @foreach ($roles as $role)
+                        <div
+                            role="checkbox"
+                            tabindex="0"
+                            x-bind:aria-checked="isRoleSelected('{{ $role->name }}').toString()"
+                            x-on:click="toggleRole('{{ $role->name }}')"
+                            x-on:keydown.space.prevent="toggleRole('{{ $role->name }}')"
                             :class="isRoleSelected('{{ $role->name }}')
-                                ? 'border-blue-500 bg-blue-500'
-                                : 'border-slate-300 bg-white dark:border-slate-600 dark:bg-slate-700'"
+                                ? 'border-blue-500 bg-blue-50/70 ring-1 ring-blue-500 dark:border-blue-400 dark:bg-blue-500/10 dark:ring-blue-400'
+                                : 'border-slate-200 bg-white hover:border-slate-300 hover:bg-slate-50 dark:border-slate-700 dark:bg-slate-900 dark:hover:border-slate-600 dark:hover:bg-slate-800/60'"
+                            class="flex cursor-pointer items-center gap-3 rounded-xl border p-3 transition select-none focus:outline-none focus-visible:ring-3 focus-visible:ring-blue-500/30"
                         >
-                            <x-icons.check x-show="isRoleSelected('{{ $role->name }}')" class="h-2.5 w-2.5 text-white" />
-                        </span>
-                        <div>
-                            <p
-                                class="text-sm font-medium transition-colors"
+                            <span
+                                class="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg transition-colors"
                                 :class="isRoleSelected('{{ $role->name }}')
-                                    ? 'text-blue-700 dark:text-blue-300'
-                                    : 'text-slate-700 dark:text-slate-300'"
+                                    ? 'bg-blue-600 text-white dark:bg-blue-500'
+                                    : 'bg-slate-100 text-slate-500 dark:bg-slate-800 dark:text-slate-400'"
                             >
-                                {{ $role->name }}
-                            </p>
-                            <p class="text-xs text-slate-400 dark:text-slate-500">
-                                {{ $role->permissions->count() }} permission{{ $role->permissions->count() !== 1 ? 's' : '' }}
-                            </p>
-                        </div>
-                    </label>
-                @endforeach
-            </div>
-        @endif
-    </div>
+                                <x-admin.icon name="shield" class="h-4.5 w-4.5" />
+                            </span>
 
-    <div x-show="activeTab === 'permissions'" x-cloak class="space-y-5">
-        <div
-            class="flex items-start gap-3 rounded-lg border border-blue-200 bg-blue-50 px-4 py-3 text-sm text-blue-700 dark:border-blue-800 dark:bg-blue-900/20 dark:text-blue-400"
-        >
-            <x-icons.info class="mt-0.5 h-4 w-4 shrink-0" />
-
-            Permissions from assigned roles are pre-selected. You can freely add or remove any permission individually.
-        </div>
-
-        @if ($groupedPermissions->isEmpty())
-            <div
-                class="flex flex-col items-center justify-center rounded-xl border border-dashed border-slate-300 py-12 text-center dark:border-slate-700"
-            >
-                <x-icons.key class="mb-3 h-10 w-10 text-slate-300 dark:text-slate-600" />
-                <p class="text-sm font-medium text-slate-500 dark:text-slate-400">No permissions available</p>
-            </div>
-        @else
-            <div class="space-y-5">
-                @foreach ($groupedPermissions as $group => $groupPerms)
-                    <div>
-                        <h4 class="mb-2 text-xs font-semibold tracking-wider text-slate-400 uppercase dark:text-slate-500">
-                            {{ $group }}
-                        </h4>
-                        <div class="grid grid-cols-1 gap-2 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
-                            @foreach ($groupPerms as $permission)
-                                <label
-                                    x-on:click.prevent="togglePermission('{{ $permission->name }}')"
-                                    :class="isPermChecked('{{ $permission->name }}')
-                                        ? 'border-blue-200 bg-blue-50 dark:border-blue-800 dark:bg-blue-900/20'
-                                        : 'border-slate-200 bg-white hover:border-slate-300 dark:border-slate-700 dark:bg-slate-800/50 dark:hover:border-slate-600'"
-                                    class="flex cursor-pointer items-center gap-2.5 rounded-lg border px-3 py-2 text-xs transition-colors"
+                            <div class="min-w-0 flex-1">
+                                <p
+                                    class="truncate text-sm font-medium capitalize transition-colors"
+                                    :class="isRoleSelected('{{ $role->name }}') ? 'text-blue-700 dark:text-blue-300' : 'text-slate-900 dark:text-white'"
                                 >
+                                    {{ $role->name }}
+                                </p>
+                                <p class="mt-0.5 flex items-center gap-1 text-xs text-slate-500 dark:text-slate-400">
+                                    <x-admin.icon name="key" class="h-3 w-3" />
+                                    {{ $role->permissions->count() }} permission{{ $role->permissions->count() !== 1 ? 's' : '' }}
+                                </p>
+                            </div>
+
+                            <span
+                                class="flex h-5 w-5 shrink-0 items-center justify-center rounded-full border transition-colors"
+                                :class="isRoleSelected('{{ $role->name }}')
+                                    ? 'border-blue-600 bg-blue-600 text-white dark:border-blue-500 dark:bg-blue-500'
+                                    : 'border-slate-300 bg-white text-transparent dark:border-slate-600 dark:bg-slate-800'"
+                            >
+                                <x-admin.icon name="check" class="h-3 w-3" />
+                            </span>
+                        </div>
+                    @endforeach
+                </div>
+            @endif
+        </x-admin.card>
+
+        <x-admin.card title="Permissions" text="Fine-tune access. Permissions from selected roles are pre-ticked." icon="key">
+            <x-slot:extra>
+                <span
+                    class="tabular inline-flex items-center gap-1 rounded-full border border-slate-200 bg-white px-2 py-px text-xs font-medium text-slate-600 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-300"
+                >
+                    <span x-text="directPermissions.length">0</span>
+                    / {{ $totalPermissions }}
+                </span>
+            </x-slot>
+
+            @if ($groupedPermissions->isEmpty())
+                <div
+                    class="flex flex-col items-center justify-center rounded-xl border border-dashed border-slate-300 py-10 text-center dark:border-slate-700"
+                >
+                    <span
+                        class="mb-3 flex h-10 w-10 items-center justify-center rounded-xl bg-slate-100 text-slate-400 dark:bg-slate-800 dark:text-slate-500"
+                    >
+                        <x-admin.icon name="key" class="h-5 w-5" />
+                    </span>
+                    <p class="text-sm font-medium text-slate-700 dark:text-slate-300">No permissions available</p>
+                </div>
+            @else
+                <div class="space-y-3">
+                    @foreach ($groupedPermissions as $group => $groupPerms)
+                        <div class="rounded-xl border border-slate-200/80 bg-slate-50/60 p-3 dark:border-slate-800 dark:bg-slate-950/40">
+                            <div class="mb-2.5 flex items-center justify-between gap-2 px-0.5">
+                                <div class="flex min-w-0 items-center gap-2">
                                     <span
-                                        class="flex h-4 w-4 shrink-0 items-center justify-center rounded border transition-colors"
-                                        :class="isPermChecked('{{ $permission->name }}')
-                                            ? 'border-blue-500 bg-blue-500'
-                                            : 'border-slate-300 bg-white dark:border-slate-600 dark:bg-slate-700'"
+                                        class="flex h-6 w-6 shrink-0 items-center justify-center rounded-md border border-slate-200 bg-white text-slate-500 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-300"
                                     >
-                                        <x-icons.check x-show="isPermChecked('{{ $permission->name }}')" class="h-2.5 w-2.5 text-white" />
+                                        <x-admin.icon :name="$groupIcons[$group] ?? 'key'" class="h-3.5 w-3.5" />
                                     </span>
-                                    <span
-                                        class="truncate leading-none font-medium"
+                                    <h4 class="truncate text-sm font-medium text-slate-800 dark:text-slate-200">{{ $group }}</h4>
+                                </div>
+                                <span class="tabular shrink-0 text-xs text-slate-500 dark:text-slate-400">
+                                    <span x-text="
+                                        {{ Js::from($groupPerms->pluck('name')->values()) }}.filter((p) =>
+                                            isPermChecked(p),
+                                        ).length
+                                    ">
+                                        0
+                                    </span>
+                                    / {{ $groupPerms->count() }}
+                                </span>
+                            </div>
+
+                            <div class="grid grid-cols-1 gap-2 sm:grid-cols-2 lg:grid-cols-3">
+                                @foreach ($groupPerms as $permission)
+                                    <div
+                                        role="checkbox"
+                                        tabindex="0"
+                                        x-bind:aria-checked="isPermChecked('{{ $permission->name }}').toString()"
+                                        x-on:click="togglePermission('{{ $permission->name }}')"
+                                        x-on:keydown.space.prevent="togglePermission('{{ $permission->name }}')"
                                         :class="isPermChecked('{{ $permission->name }}')
-                                            ? 'text-blue-700 dark:text-blue-300'
-                                            : 'text-slate-600 dark:text-slate-400'"
+                                            ? 'border-blue-300 bg-blue-50 dark:border-blue-500/50 dark:bg-blue-500/10'
+                                            : 'border-slate-200 bg-white hover:border-slate-300 dark:border-slate-700 dark:bg-slate-900 dark:hover:border-slate-600'"
+                                        class="flex min-w-0 cursor-pointer items-center gap-2.5 rounded-lg border px-2.5 py-2 transition-colors select-none focus:outline-none focus-visible:ring-3 focus-visible:ring-blue-500/30"
                                         title="{{ $permission->name }}"
                                     >
-                                        {{ $permission->name }}
-                                    </span>
-                                </label>
-                            @endforeach
+                                        <span
+                                            class="flex h-4 w-4 shrink-0 items-center justify-center rounded border transition-colors"
+                                            :class="isPermChecked('{{ $permission->name }}')
+                                                ? 'border-blue-600 bg-blue-600 text-white dark:border-blue-500 dark:bg-blue-500'
+                                                : 'border-slate-300 bg-white text-transparent dark:border-slate-600 dark:bg-slate-800'"
+                                        >
+                                            <x-admin.icon name="check" class="h-3 w-3" />
+                                        </span>
+
+                                        <x-admin.icon
+                                            :name="$permissionIcon($permission->name)"
+                                            class="h-3.5 w-3.5 shrink-0 text-slate-400 dark:text-slate-500"
+                                        />
+
+                                        <span
+                                            class="min-w-0 flex-1 truncate text-xs font-medium"
+                                            :class="isPermChecked('{{ $permission->name }}')
+                                                ? 'text-blue-700 dark:text-blue-300'
+                                                : 'text-slate-600 dark:text-slate-300'"
+                                        >
+                                            {{ $permissionLabel($permission->name) }}
+                                        </span>
+
+                                        <span
+                                            x-cloak
+                                            x-show="isFromRole('{{ $permission->name }}')"
+                                            class="shrink-0 rounded-full bg-white px-1.5 py-px text-[10px] font-medium text-slate-500 ring-1 ring-slate-200 dark:bg-slate-800 dark:text-slate-400 dark:ring-slate-700"
+                                        >
+                                            Role
+                                        </span>
+                                    </div>
+                                @endforeach
+                            </div>
+                        </div>
+                    @endforeach
+                </div>
+            @endif
+        </x-admin.card>
+
+        <x-slot:aside>
+            <x-admin.card title="Avatar" icon="camera">
+                <x-admin.image-upload
+                    name="avatar"
+                    preset="avatar"
+                    remove-name="remove_avatar"
+                    label="Avatar"
+                    :current="isset($user) && $user->avatar ? asset('storage/' . $user->avatar) : null"
+                />
+            </x-admin.card>
+
+            <x-admin.card title="Account" icon="user-check">
+                <x-admin.form.select
+                    name="status"
+                    label="Status"
+                    required
+                    :options="\App\Enums\CommonStatusEnum::dotOptions()"
+                    :value="$user->status->value ?? \App\Enums\CommonStatusEnum::ACTIVE->value"
+                    hint="Inactive users cannot sign in."
+                />
+
+                @if ($isEdit)
+                    <dl class="mt-5 space-y-2.5 border-t border-slate-100 pt-4 text-xs dark:border-slate-800">
+                        <div class="flex items-center justify-between gap-3">
+                            <dt class="flex items-center gap-1.5 text-slate-500 dark:text-slate-400">
+                                <x-admin.icon name="calendar" class="h-3.5 w-3.5" />
+                                Joined
+                            </dt>
+                            <dd class="font-medium text-slate-700 dark:text-slate-200">{{ $user->created_at?->format('d M Y') }}</dd>
+                        </div>
+                        <div class="flex items-center justify-between gap-3">
+                            <dt class="flex items-center gap-1.5 text-slate-500 dark:text-slate-400">
+                                <x-admin.icon name="clock" class="h-3.5 w-3.5" />
+                                Last updated
+                            </dt>
+                            <dd class="font-medium text-slate-700 dark:text-slate-200">{{ $user->updated_at?->diffForHumans() }}</dd>
+                        </div>
+                    </dl>
+                @endif
+            </x-admin.card>
+
+            <x-admin.card title="Access summary" icon="shield-check">
+                <div class="space-y-4">
+                    <div>
+                        <p class="mb-2 text-xs font-medium text-slate-500 dark:text-slate-400">Roles</p>
+                        <div class="flex flex-wrap gap-1.5">
+                            <template x-for="role in selectedRoles" :key="'s_' + role">
+                                <span
+                                    class="inline-flex items-center gap-1 rounded-full bg-blue-50 px-2 py-0.5 text-xs font-medium text-blue-700 capitalize dark:bg-blue-500/10 dark:text-blue-300"
+                                >
+                                    <x-admin.icon name="shield" class="h-3 w-3" />
+                                    <span x-text="role"></span>
+                                </span>
+                            </template>
+                            <span x-show="selectedRoles.length === 0" class="text-xs text-slate-400 dark:text-slate-500">No roles selected</span>
                         </div>
                     </div>
-                @endforeach
-            </div>
-        @endif
-    </div>
-</div>
 
-<div class="mt-6"></div>
+                    <div class="flex items-center justify-between rounded-lg bg-slate-50 px-3 py-2.5 dark:bg-slate-800/60">
+                        <span class="flex items-center gap-1.5 text-xs text-slate-500 dark:text-slate-400">
+                            <x-admin.icon name="key" class="h-3.5 w-3.5" />
+                            Permissions granted
+                        </span>
+                        <span class="tabular text-sm font-semibold text-slate-900 dark:text-white">
+                            <span x-text="directPermissions.length">0</span>
+                            <span class="text-xs font-normal text-slate-400">/ {{ $totalPermissions }}</span>
+                        </span>
+                    </div>
+                </div>
+            </x-admin.card>
+        </x-slot>
+    </x-admin.form-grid>
+</div>

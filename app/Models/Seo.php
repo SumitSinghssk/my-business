@@ -106,14 +106,15 @@ class Seo extends Model
         return json_encode(count($nodes) === 1 ? $nodes[0] : $nodes, JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE | JSON_HEX_TAG);
     }
 
+    /** Drop the cached records. Needed after writes that skip model events (query-builder updates, saveQuietly). */
+    public static function flushCache(): void
+    {
+        Cache::memo()->forget('seo_all');
+    }
+
     protected static function booted()
     {
-        static::saved(function () {
-            Cache::memo()->forget('seo_all');
-        });
-
-        static::deleted(function () {
-            Cache::memo()->forget('seo_all');
-        });
+        static::saved(fn () => static::flushCache());
+        static::deleted(fn () => static::flushCache());
     }
 }

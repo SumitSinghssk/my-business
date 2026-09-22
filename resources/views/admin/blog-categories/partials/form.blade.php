@@ -2,108 +2,83 @@
     x-data="blogCategoryForm({
                 preview:
                     '{{ isset($blogCategory) && $blogCategory->image ? asset('storage/' . $blogCategory->image) : '' }}',
-                name: `{{ old('name', $blogCategory->name ?? '') }}`,
-                slug: `{{ old('slug', $blogCategory->slug ?? '') }}`,
+                name: @js(old('name', $blogCategory->name ?? '')),
+                slug: @js(old('slug', $blogCategory->slug ?? '')),
             })"
-    class="space-y-8"
 >
-    <div class="col-span-9 space-y-5">
-        <div class="grid grid-cols-1 gap-5 sm:grid-cols-2">
-            <div>
-                <x-admin.form-label for="name" label="Category Name" required />
-                <x-admin.form-input
-                    type="text"
-                    name="name"
-                    id="name"
-                    x-model="name"
-                    :value="old('name', $blogCategory->name ?? '')"
-                    placeholder="e.g. Technology, Lifestyle"
-                    :error="$errors->first('name')"
-                >
-                    <x-slot:leftIcon>
-                        <x-icons.pages class="h-5 w-5" />
-                    </x-slot>
-                </x-admin.form-input>
-                <x-admin.form-error for="name" />
+    <x-admin.form-grid>
+        <x-admin.card title="Category details" text="The name, web address and a short description." icon="tag">
+            <div class="space-y-5">
+                <div class="grid grid-cols-1 gap-5 sm:grid-cols-2">
+                    <x-admin.form.input
+                        name="name"
+                        label="Category name"
+                        required
+                        x-model="name"
+                        :value="$blogCategory->name ?? ''"
+                        placeholder="e.g. Technology, Lifestyle"
+                    >
+                        <x-slot:leftIcon>
+                            <x-admin.icon name="tag" class="h-4 w-4" />
+                        </x-slot>
+                    </x-admin.form.input>
+
+                    <x-admin.form.input
+                        name="slug"
+                        label="Slug"
+                        required
+                        x-model="slug"
+                        x-on:input="onSlugInput"
+                        :value="$blogCategory->slug ?? ''"
+                        placeholder="e.g. technology, life-style"
+                    >
+                        <x-slot:leftIcon>
+                            <x-admin.icon name="link" class="h-4 w-4" />
+                        </x-slot>
+                    </x-admin.form.input>
+                </div>
+
+                <x-admin.form.textarea
+                    name="description"
+                    label="Description"
+                    rows="3"
+                    :value="$blogCategory->description ?? ''"
+                    placeholder="Brief description of this category..."
+                />
             </div>
+        </x-admin.card>
 
-            <div>
-                <x-admin.form-label for="slug" label="Slug" required />
-                <x-admin.form-input
-                    type="text"
-                    name="slug"
-                    id="slug"
-                    x-model="slug"
-                    x-on:input="onSlugInput"
-                    :value="old('slug', $blogCategory->slug ?? '')"
-                    placeholder="e.g. technology, life-style"
-                    :error="$errors->first('slug')"
-                >
-                    <x-slot:leftIcon>
-                        <x-icons.url class="h-5 w-5" />
-                    </x-slot>
-                </x-admin.form-input>
-                <x-admin.form-error for="slug" />
-            </div>
-        </div>
+        <x-slot:aside>
+            <x-admin.card title="Settings" icon="sliders">
+                <div class="space-y-5">
+                    <x-admin.form.select
+                        name="status"
+                        label="Status"
+                        required
+                        :options="\App\Enums\CommonStatusEnum::dotOptions()"
+                        :value="isset($blogCategory) ? $blogCategory->status->value : \App\Enums\CommonStatusEnum::ACTIVE->value"
+                    />
 
-        <div class="grid grid-cols-1 gap-5 sm:grid-cols-2">
-            <div>
-                <x-admin.form-label for="parent_id" label="Parent Category" />
-                <select
-                    name="parent_id"
-                    id="parent_id"
-                    class="focus:border-primary-400 focus:ring-primary-100 dark:focus:border-primary-500 dark:focus:ring-primary-900/30 w-full rounded-xl border border-slate-200 bg-white px-4 py-2.5 text-sm text-slate-900 placeholder-slate-400 focus:ring-2 focus:outline-none dark:border-slate-700 dark:bg-slate-900 dark:text-white"
-                >
-                    <option value="">— None (Top-level) —</option>
-                    @foreach ($parentCategories as $parent)
-                        <option value="{{ $parent->id }}" {{ old('parent_id', $blogCategory->parent_id ?? '') == $parent->id ? 'selected' : '' }}>
-                            {{ $parent->name }}
-                        </option>
-                    @endforeach
-                </select>
-                <x-admin.form-error for="parent_id" />
-            </div>
+                    <x-admin.form.select
+                        name="parent_id"
+                        label="Parent category"
+                        icon="folder-tree"
+                        :options="['' => '— None (Top-level) —'] + $parentCategories->pluck('name', 'id')->all()"
+                        :value="$blogCategory->parent_id ?? ''"
+                    />
+                </div>
+            </x-admin.card>
 
-            <div>
-                <x-admin.form-label for="status" label="Status" required />
-
-                @php
-                    use App\Enums\CommonStatusEnum;
-
-                    $status = old('status', $blogCategory->status ?? CommonStatusEnum::ACTIVE->value);
-                @endphp
-
-                <x-admin.form-select name="status" id="status">
-                    @foreach (CommonStatusEnum::cases() as $case)
-                        <option value="{{ $case->value }}" @selected($status === $case->value)>
-                            {{ $case->label() }}
-                        </option>
-                    @endforeach
-                </x-admin.form-select>
-                <x-admin.form-error for="status" />
-            </div>
-        </div>
-
-        <div>
-            <x-admin.form-label for="description" label="Description" />
-            <x-admin.form-textarea name="description" id="description" rows="3" placeholder="Brief description of this category...">
-                {{ old('description', $blogCategory->description ?? '') }}
-            </x-admin.form-textarea>
-            <x-admin.form-error for="description" />
-        </div>
-    </div>
-
-    <div class="mb-4 space-y-4">
-        <div>
-            <x-admin.image-upload
-                name="image"
-                preset="category"
-                label="Category image"
-                :current="isset($blogCategory) && $blogCategory->image ? asset('storage/' . $blogCategory->image) : null"
-            />
-        </div>
-    </div>
+            <x-admin.card title="Category image" icon="image">
+                <x-admin.image-upload
+                    name="image"
+                    preset="category"
+                    label="Category image"
+                    :current="isset($blogCategory) && $blogCategory->image ? asset('storage/' . $blogCategory->image) : null"
+                />
+            </x-admin.card>
+        </x-slot>
+    </x-admin.form-grid>
 </div>
 
 <script>

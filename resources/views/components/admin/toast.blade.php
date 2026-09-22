@@ -1,7 +1,7 @@
 <div
     x-data="flashMessages()"
     x-init="init()"
-    class="admin-theme pointer-events-none fixed top-5 right-5 z-100 flex w-full max-w-100 flex-col gap-3"
+    class="admin-theme pointer-events-none fixed right-4 bottom-4 z-100 flex w-[calc(100%-2rem)] max-w-96 flex-col-reverse gap-2.5 sm:right-6 sm:bottom-6"
     aria-live="polite"
     aria-label="Notifications"
 >
@@ -9,45 +9,37 @@
         <div
             x-show="toast.visible"
             x-transition:enter="transition duration-300 ease-out"
-            x-transition:enter-start="translate-x-12 scale-95 opacity-0"
-            x-transition:enter-end="translate-x-0 scale-100 opacity-100"
+            x-transition:enter-start="translate-y-3 scale-[0.98] opacity-0"
+            x-transition:enter-end="translate-y-0 scale-100 opacity-100"
             x-transition:leave="transition duration-200 ease-in"
             x-transition:leave-start="translate-x-0 opacity-100"
-            x-transition:leave-end="translate-x-12 opacity-0"
-            class="group pointer-events-auto relative flex items-start gap-4 overflow-hidden rounded-2xl border border-gray-200/50 bg-white/90 p-4 shadow-[0_8px_30px_rgb(0,0,0,0.12)] backdrop-blur-md dark:border-gray-700/50 dark:bg-gray-900/90"
+            x-transition:leave-end="translate-x-6 opacity-0"
+            class="group pointer-events-auto relative flex items-start gap-3 overflow-hidden rounded-xl border border-slate-200 bg-white p-3.5 shadow-lg dark:border-slate-700 dark:bg-slate-900"
         >
             <div
-                class="flex h-10 w-10 shrink-0 items-center justify-center rounded-md shadow-sm"
+                class="flex h-8 w-8 shrink-0 items-center justify-center rounded-full"
                 :class="{
-                    'bg-emerald-100 text-emerald-600 dark:bg-emerald-500/20 dark:text-emerald-400': toast.type === 'success',
-                    'bg-rose-100 text-rose-600 dark:bg-rose-500/20 dark:text-rose-400':       toast.type === 'error',
-                    'bg-amber-100 text-amber-600 dark:bg-amber-500/20 dark:text-amber-400':   toast.type === 'warning',
-                    'bg-blue-100 text-blue-600 dark:bg-blue-500/20 dark:text-blue-400':       toast.type === 'info',
+                    'bg-emerald-50 text-emerald-600 dark:bg-emerald-500/15 dark:text-emerald-400': toast.type === 'success',
+                    'bg-red-50 text-red-600 dark:bg-red-500/15 dark:text-red-400': toast.type === 'error',
+                    'bg-amber-50 text-amber-600 dark:bg-amber-500/15 dark:text-amber-400': toast.type === 'warning',
+                    'bg-blue-50 text-blue-600 dark:bg-blue-500/15 dark:text-blue-400': toast.type === 'info',
                 }"
             >
-                <template x-if="toast.type === 'success'">
-                    <x-icons.check class="h-6 w-6" />
-                </template>
-                <template x-if="toast.type === 'error'">
-                    <x-icons.close class="h-6 w-6" />
-                </template>
-                <template x-if="toast.type === 'warning'">
-                    <x-icons.warning class="h-6 w-6" />
-                </template>
-                <template x-if="toast.type === 'info'">
-                    <x-icons.info class="h-6 w-6" />
-                </template>
+                <x-admin.icon name="check-circle" x-show="toast.type === 'success'" class="h-4.5 w-4.5" />
+                <x-admin.icon name="alert-circle" x-show="toast.type === 'error'" class="h-4.5 w-4.5" />
+                <x-admin.icon name="alert-triangle" x-show="toast.type === 'warning'" class="h-4.5 w-4.5" />
+                <x-admin.icon name="info" x-show="toast.type === 'info'" class="h-4.5 w-4.5" />
             </div>
 
-            <div class="flex-1 pt-0.5">
-                <h3 class="text-sm font-bold text-gray-900 dark:text-white" x-text="toast.title"></h3>
-                <p class="mt-1 text-sm leading-relaxed text-gray-600 dark:text-gray-400" x-text="toast.message"></p>
+            <div class="min-w-0 flex-1 pt-0.5">
+                <h3 class="text-sm font-semibold text-slate-900 dark:text-white" x-text="toast.title"></h3>
+                <p class="mt-0.5 text-sm leading-relaxed text-slate-600 dark:text-slate-400" x-text="toast.message"></p>
 
                 <template x-if="toast.errors && toast.errors.length">
-                    <ul class="mt-2 space-y-1 border-t border-gray-100 pt-2 dark:border-gray-800">
+                    <ul class="mt-2 space-y-1 border-t border-slate-100 pt-2 dark:border-slate-800">
                         <template x-for="err in toast.errors" :key="err">
-                            <li class="flex items-center gap-2 text-xs font-medium text-rose-600 dark:text-rose-400">
-                                <span class="h-1 w-1 rounded-full bg-rose-500"></span>
+                            <li class="flex items-start gap-2 text-xs text-red-600 dark:text-red-400">
+                                <span class="mt-1.5 h-1 w-1 shrink-0 rounded-full bg-red-500"></span>
                                 <span x-text="err"></span>
                             </li>
                         </template>
@@ -57,19 +49,21 @@
 
             <button
                 x-on:click="remove(toast.id)"
-                class="shrink-0 cursor-pointer rounded-lg p-1 text-gray-400 transition-colors hover:bg-gray-100 hover:text-gray-600 dark:hover:bg-gray-800 dark:hover:text-gray-200"
+                type="button"
+                aria-label="Dismiss notification"
+                class="shrink-0 cursor-pointer rounded-md p-1 text-slate-400 transition-colors hover:bg-slate-100 hover:text-slate-600 dark:hover:bg-slate-800 dark:hover:text-slate-200"
             >
-                <x-icons.close class="h-4 w-4" />
+                <x-admin.icon name="x" class="h-4 w-4" />
             </button>
 
-            <div class="absolute right-0 bottom-0 left-0 h-0.75 bg-gray-100 dark:bg-gray-800">
+            <div class="absolute right-0 bottom-0 left-0 h-0.5 bg-slate-100 dark:bg-slate-800">
                 <div
                     class="h-full transition-all ease-linear"
                     :class="{
                         'bg-emerald-500': toast.type === 'success',
-                        'bg-rose-500':    toast.type === 'error',
-                        'bg-amber-500':   toast.type === 'warning',
-                        'bg-blue-500':    toast.type === 'info',
+                        'bg-red-500': toast.type === 'error',
+                        'bg-amber-500': toast.type === 'warning',
+                        'bg-blue-500': toast.type === 'info',
                     }"
                     :style="{ width: toast.progress + '%', transitionDuration: '100ms' }"
                 ></div>

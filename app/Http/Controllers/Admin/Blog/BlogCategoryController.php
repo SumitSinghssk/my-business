@@ -78,8 +78,9 @@ class BlogCategoryController extends Controller
 
         $blogCategory->load('seo');
 
+        // The current parent stays in the list even if it was deactivated, so saving doesn't silently detach it.
         $parentCategories = BlogCategory::whereNull('parent_id')
-            ->where('status', 'active')
+            ->where(fn ($q) => $q->where('status', 'active')->orWhere('id', $blogCategory->parent_id))
             ->where('id', '!=', $blogCategory->id)
             ->orderBy('name')
             ->get();

@@ -1,24 +1,33 @@
 @php
+    // action => [label, tone, icon]
     $actionConfig = [
-        'login' => ['label' => 'Login', 'dot' => 'bg-green-500', 'bg' => 'bg-green-100 dark:bg-green-900/30', 'text' => 'text-green-700 dark:text-green-400', 'icon' => 'icons.login'],
-        'logout' => ['label' => 'Logout', 'dot' => 'bg-slate-400', 'bg' => 'bg-slate-100 dark:bg-slate-700', 'text' => 'text-slate-700 dark:text-slate-300', 'icon' => 'icons.logout'],
-        'failed_login' => ['label' => 'Failed Login', 'dot' => 'bg-red-500', 'bg' => 'bg-red-100 dark:bg-red-900/30', 'text' => 'text-red-700 dark:text-red-400', 'icon' => 'icons.close'],
-        'viewed' => ['label' => 'Viewed', 'dot' => 'bg-blue-500', 'bg' => 'bg-blue-100 dark:bg-blue-900/30', 'text' => 'text-blue-700 dark:text-blue-400', 'icon' => 'icons.visibility'],
-        'created' => ['label' => 'Created', 'dot' => 'bg-green-500', 'bg' => 'bg-green-100 dark:bg-green-900/30', 'text' => 'text-green-700 dark:text-green-400', 'icon' => 'icons.add'],
-        'updated' => ['label' => 'Updated', 'dot' => 'bg-yellow-500', 'bg' => 'bg-yellow-100 dark:bg-yellow-900/30', 'text' => 'text-yellow-700 dark:text-yellow-400', 'icon' => 'icons.update'],
-        'deleted' => ['label' => 'Deleted', 'dot' => 'bg-red-500', 'bg' => 'bg-red-100 dark:bg-red-900/30', 'text' => 'text-red-700 dark:text-red-400', 'icon' => 'icons.delete'],
+        'login' => ['Login', 'success', 'log-in'],
+        'logout' => ['Logout', 'neutral', 'log-out'],
+        'failed_login' => ['Failed login', 'danger', 'x-circle'],
+        'viewed' => ['Viewed', 'info', 'eye'],
+        'created' => ['Created', 'success', 'plus'],
+        'updated' => ['Updated', 'warning', 'pencil'],
+        'deleted' => ['Deleted', 'danger', 'trash'],
     ];
 
-    $cfg = $actionConfig[$log->action] ?? [
-        'label' => $log->action,
-        'dot' => 'bg-slate-400',
-        'bg' => 'bg-slate-100 dark:bg-slate-700',
-        'text' => 'text-slate-700 dark:text-slate-300',
-        'icon' => 'icons.default',
-    ];
+    [$label, $tone, $icon] = $actionConfig[$log->action] ?? [ucfirst(str_replace('_', ' ', (string) $log->action)), 'neutral', 'circle'];
+
+    $toneTile = [
+        'success' => 'bg-emerald-50 text-emerald-600 dark:bg-emerald-500/10 dark:text-emerald-300',
+        'neutral' => 'bg-slate-100 text-slate-600 dark:bg-slate-800 dark:text-slate-300',
+        'info' => 'bg-blue-50 text-blue-600 dark:bg-blue-500/10 dark:text-blue-300',
+        'warning' => 'bg-amber-50 text-amber-600 dark:bg-amber-500/10 dark:text-amber-300',
+        'danger' => 'bg-red-50 text-red-600 dark:bg-red-500/10 dark:text-red-300',
+    ][$tone];
 
     $isSession = in_array($log->action, ['login', 'logout', 'failed_login']);
     $isCrud = in_array($log->action, ['created', 'updated', 'deleted']);
+
+    $deviceIcon = match ($log->device_type) {
+        'mobile' => 'smartphone',
+        'tablet' => 'tablet',
+        default => 'monitor',
+    };
 
     $renderVal = function ($val): string {
         if ($val === null) {
@@ -41,12 +50,30 @@
     $diffKeys = array_unique(array_merge(array_keys($oldArr), array_keys($newArr)));
 
     $methodColors = [
-        'GET' => 'bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400',
-        'POST' => 'bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400',
-        'PUT' => 'bg-yellow-100 text-yellow-700 dark:bg-yellow-900/30 dark:text-yellow-400',
-        'PATCH' => 'bg-yellow-100 text-yellow-700 dark:bg-yellow-900/30 dark:text-yellow-400',
-        'DELETE' => 'bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400',
+        'GET' => 'bg-blue-50 text-blue-700 ring-blue-600/15 dark:bg-blue-500/10 dark:text-blue-300 dark:ring-blue-400/20',
+        'POST' => 'bg-emerald-50 text-emerald-700 ring-emerald-600/15 dark:bg-emerald-500/10 dark:text-emerald-300 dark:ring-emerald-400/20',
+        'PUT' => 'bg-amber-50 text-amber-700 ring-amber-600/20 dark:bg-amber-500/10 dark:text-amber-300 dark:ring-amber-400/20',
+        'PATCH' => 'bg-amber-50 text-amber-700 ring-amber-600/20 dark:bg-amber-500/10 dark:text-amber-300 dark:ring-amber-400/20',
+        'DELETE' => 'bg-red-50 text-red-700 ring-red-600/15 dark:bg-red-500/10 dark:text-red-300 dark:ring-red-400/20',
     ];
+
+    // One label/value line inside a card. Values are escaped here.
+    $row = function (string $label, $value = null, bool $mono = false): string {
+        $value = $value === null || $value === '' ? '—' : (string) $value;
+        $valueClass = $mono ? 'font-mono text-xs' : 'text-sm';
+
+        return '<div class="flex items-start justify-between gap-4 py-2.5">' .
+            '<dt class="shrink-0 text-sm text-slate-500 dark:text-slate-400">' .
+            e($label) .
+            '</dt>' .
+            '<dd class="' .
+            $valueClass .
+            ' min-w-0 text-right font-medium wrap-break-word text-slate-900 dark:text-white">' .
+            e($value) .
+            '</dd>' .
+            '</div>';
+    };
+    $dl = 'divide-y divide-slate-100 dark:divide-slate-800';
 @endphp
 
 <x-admin
@@ -55,133 +82,117 @@
         ['label' => 'Log #' . $log->id, 'url' => '#'],
     ]"
 >
-    <x-admin.card class="mb-4">
-        <div class="flex items-center justify-between">
-            <div class="flex items-center gap-4">
-                <div class="{{ $cfg['bg'] }} {{ $cfg['text'] }} flex h-14 w-14 items-center justify-center rounded-2xl">
-                    <x-dynamic-component :component="$cfg['icon']" class="h-7 w-7" />
-                </div>
-                <div>
-                    <div class="flex flex-wrap items-center gap-2">
-                        <h1 class="text-lg font-semibold text-slate-900 dark:text-white">{{ $cfg['label'] }}</h1>
-                        @if ($log->is_suspicious)
-                            <span
-                                class="inline-flex items-center gap-1 rounded-sm bg-red-100 px-2 py-0.5 text-xs font-medium text-red-600 dark:bg-red-900/30 dark:text-red-400"
-                            >
-                                <x-icons.warning class="h-3 w-3" />
-                                Suspicious Activity
-                            </span>
-                        @endif
-                    </div>
-                    <p class="text-sm text-slate-500 dark:text-slate-400">
-                        {{ $log->description ?? ($log->page_title ?? ($log->model_name ?? "Log #{$log->id}")) }}
-                    </p>
-                </div>
-            </div>
-            <div class="text-right">
-                <p class="text-[10px] font-bold tracking-wider text-slate-400 uppercase">Log ID</p>
-                <p class="font-mono text-sm font-semibold text-slate-700 dark:text-slate-300">#{{ $log->id }}</p>
-            </div>
-        </div>
-    </x-admin.card>
+    <x-admin.page-header
+        :title="'Log #' . $log->id"
+        :description="$log->description ?? ($log->page_title ?? ($log->model_name ?? 'Activity log entry'))"
+        :back="route('admin.activity-logs.index')"
+    />
 
-    <div class="grid grid-cols-1 gap-4 lg:grid-cols-12">
-        <div class="space-y-4 lg:col-span-8">
-            <x-admin.card>
-                <x-slot name="title">
-                    <div class="flex items-center gap-2 dark:text-white">
-                        <div class="flex h-8 w-8 items-center justify-center rounded-lg bg-blue-100 dark:bg-blue-900/30">
-                            <x-icons.account-circle class="h-4 w-4 text-blue-600 dark:text-blue-400" />
-                        </div>
-                        <span>User</span>
-                    </div>
-                </x-slot>
-
-                @php
-                    $infoRow = function (string $label, ?string $value = null, ?string $slotHtml = null): string {
-                        $content = $value !== null ? '<span class="ml-4 text-right text-sm font-medium text-slate-900 dark:text-white">' . e($value) . '</span>' : $slotHtml ?? '<span class="ml-4 text-right text-sm font-medium text-slate-900 dark:text-white">—</span>';
-                        return '<div class="flex items-start justify-between border-b border-slate-100 py-2.5 last:border-0 dark:border-slate-700"><span class="shrink-0 text-sm text-slate-500 dark:text-slate-400">' . e($label) . '</span>' . $content . '</div>';
-                    };
-                @endphp
-
-                {!! $infoRow('Name', $log->user?->name ?? 'Guest / Unknown') !!}
-                {!! $infoRow('Email', $log->user?->email ?? ($log->email ?? '—')) !!}
-                {!! $infoRow('User ID', $log->user_id ? '#' . $log->user_id : '—') !!}
-            </x-admin.card>
-
-            <x-admin.card>
-                <x-slot name="title">
-                    <div class="flex items-center gap-2 dark:text-white">
-                        <div class="flex h-8 w-8 items-center justify-center rounded-lg bg-purple-100 dark:bg-purple-900/30">
-                            <x-icons.url class="h-4 w-4 text-purple-600 dark:text-purple-400" />
-                        </div>
-                        <span>Request</span>
-                    </div>
-                </x-slot>
-
-                {!! $infoRow('Page Title', $log->page_title ?? '—') !!}
-
-                <div class="flex items-start justify-between border-b border-slate-100 py-2.5 last:border-0 dark:border-slate-700">
-                    <span class="shrink-0 text-sm text-slate-500 dark:text-slate-400">URL</span>
-                    <span class="ml-4 max-w-xs font-mono text-xs break-all text-slate-900 dark:text-white">{{ $log->url ?? '—' }}</span>
-                </div>
-
-                <div class="flex items-start justify-between border-b border-slate-100 py-2.5 last:border-0 dark:border-slate-700">
-                    <span class="shrink-0 text-sm text-slate-500 dark:text-slate-400">Method</span>
-
-                    @if ($log->method)
-                        <span class="{{ $methodColors[$log->method] ?? 'bg-slate-100 text-slate-600' }} rounded px-1.5 py-0.5 text-xs font-bold">
-                            {{ $log->method }}
-                        </span>
-                    @else
-                        <span class="ml-4 text-right text-sm font-medium text-slate-900 dark:text-white">—</span>
+    {{-- Summary --}}
+    <div
+        class="mb-4 flex flex-col gap-4 rounded-xl border border-slate-200/80 bg-white p-4 shadow-xs sm:flex-row sm:items-center sm:p-5 dark:border-slate-800 dark:bg-slate-900"
+    >
+        <div class="flex min-w-0 flex-1 items-center gap-3.5">
+            <span class="{{ $toneTile }} flex h-11 w-11 shrink-0 items-center justify-center rounded-xl">
+                <x-admin.icon :name="$icon" class="h-5 w-5" />
+            </span>
+            <div class="min-w-0">
+                <div class="flex flex-wrap items-center gap-2">
+                    <h2 class="text-base font-semibold text-slate-900 dark:text-white">{{ $label }}</h2>
+                    @if ($log->is_suspicious)
+                        <x-admin.status-badge tone="danger" label="Suspicious activity" />
                     @endif
                 </div>
+                <p class="mt-0.5 flex items-center gap-1.5 truncate text-sm text-slate-500 dark:text-slate-400">
+                    <x-admin.icon name="user" class="h-3.5 w-3.5 shrink-0" />
+                    <span class="truncate">{{ $log->user?->name ?? 'Guest' }}</span>
+                </p>
+            </div>
+        </div>
 
-                <div class="flex items-start justify-between border-b border-slate-100 py-2.5 last:border-0 dark:border-slate-700">
-                    <span class="shrink-0 text-sm text-slate-500 dark:text-slate-400">IP Address</span>
-                    <span class="font-mono text-sm font-medium text-slate-900 dark:text-white">{{ $log->ip_address ?? '—' }}</span>
-                </div>
+        <div class="flex flex-wrap gap-x-6 gap-y-2 text-sm sm:justify-end">
+            <span class="flex items-center gap-1.5 text-slate-600 dark:text-slate-300">
+                <x-admin.icon name="clock" class="h-4 w-4 text-slate-400" />
+                {{ $log->created_at_formatted }}
+            </span>
+            @if ($log->ip_address)
+                <span class="flex items-center gap-1.5 font-mono text-xs text-slate-600 dark:text-slate-300">
+                    <x-admin.icon name="wifi" class="h-4 w-4 text-slate-400" />
+                    {{ $log->ip_address }}
+                </span>
+            @endif
+        </div>
+    </div>
 
-                {!! $infoRow('Description', $log->description ?? '—') !!}
+    <div class="grid grid-cols-1 gap-4 lg:grid-cols-12">
+        <div class="min-w-0 space-y-4 lg:col-span-8">
+            <x-admin.card title="User" icon="user-circle" body-class="!py-1.5">
+                <dl class="{{ $dl }}">
+                    {!! $row('Name', $log->user?->name ?? 'Guest / Unknown') !!}
+                    {!! $row('Email', $log->user?->email ?? $log->email) !!}
+                    {!! $row('User ID', $log->user_id ? '#' . $log->user_id : null) !!}
+                </dl>
+            </x-admin.card>
+
+            <x-admin.card title="Request" icon="globe" body-class="!py-1.5">
+                <dl class="{{ $dl }}">
+                    {!! $row('Page title', $log->page_title) !!}
+                    <div class="flex items-start justify-between gap-4 py-2.5">
+                        <dt class="shrink-0 text-sm text-slate-500 dark:text-slate-400">URL</dt>
+                        <dd class="min-w-0 text-right font-mono text-xs break-all text-slate-900 dark:text-white">{{ $log->url ?? '—' }}</dd>
+                    </div>
+                    <div class="flex items-center justify-between gap-4 py-2.5">
+                        <dt class="shrink-0 text-sm text-slate-500 dark:text-slate-400">Method</dt>
+                        <dd>
+                            @if ($log->method)
+                                <span
+                                    class="{{ $methodColors[$log->method] ?? 'bg-slate-50 text-slate-600 ring-slate-500/15 dark:bg-slate-800 dark:text-slate-300 dark:ring-slate-600/40' }} rounded-md px-1.5 py-0.5 font-mono text-xs font-medium ring-1 ring-inset"
+                                >
+                                    {{ $log->method }}
+                                </span>
+                            @else
+                                <span class="text-sm text-slate-400">—</span>
+                            @endif
+                        </dd>
+                    </div>
+                    {!! $row('IP address', $log->ip_address, true) !!}
+                    {!! $row('Description', $log->description) !!}
+                </dl>
             </x-admin.card>
 
             @if ($isCrud)
-                <x-admin.card>
-                    <x-slot name="title">
-                        <div class="flex items-center gap-2 dark:text-white">
-                            <div class="flex h-8 w-8 items-center justify-center rounded-lg bg-yellow-100 dark:bg-yellow-900/30">
-                                <x-icons.edit class="h-4 w-4 text-yellow-600 dark:text-yellow-400" />
-                            </div>
-                            <span>Changes</span>
-                        </div>
-                    </x-slot>
-
-                    {!! $infoRow('Model', $log->model_type ? class_basename($log->model_type) : '—') !!}
-                    {!! $infoRow('Model ID', $log->model_id ? '#' . $log->model_id : '—') !!}
-                    {!! $infoRow('Name', $log->model_name ?? '—') !!}
+                <x-admin.card title="Changes" icon="pencil">
+                    <dl class="{{ $dl }} -my-2.5">
+                        {!! $row('Model', $log->model_type ? class_basename($log->model_type) : null) !!}
+                        {!! $row('Model ID', $log->model_id ? '#' . $log->model_id : null) !!}
+                        {!! $row('Name', $log->model_name) !!}
+                    </dl>
 
                     @if ($log->old_values || $log->new_values)
-                        <div class="mt-4">
+                        <div class="mt-5">
                             @if (empty($diffKeys))
                                 <p class="text-sm text-slate-400">No changes recorded.</p>
                             @else
-                                <div class="overflow-hidden rounded-xl border border-slate-200 dark:border-slate-700">
+                                <div class="overflow-x-auto rounded-lg border border-slate-200 dark:border-slate-700">
                                     <table class="w-full text-sm">
                                         <thead>
                                             <tr class="border-b border-slate-200 bg-slate-50 dark:border-slate-700 dark:bg-slate-800/60">
-                                                <th class="px-4 py-2 text-left text-[10px] font-bold tracking-wider text-slate-400 uppercase">
-                                                    Field
+                                                <th class="px-3.5 py-2 text-left text-xs font-medium text-slate-500 dark:text-slate-400">Field</th>
+                                                <th class="px-3.5 py-2 text-left text-xs font-medium text-red-600 dark:text-red-400">
+                                                    <span class="inline-flex items-center gap-1">
+                                                        <x-admin.icon name="minus" class="h-3 w-3" />
+                                                        Before
+                                                    </span>
                                                 </th>
-                                                <th class="px-4 py-2 text-left text-[10px] font-bold tracking-wider text-red-400 uppercase">
-                                                    Before
-                                                </th>
-                                                <th class="px-4 py-2 text-left text-[10px] font-bold tracking-wider text-green-500 uppercase">
-                                                    After
+                                                <th class="px-3.5 py-2 text-left text-xs font-medium text-emerald-600 dark:text-emerald-400">
+                                                    <span class="inline-flex items-center gap-1">
+                                                        <x-admin.icon name="plus" class="h-3 w-3" />
+                                                        After
+                                                    </span>
                                                 </th>
                                             </tr>
                                         </thead>
-                                        <tbody>
+                                        <tbody class="divide-y divide-slate-100 dark:divide-slate-800">
                                             @foreach ($diffKeys as $key)
                                                 @php
                                                     $oldVal = $oldArr[$key] ?? null;
@@ -192,39 +203,39 @@
                                                     $isMulti = str_contains($oldStr, "\n") || str_contains($newStr, "\n");
                                                 @endphp
 
-                                                <tr
-                                                    class="{{ $changed ? '' : 'opacity-50' }} border-b border-slate-100 last:border-0 dark:border-slate-800"
-                                                >
-                                                    <td class="px-4 py-2.5 align-top font-medium text-slate-700 capitalize dark:text-slate-300">
-                                                        {{ str_replace('_', ' ', $key) }}
+                                                <tr class="{{ $changed ? '' : 'opacity-50' }}">
+                                                    <td
+                                                        class="px-3.5 py-2.5 align-top font-medium whitespace-nowrap text-slate-700 dark:text-slate-300"
+                                                    >
+                                                        {{ ucfirst(str_replace('_', ' ', $key)) }}
                                                     </td>
-                                                    <td class="px-4 py-2.5 align-top">
+                                                    <td class="px-3.5 py-2.5 align-top">
                                                         <div
-                                                            class="max-w-70 rounded-lg bg-red-50 px-2 py-1.5 text-red-700 dark:bg-red-900/20 dark:text-red-400"
+                                                            class="max-w-70 rounded-md bg-red-50 px-2 py-1.5 text-red-700 dark:bg-red-500/10 dark:text-red-300"
                                                         >
                                                             @if ($isMulti)
                                                                 <pre
-                                                                    class="max-h-40 overflow-auto font-mono text-[10px] leading-tight whitespace-pre-wrap"
+                                                                    class="max-h-40 overflow-auto font-mono text-[11px] leading-tight whitespace-pre-wrap"
                                                                 >
-                                                                    {{ $oldStr }}
-                                                                </pre>
+{{ $oldStr }}</pre
+                                                                >
                                                             @else
-                                                                <span class="text-xs">{{ $oldStr }}</span>
+                                                                <span class="text-xs wrap-break-word">{{ $oldStr }}</span>
                                                             @endif
                                                         </div>
                                                     </td>
-                                                    <td class="px-4 py-2.5 align-top">
+                                                    <td class="px-3.5 py-2.5 align-top">
                                                         <div
-                                                            class="max-w-70 rounded-lg bg-green-50 px-2 py-1.5 text-green-700 dark:bg-green-900/20 dark:text-green-400"
+                                                            class="max-w-70 rounded-md bg-emerald-50 px-2 py-1.5 text-emerald-700 dark:bg-emerald-500/10 dark:text-emerald-300"
                                                         >
                                                             @if ($isMulti)
                                                                 <pre
-                                                                    class="max-h-40 overflow-auto font-mono text-[10px] leading-tight whitespace-pre-wrap"
+                                                                    class="max-h-40 overflow-auto font-mono text-[11px] leading-tight whitespace-pre-wrap"
                                                                 >
-                                                                    {{ $newStr }}
-                                                                </pre>
+{{ $newStr }}</pre
+                                                                >
                                                             @else
-                                                                <span class="text-xs">{{ $newStr }}</span>
+                                                                <span class="text-xs wrap-break-word">{{ $newStr }}</span>
                                                             @endif
                                                         </div>
                                                     </td>
@@ -236,123 +247,101 @@
                             @endif
                         </div>
                     @else
-                        <p class="mt-3 text-sm text-slate-400">No change data recorded.</p>
+                        <p class="mt-4 text-sm text-slate-400">No change data recorded.</p>
                     @endif
                 </x-admin.card>
             @endif
 
             @if ($isSession && ($log->login_at || $log->logout_at))
-                <x-admin.card>
-                    <x-slot name="title">
-                        <div class="flex items-center gap-2 dark:text-white">
-                            <div class="flex h-8 w-8 items-center justify-center rounded-lg bg-green-100 dark:bg-green-900/30">
-                                <x-icons.clock class="h-4 w-4 text-green-600 dark:text-green-400" />
-                            </div>
-                            <span>Session</span>
+                <x-admin.card title="Session" icon="clock" body-class="!py-1.5">
+                    <dl class="{{ $dl }}">
+                        {!! $row('Login at', $log->login_at?->format('Y-m-d H:i:s')) !!}
+                        {!! $row('Logout at', $log->logout_at?->format('Y-m-d H:i:s') ?? 'Still active') !!}
+                        {!! $row('Duration', $log->session_duration_formatted) !!}
+                        <div class="flex items-start justify-between gap-4 py-2.5">
+                            <dt class="shrink-0 text-sm text-slate-500 dark:text-slate-400">Session ID</dt>
+                            <dd class="min-w-0 truncate font-mono text-xs text-slate-900 dark:text-white">{{ $log->session_id ?? '—' }}</dd>
                         </div>
-                    </x-slot>
-                    {!! $infoRow('Login At', $log->login_at?->format('Y-m-d H:i:s') ?? '—') !!}
-                    {!! $infoRow('Logout At', $log->logout_at?->format('Y-m-d H:i:s') ?? 'Still active') !!}
-                    {!! $infoRow('Duration', $log->session_duration_formatted ?? '—') !!}
-                    <div class="flex items-start justify-between border-b border-slate-100 py-2.5 last:border-0 dark:border-slate-700">
-                        <span class="shrink-0 text-sm text-slate-500 dark:text-slate-400">Session ID</span>
-                        <span class="ml-4 max-w-50 truncate font-mono text-xs text-slate-900 dark:text-white">
-                            {{ $log->session_id ?? '—' }}
-                        </span>
-                    </div>
+                    </dl>
                 </x-admin.card>
             @endif
         </div>
 
-        <div class="space-y-4 lg:col-span-4">
-            <x-admin.card>
-                <x-slot name="title">
-                    <div class="flex items-center gap-2 dark:text-white">
-                        <div class="flex h-8 w-8 items-center justify-center rounded-lg bg-slate-100 dark:bg-slate-700">
-                            <x-icons.clock class="h-4 w-4 text-slate-600 dark:text-white" />
-                        </div>
-                        <span>Timestamp</span>
-                    </div>
-                </x-slot>
-                {!! $infoRow('Logged At', $log->created_at_formatted) !!}
-                <div class="flex items-start justify-between border-b border-slate-100 py-2.5 last:border-0 dark:border-slate-700">
-                    <span class="shrink-0 text-sm text-slate-500 dark:text-slate-400">Security</span>
-                    @if ($log->is_suspicious)
-                        <span class="inline-flex items-center gap-1 text-red-500">
-                            <x-icons.warning class="h-3 w-3" />
-                            Suspicious
-                        </span>
-                    @else
-                        <span class="inline-flex items-center gap-1 text-green-600 dark:text-green-400">
-                            <x-icons.check-circle class="h-3.5 w-3.5" />
-                            Normal
-                        </span>
-                    @endif
-                </div>
-            </x-admin.card>
-
-            @if ($isSession)
-                <x-admin.card>
-                    <x-slot name="title">
-                        <div class="flex items-center gap-2 dark:text-white">
-                            <div class="flex h-8 w-8 items-center justify-center rounded-lg bg-indigo-100 dark:bg-indigo-900/30">
-                                <x-icons.desktop class="h-4 w-4 text-indigo-600 dark:text-indigo-400" />
-                            </div>
-                            <span>Device</span>
-                        </div>
-                    </x-slot>
-                    {!! $infoRow('Device', $log->device ?? ($log->device_type ?? '—')) !!}
-                    {!! $infoRow('Browser', collect([$log->browser, $log->browser_version])->filter()->implode(' ') ?:'—',) !!}
-                    {!! $infoRow('Platform', $log->platform ?? '—') !!}
-                    @if ($log->user_agent)
-                        <div class="mt-2 border-t border-slate-100 pt-2 dark:border-slate-700">
-                            <p class="text-xs break-all text-slate-400">{{ $log->user_agent }}</p>
-                        </div>
-                    @endif
-                </x-admin.card>
-
-                <x-admin.card>
-                    <x-slot name="title">
-                        <div class="flex items-center gap-2 dark:text-white">
-                            <div class="flex h-8 w-8 items-center justify-center rounded-lg bg-rose-100 dark:bg-rose-900/30">
-                                <x-icons.location class="h-4 w-4 text-rose-600 dark:text-rose-400" />
-                            </div>
-                            <span>Location</span>
-                        </div>
-                    </x-slot>
-                    {!! $infoRow('City', $log->city ?? '—') !!}
-                    {!! $infoRow('Region', $log->region ?? '—') !!}
-                    {!! $infoRow('Country', $log->country ?? '—') !!}
-                    {!! $infoRow('Timezone', $log->timezone ?? '—') !!}
-                    {!! $infoRow('ISP', $log->isp ?? '—') !!}
-                    @if ($log->latitude && $log->longitude)
-                        <div class="mt-3">
-                            <a
-                                href="https://maps.google.com/?q={{ $log->latitude }},{{ $log->longitude }}"
-                                target="_blank"
-                                rel="noopener noreferrer"
-                                class="inline-flex w-full items-center justify-center gap-1.5 rounded-xl border border-slate-200 py-2 text-xs font-medium text-slate-600 transition hover:bg-slate-50 dark:border-slate-700 dark:text-slate-400 dark:hover:bg-slate-800"
-                            >
-                                <x-icons.link class="h-3.5 w-3.5" />
-                                View on Google Maps
-                            </a>
-                        </div>
-                    @endif
-                </x-admin.card>
-            @endif
-
+        <div class="min-w-0 space-y-4 lg:col-span-4">
             @if ($log->is_suspicious)
-                <div class="rounded-xl border border-red-200 bg-red-50 p-4 dark:border-red-800/40 dark:bg-red-900/20">
+                <div class="rounded-xl border border-red-200 bg-red-50 p-4 dark:border-red-500/30 dark:bg-red-500/10">
                     <div class="flex items-center gap-2">
-                        <div class="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-red-100 dark:bg-red-900/40">
-                            <x-icons.warning class="h-4 w-4 text-red-600 dark:text-red-400" />
-                        </div>
-                        <p class="text-sm font-semibold text-red-700 dark:text-red-300">Security Alert</p>
+                        <x-admin.icon name="alert-triangle" class="h-4 w-4 text-red-600 dark:text-red-400" />
+                        <p class="text-sm font-semibold text-red-700 dark:text-red-300">Security alert</p>
                     </div>
-                    <p class="mt-2 text-sm text-red-600 dark:text-red-400">
+                    <p class="mt-1.5 text-sm text-red-600 dark:text-red-300/90">
                         This login originated from an IP address never used before by this user. It may indicate unauthorized access.
                     </p>
                 </div>
+            @endif
+
+            <x-admin.card title="Timestamp" icon="calendar" body-class="!py-1.5">
+                <dl class="{{ $dl }}">
+                    {!! $row('Logged at', $log->created_at_formatted) !!}
+                    <div class="flex items-center justify-between gap-4 py-2.5">
+                        <dt class="shrink-0 text-sm text-slate-500 dark:text-slate-400">Security</dt>
+                        <dd>
+                            @if ($log->is_suspicious)
+                                <span class="inline-flex items-center gap-1 text-sm font-medium text-red-600 dark:text-red-400">
+                                    <x-admin.icon name="alert-triangle" class="h-3.5 w-3.5" />
+                                    Suspicious
+                                </span>
+                            @else
+                                <span class="inline-flex items-center gap-1 text-sm font-medium text-emerald-600 dark:text-emerald-400">
+                                    <x-admin.icon name="shield-check" class="h-3.5 w-3.5" />
+                                    Normal
+                                </span>
+                            @endif
+                        </dd>
+                    </div>
+                </dl>
+            </x-admin.card>
+
+            @if ($isSession)
+                <x-admin.card title="Device" :icon="$deviceIcon" body-class="!py-1.5">
+                    <dl class="{{ $dl }}">
+                        {!! $row('Device', ucfirst((string) ($log->device ?? $log->device_type))) !!}
+                        {!! $row('Browser', collect([$log->browser, $log->browser_version])->filter()->implode(' '),) !!}
+                        {!! $row('Platform', $log->platform) !!}
+                    </dl>
+                    @if ($log->user_agent)
+                        <p
+                            class="border-t border-slate-100 py-2.5 font-mono text-[11px] leading-relaxed break-all text-slate-400 dark:border-slate-800"
+                        >
+                            {{ $log->user_agent }}
+                        </p>
+                    @endif
+                </x-admin.card>
+
+                <x-admin.card title="Location" icon="map-pin" body-class="!py-1.5">
+                    <dl class="{{ $dl }}">
+                        {!! $row('City', $log->city) !!}
+                        {!! $row('Region', $log->region) !!}
+                        {!! $row('Country', $log->country) !!}
+                        {!! $row('Timezone', $log->timezone) !!}
+                        {!! $row('ISP', $log->isp) !!}
+                    </dl>
+                    @if ($log->latitude && $log->longitude)
+                        <div class="pt-1 pb-2.5">
+                            <x-admin.button
+                                variant="secondary"
+                                size="sm"
+                                icon="map-pin"
+                                full
+                                :href="'https://maps.google.com/?q=' . $log->latitude . ',' . $log->longitude"
+                                target="_blank"
+                                rel="noopener noreferrer"
+                            >
+                                View on Google Maps
+                            </x-admin.button>
+                        </div>
+                    @endif
+                </x-admin.card>
             @endif
         </div>
     </div>

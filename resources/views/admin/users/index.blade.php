@@ -5,9 +5,12 @@
     $canDelete = auth()
         ->user()
         ->can('admin.users.delete');
+    $canToggle = auth()
+        ->user()
+        ->can('admin.users.toogle-status');
     $canManage = $canEdit || $canDelete;
 
-    $headers = ['User', 'Roles', 'Status'];
+    $headers = ['User', 'Roles', 'Status', 'Joined'];
     if ($canManage) {
         $headers[] = 'Actions';
     }
@@ -16,103 +19,99 @@
 <x-admin :breadcrumb="[
     ['label' => 'Users', 'url' => route('admin.users.index')]
 ]">
-    <x-admin.card title="Users" text="Manage user accounts, roles, and permissions">
+    <x-admin.page-header title="Users" description="Manage admin accounts, their roles and access." icon="users" :count="$users->total()">
         @can('admin.users.create')
-            <x-slot name="actions">
-                <a href="{{ route('admin.users.create') }}">
-                    <x-admin.button variant="primary">
-                        <span class="flex items-center gap-1.5">
-                            <span class="text-lg">+</span>
-                            Create User
-                        </span>
-                    </x-admin.button>
-                </a>
+            <x-slot:actions>
+                <x-admin.button :href="route('admin.users.create')" icon="plus">New user</x-admin.button>
             </x-slot>
         @endcan
+    </x-admin.page-header>
 
-        @include('admin.users.partials.filters')
+    <x-admin.table :headers="$headers" :data="$users" emptyMessage="No users found" emptyIcon="users">
+        <x-slot:toolbar>
+            @include('admin.users.partials.filters')
+        </x-slot>
 
-        <x-admin.table :headers="$headers" :data="$users" emptyMessage="No users found.">
-            @foreach ($users as $user)
-                <tr class="group transition-colors hover:bg-slate-50/50 dark:hover:bg-slate-800/30">
-                    <td class="px-6 py-4">
-                        <div class="flex items-center gap-3">
-                            <img src="{{ $user->avatar_url }}" alt="{{ $user->name }}" class="h-8 w-8 rounded-full object-cover" />
-                            <div class="flex flex-col">
-                                <span class="text-sm font-bold text-slate-900 dark:text-white">
-                                    {{ $user->name }}
-                                    @if ($user->id === auth()->id())
-                                        <span
-                                            class="ml-1 inline-flex items-center rounded-sm bg-blue-100 px-1.5 py-0.5 text-xs font-medium text-blue-600 dark:bg-blue-900/40 dark:text-blue-400"
-                                        >
-                                            You
-                                        </span>
-                                    @endif
-                                </span>
-                                <span class="text-xs text-slate-400 dark:text-slate-500">{{ $user->email }}</span>
+        @foreach ($users as $user)
+            <tr>
+                <td class="max-w-md">
+                    <div class="flex items-center gap-3">
+                        <img
+                            src="{{ $user->avatar_url }}"
+                            alt=""
+                            class="h-9 w-9 shrink-0 rounded-full object-cover ring-1 ring-slate-200 dark:ring-slate-700"
+                        />
+
+                        <div class="min-w-0">
+                            <div class="flex items-center gap-1.5">
+                                @if ($canEdit)
+                                    <a
+                                        href="{{ route('admin.users.edit', $user) }}"
+                                        class="truncate font-medium text-slate-900 hover:text-blue-600 dark:text-white dark:hover:text-blue-400"
+                                    >
+                                        {{ $user->name }}
+                                    </a>
+                                @else
+                                    <span class="truncate font-medium text-slate-900 dark:text-white">{{ $user->name }}</span>
+                                @endif
+
+                                @if ($user->id === auth()->id())
+                                    <span
+                                        class="shrink-0 rounded-full bg-blue-50 px-1.5 py-px text-[11px] font-medium text-blue-700 dark:bg-blue-500/10 dark:text-blue-300"
+                                    >
+                                        You
+                                    </span>
+                                @endif
                             </div>
+                            <span class="mt-0.5 flex items-center gap-1 text-xs text-slate-400">
+                                <x-admin.icon name="mail" class="h-3 w-3 shrink-0" />
+                                <span class="truncate">{{ $user->email }}</span>
+                            </span>
                         </div>
-                    </td>
+                    </div>
+                </td>
 
-                    <td class="px-6 py-4">
-                        <div class="flex flex-wrap gap-1">
-                            @forelse ($user->roles as $role)
-                                <span
-                                    class="inline-flex items-center rounded-sm bg-blue-50 px-2 py-0.5 text-xs font-medium text-blue-700 capitalize dark:bg-blue-900/30 dark:text-blue-400"
-                                >
-                                    {{ $role->name }}
-                                </span>
-                            @empty
-                                <span class="text-xs text-slate-400 dark:text-slate-500">No roles</span>
-                            @endforelse
-                        </div>
-                    </td>
-
-                    <td class="px-6 py-4">
-                        @can('admin.users.toogle-status')
-                            <div
-                                x-data="{ status: '{{ $user->status }}', loading: false }"
-                                x-on:click="
-                                    if (loading) return
-                                    loading = true
-
-                                    axios
-                                        .patch('{{ route('admin.users.toggle-status', $user->id) }}')
-                                        .then((res) => {
-                                            status = res.data.status
-                                        })
-                                        .catch((err) => console.error(err))
-                                        .finally(() => (loading = false))
-                                "
-                                :class="loading ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer inline'"
+                <td>
+                    <div class="flex flex-wrap gap-1">
+                        @forelse ($user->roles as $role)
+                            <span
+                                class="inline-flex items-center gap-1 rounded-md border border-slate-200 bg-white px-1.5 py-0.5 text-xs font-medium whitespace-nowrap text-slate-600 capitalize dark:border-slate-700 dark:bg-slate-800 dark:text-slate-300"
                             >
-                                <template x-if="status === 'active'">
-                                    <x-admin.status-badge status="active" />
-                                </template>
+                                <x-admin.icon name="shield" class="h-3 w-3 text-slate-400" />
+                                {{ $role->name }}
+                            </span>
+                        @empty
+                            <span class="text-xs text-slate-400">No roles</span>
+                        @endforelse
+                    </div>
+                </td>
 
-                                <template x-if="status === 'inactive'">
-                                    <x-admin.status-badge status="inactive" />
-                                </template>
-                            </div>
-                        @else
-                            <x-admin.status-badge :status="$user->status" />
-                        @endcan
-                    </td>
+                <td>
+                    <x-admin.status-toggle :url="route('admin.users.toggle-status', $user->id)" :status="$user->status" :can="$canToggle" />
+                </td>
 
-                    @if ($canManage)
-                        <td class="px-6 py-4">
-                            <x-admin.row-actions
-                                size="sm"
-                                :editRoute="route('admin.users.edit', $user)"
-                                :canEdit="$canEdit"
-                                :deleteRoute="route('admin.users.destroy', $user)"
-                                :deleteId="$user->id"
-                                :canDelete="$canDelete && $user->id !== auth()->id()"
-                            />
-                        </td>
+                <td class="whitespace-nowrap">
+                    @if ($user->created_at)
+                        <span class="block text-slate-700 dark:text-slate-200">{{ $user->created_at->format('d M Y') }}</span>
+                        <span class="text-xs text-slate-400">{{ $user->created_at->diffForHumans() }}</span>
+                    @else
+                        <span class="text-slate-400">—</span>
                     @endif
-                </tr>
-            @endforeach
-        </x-admin.table>
-    </x-admin.card>
+                </td>
+
+                @if ($canManage)
+                    <td>
+                        <x-admin.row-actions
+                            size="sm"
+                            :editRoute="route('admin.users.edit', $user)"
+                            :canEdit="$canEdit"
+                            :deleteRoute="route('admin.users.destroy', $user)"
+                            :deleteId="$user->id"
+                            :canDelete="$canDelete && $user->id !== auth()->id()"
+                        />
+                    </td>
+                @endif
+            </tr>
+        @endforeach
+    </x-admin.table>
 </x-admin>

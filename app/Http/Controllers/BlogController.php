@@ -22,7 +22,7 @@ class BlogController extends Controller
         $activeCategory = $categories->firstWhere('slug', $request->query('category'));
 
         $blogs = Blog::published()
-            ->with(['categories'])
+            ->with(['categories' => fn ($q) => $q->active()])
             ->when($activeCategory, fn (Builder $q) => $q->whereHas('categories', fn (Builder $c) => $c->whereKey($activeCategory->id)))
             ->latestPublished()
             ->paginate(self::PER_PAGE)
@@ -52,14 +52,14 @@ class BlogController extends Controller
     public function show(string $slug)
     {
         $blog = Blog::published()
-            ->with(['author', 'categories', 'seo'])
+            ->with(['author', 'categories' => fn ($q) => $q->active(), 'seo'])
             ->where('slug', $slug)
             ->firstOrFail();
 
         $categoryIds = $blog->categories->pluck('id');
 
         $related = Blog::published()
-            ->with('categories')
+            ->with(['categories' => fn ($q) => $q->active()])
             ->whereKeyNot($blog->id)
             ->whereHas('categories', fn (Builder $q) => $q->whereIn('blog_categories.id', $categoryIds))
             ->latestPublished()
@@ -69,7 +69,7 @@ class BlogController extends Controller
         if ($related->count() < 3) {
             $related = $related->concat(
                 Blog::published()
-                    ->with('categories')
+                    ->with(['categories' => fn ($q) => $q->active()])
                     ->whereKeyNot($blog->id)
                     ->whereKeyNot($related->pluck('id')->all())
                     ->latestPublished()

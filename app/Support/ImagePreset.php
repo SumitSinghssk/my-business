@@ -74,7 +74,7 @@ final class ImagePreset
         return [
             $field => [
                 'nullable', 'image', 'mimes:jpg,jpeg,png,webp,gif', 'max:5120',
-                "dimensions:min_width={$this->minWidth()},min_height={$this->minHeight()}",
+                "dimensions:min_width={$this->minWidth()},min_height={$this->minHeight()},max_width=8000,max_height=8000",
             ],
             "{$field}_crop" => ['nullable', 'array'],
             "{$field}_crop.*" => ['nullable', 'numeric', 'min:0'],
@@ -85,7 +85,7 @@ final class ImagePreset
     public function messages(string $field): array
     {
         return [
-            "{$field}.dimensions" => "The {$this->label} must be at least {$this->minWidth()} × {$this->minHeight()} px (recommended {$this->width} × {$this->height} px).",
+            "{$field}.dimensions" => "The {$this->label} must be between {$this->minWidth()} × {$this->minHeight()} px and 8000 × 8000 px (recommended {$this->width} × {$this->height} px).",
             "{$field}.max" => "The {$this->label} may not be larger than 5 MB.",
         ];
     }

@@ -1,6 +1,8 @@
 @import 'tailwindcss';
 
 @custom-variant dark (&:where(.dark, .dark *));
+/* Desktop sidebar folded to icons (set on <html> before paint, see layouts/admin). */
+@custom-variant collapsed (&:where([data-sidebar=collapsed] *));
 
 @source '../../vendor/laravel/framework/src/Illuminate/Pagination/resources/views/*.blade.php';
 @source '../../storage/framework/views/*.php';
@@ -18,8 +20,9 @@
 }
 
 .admin-theme {
-    --font-sans: 'Plus Jakarta Sans', ui-sans-serif, system-ui, sans-serif, 'Apple Color Emoji', 'Segoe UI Emoji';
+    --font-sans: 'Inter', ui-sans-serif, system-ui, sans-serif, 'Apple Color Emoji', 'Segoe UI Emoji';
     font-family: var(--font-sans);
+    font-feature-settings: 'cv11', 'ss01', 'ss03';
     -webkit-font-smoothing: antialiased;
 
     --spacing: 0.225rem;
@@ -28,10 +31,10 @@
     --radius-sm: 5px;
     --radius-md: 7px;
     --radius-lg: 9px;
-    --radius-xl: 11px;
-    --radius-2xl: 13px;
-    --radius-3xl: 15px;
-    --radius-4xl: 18px;
+    --radius-xl: 12px;
+    --radius-2xl: 14px;
+    --radius-3xl: 16px;
+    --radius-4xl: 20px;
 
     --text-xs: 0.71875rem; /* 11.5px */
     --text-xs--line-height: 1rem;
@@ -52,6 +55,7 @@
     --text-5xl: 2.25rem;
     --text-5xl--line-height: 1;
 
+    /* Brand (indigo). "blue" and "sky" both map to it so every accent stays on-brand. */
     --color-blue-50: #eef2ff;
     --color-blue-100: #e0e7ff;
     --color-blue-200: #c7d2fe;
@@ -76,17 +80,25 @@
     --color-sky-900: #312e81;
     --color-sky-950: #1e1b4b;
 
-    --color-slate-50: #f7f8fc;
-    --color-slate-100: #eff1f7;
-    --color-slate-200: #e3e6ef;
-    --color-slate-300: #cdd2df;
+    /* Neutral greys: cool and quiet; the dark shades are the dark theme's surfaces. */
+    --color-slate-50: #f9fafb;
+    --color-slate-100: #f2f4f7;
+    --color-slate-200: #e7e9ee;
+    --color-slate-300: #d0d5dd;
+    --color-slate-400: #98a2b3;
+    --color-slate-500: #667085;
+    --color-slate-600: #475467;
+    --color-slate-700: #344054;
+    --color-slate-800: #222936;
+    --color-slate-900: #151a23;
+    --color-slate-950: #0c0f15;
 
-    --shadow-xs: 0 1px 2px 0 rgb(15 23 42 / 0.04);
-    --shadow-sm: 0 1px 3px 0 rgb(15 23 42 / 0.06), 0 1px 2px -1px rgb(15 23 42 / 0.04);
-    --shadow-md: 0 4px 12px -2px rgb(15 23 42 / 0.08), 0 2px 4px -2px rgb(15 23 42 / 0.05);
-    --shadow-lg: 0 10px 24px -6px rgb(15 23 42 / 0.12);
-    --shadow-xl: 0 16px 32px -8px rgb(15 23 42 / 0.14);
-    --shadow-2xl: 0 20px 40px -12px rgb(15 23 42 / 0.18);
+    --shadow-xs: 0 1px 2px 0 rgb(16 24 40 / 0.05);
+    --shadow-sm: 0 1px 3px 0 rgb(16 24 40 / 0.08), 0 1px 2px -1px rgb(16 24 40 / 0.06);
+    --shadow-md: 0 4px 8px -2px rgb(16 24 40 / 0.08), 0 2px 4px -2px rgb(16 24 40 / 0.05);
+    --shadow-lg: 0 12px 16px -4px rgb(16 24 40 / 0.08), 0 4px 6px -2px rgb(16 24 40 / 0.03);
+    --shadow-xl: 0 20px 24px -4px rgb(16 24 40 / 0.08), 0 8px 8px -4px rgb(16 24 40 / 0.03);
+    --shadow-2xl: 0 24px 48px -12px rgb(16 24 40 / 0.18);
 }
 
 .admin-theme .custom-scrollbar,
@@ -131,8 +143,9 @@
 }
 
 .admin-theme .admin-table tbody td {
-    padding: 0.625rem 1rem;
+    padding: 0.75rem 1rem;
     font-size: var(--text-sm);
+    vertical-align: middle;
 }
 
 .admin-theme .admin-table tbody tr {
@@ -144,5 +157,10 @@
 }
 
 .dark .admin-theme .admin-table tbody tr:hover {
-    background-color: rgb(30 41 59 / 0.4);
+    background-color: rgb(255 255 255 / 0.025);
+}
+
+/* Numbers that line up in tables and stat tiles. */
+.admin-theme .tabular {
+    font-variant-numeric: tabular-nums;
 }

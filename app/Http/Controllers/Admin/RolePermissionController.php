@@ -21,7 +21,7 @@ class RolePermissionController extends Controller
         Gate::authorize('admin.roles.view');
 
         $roles = Role::with('permissions')->orderBy('name')->get();
-        $permissions = Permission::orderBy('name')->get();
+        $permissions = Permission::withCount('roles')->orderBy('name')->get();
 
         $groupedPermissions = $permissions->groupBy(function ($permission) {
             $parts = explode('.', $permission->name);
@@ -54,6 +54,13 @@ class RolePermissionController extends Controller
 
         if (in_array($role->name, self::PROTECTED_ROLES, true)) {
             return back()->with('error', 'The super admin role cannot be deleted.');
+        }
+
+        // A non super admin may only delete a role they don't hold and whose access they already have.
+        $actor = auth()->user();
+        if (! $actor->hasRole(self::PROTECTED_ROLES)
+            && ($actor->hasRole($role) || $role->permissions->pluck('name')->diff($actor->getAllPermissions()->pluck('name'))->isNotEmpty())) {
+            return back()->with('error', 'You are not allowed to delete this role.');
         }
 
         $name = $role->name;

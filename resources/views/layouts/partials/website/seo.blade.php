@@ -12,7 +12,6 @@
         ->isNotEmpty();
     $recordMeta = $isVariantUrl ? null : $pageSeo;
 
-    $appName = Settings::appName();
     $metaTitle = Seo::withSiteName($recordMeta?->meta_title ?: ($title ?? null ?: ($defaultSeo?->meta_title ?: $appName)));
     $metaDescription = Seo::withSiteName($recordMeta?->meta_description ?: ($description ?? null ?: $defaultSeo?->meta_description));
 
@@ -31,32 +30,6 @@
 
     $favicon = Settings::favicon() ?? asset('favicon.ico');
     $scriptSettings = settings('script_settings') ?? [];
-
-    $logo = Settings::logoLight();
-    $organization = array_filter([
-        '@context' => 'https://schema.org',
-        '@type' => 'Organization',
-        '@id' => url('/') . '#organization',
-        'name' => $appName,
-        'url' => url('/'),
-        'logo' => $logo,
-        'email' => Settings::emails()[0] ?? null,
-        'telephone' => Settings::phones()[0] ?? null,
-        'address' => collect(Settings::addresses())
-            ->pluck('text')
-            ->filter()
-            ->map(fn ($text) => trim(preg_replace('/\s*\R\s*/', ', ', $text)))
-            ->first(),
-        'sameAs' => array_values(array_filter(array_column(Settings::socialLinks(), 'url'))) ?: null,
-    ]);
-    $website = [
-        '@context' => 'https://schema.org',
-        '@type' => 'WebSite',
-        '@id' => url('/') . '#website',
-        'name' => $appName,
-        'url' => url('/'),
-        'publisher' => ['@id' => url('/') . '#organization'],
-    ];
 @endphp
 
 @push('heads')
@@ -93,9 +66,7 @@
         <meta name="twitter:image" content="{{ $ogImageUrl }}" />
     @endif
 
-    <script type="application/ld+json">
-        {!! json_encode([$organization, $website], JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE | JSON_HEX_TAG) !!}
-    </script>
+    <x-website.json-ld :data="[\App\Support\StructuredData::organization(), \App\Support\StructuredData::website()]" />
 
     @if ($schemaJson = $pageSeo?->schemaJson())
         <script type="application/ld+json">

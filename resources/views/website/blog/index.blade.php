@@ -1,5 +1,5 @@
 @php
-    $pageTitle = fn ($category, $page = 1) => ($category ? $category->name . ' Articles' : 'Insights') . ($page > 1 ? ' – Page ' . $page : '') . ' | ' . \App\Helpers\Settings::appName();
+    $pageTitle = fn ($category, $page = 1) => ($category ? $category->name . ' Articles' : 'Insights') . ($page > 1 ? ' – Page ' . $page : '') . ' | ' . $appName;
     $titles = $categories->mapWithKeys(fn ($category) => [$category->slug => $pageTitle($category)])->put('', $pageTitle(null));
     $tabClass = 'blog-tab font-label-sm text-label-sm shrink-0 border px-3.5 py-2 tracking-wider whitespace-nowrap uppercase transition-colors';
 @endphp
@@ -20,7 +20,7 @@
             </div>
 
             @if ($categories->isNotEmpty())
-                <nav class="flex gap-1.5 overflow-x-auto border-y border-[#E1E5EA] py-3" aria-label="Blog categories">
+                <nav class="border-line flex gap-1.5 overflow-x-auto border-y py-3" aria-label="Blog categories">
                     <a
                         href="{{ route('blog.index') }}"
                         data-category=""

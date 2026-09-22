@@ -97,6 +97,11 @@ class NormalizeImages extends Command
         }
 
         $verb = $dryRun ? 'would be resized' : 'resized';
+        // Records were saved quietly: make sure cached SEO data doesn't point at removed images.
+        if (! $dryRun) {
+            Seo::flushCache();
+        }
+
         $this->info("Done: {$totals['ok']} already correct, {$totals['fixed']} {$verb}, {$totals['missing']} missing files, {$totals['failed']} failed, {$totals['variants']} srcset variants created.");
 
         return $totals['failed'] > 0 ? self::FAILURE : self::SUCCESS;

@@ -13,13 +13,14 @@ class NotificationController extends Controller
     {
         Gate::authorize('admin.notifications.view');
 
-        $notifications = Notification::latest()
+        $notifications = Notification::visibleTo($request->user())->latest()
             ->take(10)
             ->get()
             ->map(function ($n) {
                 return [
                     'id' => $n->id,
                     'title' => $n->title,
+                    'type' => $n->type,
                     'message' => $n->message,
                     'url' => $n->url,
                     'seen' => ! is_null($n->seen_at),
@@ -29,15 +30,15 @@ class NotificationController extends Controller
 
         return response()->json([
             'notifications' => $notifications,
-            'unread_count' => Notification::whereNull('seen_at')->count(),
+            'unread_count' => Notification::visibleTo($request->user())->whereNull('seen_at')->count(),
         ]);
     }
 
-    public function list()
+    public function list(Request $request)
     {
         Gate::authorize('admin.notifications.view');
 
-        $notifications = Notification::orderByRaw('seen_at IS NULL DESC')->latest()->paginate(15);
+        $notifications = Notification::visibleTo($request->user())->orderByRaw('seen_at IS NULL DESC')->latest()->paginate(15);
 
         return view('admin.notifications.index', compact('notifications'));
     }
@@ -46,7 +47,7 @@ class NotificationController extends Controller
     {
         Gate::authorize('admin.notifications.view');
 
-        $notification = Notification::findOrFail($id);
+        $notification = Notification::visibleTo($request->user())->findOrFail($id);
 
         if (is_null($notification->seen_at)) {
             $notification->update([
@@ -56,9 +57,10 @@ class NotificationController extends Controller
 
         $target = $notification->url ?? route('admin.dashboard');
 
-        // Only allow same-host redirects to avoid open-redirect via a stored URL.
-        $host = parse_url($target, PHP_URL_HOST);
-        if ($host !== null && $host !== $request->getHost()) {
+        // Only follow links into this site: a stored URL must never become an open redirect
+        // (checking the parsed host alone misses tricks like "https:\\evil.com").
+        $base = rtrim(url('/'), '/').'/';
+        if (! str_starts_with($target.'/', $base) || str_contains($target, '\\')) {
             $target = route('admin.dashboard');
         }
 
@@ -69,7 +71,7 @@ class NotificationController extends Controller
     {
         Gate::authorize('admin.notifications.mark-all-as-read');
 
-        Notification::whereNull('seen_at')->update(['seen_at' => now()]);
+        Notification::visibleTo($request->user())->whereNull('seen_at')->update(['seen_at' => now()]);
 
         return response()->json(['success' => true]);
     }
@@ -78,7 +80,7 @@ class NotificationController extends Controller
     {
         Gate::authorize('admin.notifications.view');
 
-        $notification = Notification::findOrFail($id);
+        $notification = Notification::visibleTo($request->user())->findOrFail($id);
 
         if (is_null($notification->seen_at)) {
             $notification->update(['seen_at' => now()]);

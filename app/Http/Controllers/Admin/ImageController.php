@@ -20,7 +20,7 @@ class ImageController extends Controller
         ]), 403);
 
         $request->validate([
-            'file' => ['required', 'image', 'max:2048', 'mimes:jpg,jpeg,png,webp'],
+            'file' => ['required', 'image', 'max:2048', 'mimes:jpg,jpeg,png,webp', 'dimensions:max_width=8000,max_height=8000'],
         ]);
 
         $path = $request->file('file')->store(sprintf('uploads/%s/%s/miscellaneous', now()->year, now()->month), 'public');

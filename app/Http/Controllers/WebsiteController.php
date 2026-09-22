@@ -10,7 +10,7 @@ class WebsiteController extends Controller
     public function index()
     {
         $latestPosts = Blog::published()
-            ->with('categories')
+            ->with(['categories' => fn ($q) => $q->active()])
             ->latestPublished()
             ->take(3)
             ->get();

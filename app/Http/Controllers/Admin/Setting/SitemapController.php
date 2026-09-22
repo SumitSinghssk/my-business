@@ -148,11 +148,34 @@ class SitemapController extends Controller
             return false;
         }
 
+        // A DOCTYPE (entities) or processing instruction (an xml-stylesheet one can run XSLT) has no place in a sitemap.
+        if ($dom->doctype !== null || (new \DOMXPath($dom))->query('//processing-instruction()')->length > 0) {
+            return false;
+        }
+
         foreach ($dom->getElementsByTagName('*') as $element) {
             $isHreflangLink = $element->namespaceURI === 'http://www.w3.org/1999/xhtml' && $element->localName === 'link';
 
             if (! $isHreflangLink && ! in_array($element->namespaceURI, $allowed, true)) {
                 return false;
+            }
+
+            // Attributes are where script hides (onload=, href="javascript:"): only the hreflang
+            // link's rel/hreflang/href (http or https) and xsi:schemaLocation are allowed.
+            foreach ($element->attributes as $attribute) {
+                $name = $attribute->localName;
+
+                if ($name === 'schemaLocation' && $attribute->namespaceURI === 'http://www.w3.org/2001/XMLSchema-instance') {
+                    continue;
+                }
+
+                if (! $isHreflangLink || $attribute->namespaceURI !== null || ! in_array($name, ['rel', 'hreflang', 'href'], true)) {
+                    return false;
+                }
+
+                if ($name === 'href' && ! preg_match('#^https?://#i', trim($attribute->value))) {
+                    return false;
+                }
             }
         }
 

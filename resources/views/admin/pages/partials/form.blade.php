@@ -2,95 +2,79 @@
     x-data="pageForm({
                 preview:
                     '{{ isset($page) && $page->featured_image ? asset('storage/' . $page->featured_image) : '' }}',
-                title: `{{ old('title', $page->title ?? '') }}`,
-                slug: `{{ old('slug', $page->slug ?? '') }}`,
+                title: @js(old('title', $page->title ?? '')),
+                slug: @js(old('slug', $page->slug ?? '')),
             })"
-    class="space-y-8"
 >
-    <div class="grid grid-cols-1 gap-5 sm:grid-cols-2">
-        <div>
-            <x-admin.form-label for="title" label="Page Title" required />
-            <x-admin.form-input
-                type="text"
-                name="title"
-                id="title"
-                x-model="title"
-                :value="old('title', $page->title ?? '')"
-                placeholder="e.g. About Us"
-                :error="$errors->first('title')"
-            >
-                <x-slot:leftIcon>
-                    <x-icons.pages class="h-5 w-5" />
-                </x-slot>
-            </x-admin.form-input>
-            <x-admin.form-error for="title" />
-        </div>
+    <x-admin.form-grid>
+        <x-admin.card title="Page details" text="The page name and its web address." icon="file-text">
+            <div class="space-y-5">
+                <x-admin.form.input name="title" label="Page title" required x-model="title" :value="$page->title ?? ''" placeholder="e.g. About Us">
+                    <x-slot:leftIcon>
+                        <x-admin.icon name="file" class="h-4 w-4" />
+                    </x-slot>
+                </x-admin.form.input>
 
-        <div>
-            <x-admin.form-label for="slug" label="Slug" required />
-            <x-admin.form-input
-                type="text"
-                name="slug"
-                id="slug"
-                x-model="slug"
-                x-on:input="onSlugInput"
-                :value="old('slug', $page->slug ?? '')"
-                placeholder="e.g. privacy-policy"
-                :error="$errors->first('slug')"
-            >
-                <x-slot:leftIcon>
-                    <x-icons.url class="h-5 w-5" />
-                </x-slot>
-            </x-admin.form-input>
-            <x-admin.form-error for="slug" />
-            <p class="mt-1.5 text-xs text-slate-500 dark:text-slate-400">
-                Public URL:
-                <span class="font-mono text-slate-700 dark:text-slate-300">
-                    {{ url('/') }}/
-                    <span x-text="slug || 'your-slug'"></span>
-                </span>
-            </p>
-        </div>
-    </div>
+                <div>
+                    <x-admin.form.input
+                        name="slug"
+                        label="Slug"
+                        required
+                        x-model="slug"
+                        x-on:input="onSlugInput"
+                        :value="$page->slug ?? ''"
+                        placeholder="e.g. privacy-policy"
+                    >
+                        <x-slot:leftIcon>
+                            <x-admin.icon name="link" class="h-4 w-4" />
+                        </x-slot>
+                    </x-admin.form.input>
+                    <p class="mt-1.5 flex min-w-0 items-center gap-1.5 text-xs text-slate-500 dark:text-slate-400">
+                        <x-admin.icon name="globe" class="h-3.5 w-3.5 shrink-0" />
+                        <span class="shrink-0">Public URL:</span>
+                        <span class="truncate font-mono text-slate-700 dark:text-slate-300">
+                            {{ url('/') }}/
+                            <span x-text="slug || 'your-slug'"></span>
+                        </span>
+                    </p>
+                </div>
+            </div>
+        </x-admin.card>
 
-    <div class="grid grid-cols-1 gap-5 sm:grid-cols-2">
-        <div>
-            @php
-                use App\Enums\CommonStatusEnum;
-                $status = old('status', $page->status ?? CommonStatusEnum::ACTIVE->value);
-            @endphp
-
-            <x-admin.form-label for="status" label="Status" required />
-            <x-admin.form-select name="status" id="status">
-                @foreach (CommonStatusEnum::cases() as $statusOption)
-                    <option value="{{ $statusOption->value }}" @selected($status === $statusOption->value)>
-                        {{ $statusOption->label() }}
-                    </option>
-                @endforeach
-            </x-admin.form-select>
-            <x-admin.form-error for="status" />
-        </div>
-
-        <div>
-            <x-admin.form-label for="published_at" label="Published At" />
-            <x-admin.form-input
-                type="datetime-local"
-                name="published_at"
-                id="published_at"
-                :value="old('published_at', isset($page) && $page->published_at ? $page->published_at->format('Y-m-d\TH:i') : '')"
-                :error="$errors->first('published_at')"
+        <x-admin.card title="Content" text="The body of the page." icon="newspaper">
+            <x-admin.form.textarea
+                name="content"
+                label="Content"
+                required
+                rows="12"
+                editor
+                :value="$page->content ?? ''"
+                placeholder="Write your page content here..."
             />
-            <x-admin.form-error for="published_at" />
-        </div>
-    </div>
+        </x-admin.card>
 
-    <div class="mb-4">
-        <x-admin.form-label for="content" label="Content" required />
-        <x-admin.form-textarea name="content" id="content" rows="12" editor placeholder="Write your page content here...">
-            {{ old('content', $page->content ?? '') }}
-        </x-admin.form-textarea>
-        <x-admin.form-error for="content" />
-    </div>
+        <x-slot:aside>
+            <x-admin.card title="Publishing" icon="calendar">
+                <div class="space-y-5">
+                    <x-admin.form.select
+                        name="status"
+                        label="Status"
+                        required
+                        :options="\App\Enums\CommonStatusEnum::dotOptions()"
+                        :value="isset($page) ? $page->status->value : \App\Enums\CommonStatusEnum::ACTIVE->value"
+                    />
+
+                    <x-admin.form.date-picker
+                        name="published_at"
+                        label="Publish date"
+                        with-time
+                        :value="isset($page) && $page->published_at ? $page->published_at->format('Y-m-d\TH:i') : ''"
+                        hint="Leave empty to publish now. A future date schedules the page."
+                    />
+                </div>
+            </x-admin.card>
+        </x-slot>
+    </x-admin.form-grid>
 </div>
 
 @push('scripts')

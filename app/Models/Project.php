@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Casts\SafeHtml;
 use App\Enums\CommonStatusEnum;
 use App\Models\Concerns\HasSeoRecord;
 use Illuminate\Database\Eloquent\Builder;
@@ -38,6 +39,7 @@ class Project extends Model
     ];
 
     protected $casts = [
+        'content' => SafeHtml::class,
         'status' => CommonStatusEnum::class,
         'results' => 'array',
         'tags' => 'array',

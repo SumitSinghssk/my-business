@@ -10,7 +10,7 @@
         @endforeach
     </div>
 @else
-    <div class="px-space-lg py-space-2xl rounded-lg border border-dashed border-[#C3C6D8] bg-white text-center">
+    <div class="px-space-lg py-space-2xl border-outline-variant rounded-lg border border-dashed bg-white text-center">
         <p class="font-headline-sm text-headline-sm text-on-surface font-semibold">No articles published yet.</p>
     </div>
 @endif

@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Enums\CommonStatusEnum;
 use App\Models\Project;
 use App\Models\Service;
 use Illuminate\Database\Eloquent\Builder;
@@ -56,6 +57,9 @@ class WorkController extends Controller
             ->take(3)
             ->get();
 
-        return view('website.work.show', compact('project', 'more'));
+        // Only link the project to its service while that service is published.
+        $service = $project->service?->status === CommonStatusEnum::ACTIVE ? $project->service : null;
+
+        return view('website.work.show', compact('project', 'more', 'service'));
     }
 }

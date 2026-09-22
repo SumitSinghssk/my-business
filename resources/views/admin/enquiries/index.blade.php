@@ -1,115 +1,170 @@
 @php
     $canDelete = auth()
         ->user()
-        ->can("admin.enquiries.delete");
+        ->can('admin.enquiries.delete');
     $canView = auth()
         ->user()
-        ->can("admin.enquiries.view");
+        ->can('admin.enquiries.view');
 
-    $activeFilters = collect(request()->only(["status", "source", "seen", "date_from", "date_to", "search"]))
-        ->filter()
-        ->count();
+    $headers = ['Contact', 'Message', 'Source', 'Status', 'Received'];
+    if ($canView || $canDelete) {
+        $headers[] = 'Actions';
+    }
 @endphp
 
 <x-admin :breadcrumb="[['label' => 'Enquiries', 'url' => route('admin.enquiries.index')]]">
-    <x-admin.card title="Enquiries" text="All incoming enquiries from various sources">
-        @include("admin.enquiries.partials.filters")
+    <x-admin.page-header
+        title="Enquiries"
+        description="Messages and leads coming in from your website forms."
+        icon="inbox"
+        :count="$enquiries->total()"
+    />
 
-        <x-admin.table :headers="['Contact', 'Source', 'Status', 'Received', '']" :data="$enquiries" emptyMessage="No enquiries found.">
-            @foreach ($enquiries as $enquiry)
-                @php
-                    $data = $enquiry->data ?? [];
-                    $name = $data["name"] ?? null;
-                    $email = $data["email"] ?? null;
-                    $phone = $data["phone"] ?? null;
+    <x-admin.table :headers="$headers" :data="$enquiries" emptyMessage="No enquiries found" emptyIcon="inbox">
+        <x-slot:toolbar>
+            @include('admin.enquiries.partials.filters')
+        </x-slot>
 
-                    $primary = $name ?: ($email ?: ($phone ?: "Anonymous"));
-                    $secondary = $name ? $email : ($email ? $phone : null);
+        @foreach ($enquiries as $enquiry)
+            @php
+                $data = $enquiry->data ?? [];
+                $name = is_scalar($data['name'] ?? null) ? (string) $data['name'] : null;
+                $email = is_scalar($data['email'] ?? null) ? (string) $data['email'] : null;
+                $phone = is_scalar($data['phone'] ?? null) ? (string) $data['phone'] : null;
+                $message = is_scalar($data['message'] ?? null) ? (string) $data['message'] : null;
 
-                    $color = $enquiry->statusColor;
-                @endphp
+                $primary = $name ?: ($email ?: ($phone ?: 'Anonymous'));
+                $initials = $name
+                    ? collect(preg_split('/\s+/', trim($name)))
+                        ->filter()
+                        ->take(2)
+                        ->map(fn ($part) => mb_strtoupper(mb_substr($part, 0, 1)))
+                        ->implode('')
+                    : null;
+                $unseen = $enquiry->is_unseen;
 
-                <tr
-                    class="{{ $enquiry->is_unseen ? "bg-slate-50/40 dark:bg-slate-800/20" : "" }} transition-colors hover:bg-slate-50/80 dark:hover:bg-slate-800/40"
-                >
-                    {{-- Contact --}}
-                    <td class="px-6 py-4">
-                        <div class="flex items-center gap-3">
-                            <span class="flex h-2 w-2 shrink-0" title="{{ $enquiry->is_unseen ? "Unseen" : "Seen" }}">
-                                @if ($enquiry->is_unseen)
-                                    <span
-                                        class="h-2 w-2 rounded-full bg-slate-800 ring-2 ring-slate-200 dark:bg-slate-200 dark:ring-slate-700"
-                                    ></span>
+                // Opening an unread enquiry marks it as read in the background; a failure only means it stays unread.
+                $openAttrs = 'x-on:click="$dispatch(\'open-modal\', \'enquiry-' . $enquiry->id . '\')"';
+                if ($unseen) {
+                    $openAttrs .= ' x-on:click.once="axios.patch(' . e(json_encode(route('admin.enquiries.seen', $enquiry))) . ').catch(console.warn)"';
+                }
+            @endphp
+
+            <tr>
+                {{-- Contact --}}
+                <td class="max-w-xs">
+                    <div class="flex items-center gap-3">
+                        <span class="relative shrink-0">
+                            <span
+                                @class([
+                                    'flex h-9 w-9 items-center justify-center rounded-full text-xs font-semibold',
+                                    'bg-blue-50 text-blue-700 dark:bg-blue-500/10 dark:text-blue-300' => $unseen,
+                                    'bg-slate-100 text-slate-500 dark:bg-slate-800 dark:text-slate-400' => ! $unseen,
+                                ])
+                            >
+                                @if ($initials)
+                                    {{ $initials }}
+                                @else
+                                    <x-admin.icon name="user" class="h-4 w-4" />
                                 @endif
                             </span>
+                            @if ($unseen)
+                                <span
+                                    class="absolute -top-0.5 -right-0.5 h-2.5 w-2.5 rounded-full bg-blue-500 ring-2 ring-white dark:ring-slate-900"
+                                    title="Unread"
+                                ></span>
+                            @endif
+                        </span>
 
-                            <div class="min-w-0">
-                                <p class="truncate text-sm font-semibold text-slate-900 dark:text-white">{{ $primary }}</p>
-                                @if ($secondary)
-                                    <p class="truncate text-xs text-slate-500 dark:text-slate-400">{{ $secondary }}</p>
+                        <div class="min-w-0">
+                            @if ($canView)
+                                <button
+                                    type="button"
+                                    {!! $openAttrs !!}
+                                    @class([
+                                        'block max-w-full cursor-pointer truncate text-left hover:text-blue-600 dark:hover:text-blue-400',
+                                        'font-semibold text-slate-900 dark:text-white' => $unseen,
+                                        'font-medium text-slate-700 dark:text-slate-200' => ! $unseen,
+                                    ])
+                                >
+                                    {{ $primary }}
+                                </button>
+                            @else
+                                <span
+                                    @class(['block truncate', 'font-semibold text-slate-900 dark:text-white' => $unseen, 'font-medium text-slate-700 dark:text-slate-200' => ! $unseen])
+                                >
+                                    {{ $primary }}
+                                </span>
+                            @endif
+
+                            <div class="mt-0.5 flex min-w-0 flex-wrap items-center gap-x-3 gap-y-0.5 text-xs text-slate-400">
+                                @if ($email && $email !== $primary)
+                                    <span class="flex min-w-0 items-center gap-1">
+                                        <x-admin.icon name="mail" class="h-3 w-3 shrink-0" />
+                                        <span class="truncate">{{ $email }}</span>
+                                    </span>
+                                @endif
+
+                                @if ($phone && $phone !== $primary)
+                                    <span class="flex items-center gap-1 whitespace-nowrap">
+                                        <x-admin.icon name="phone" class="h-3 w-3 shrink-0" />
+                                        {{ $phone }}
+                                    </span>
                                 @endif
                             </div>
                         </div>
-                    </td>
+                    </div>
+                </td>
 
-                    {{-- Source --}}
-                    <td class="px-6 py-4">
-                        <span
-                            class="inline-flex items-center gap-1.5 rounded-sm bg-slate-100 px-2 py-1 text-xs font-semibold tracking-wide text-slate-600 uppercase dark:bg-slate-700 dark:text-slate-300"
+                {{-- Message preview --}}
+                <td class="max-w-xs">
+                    @if ($message)
+                        <p
+                            @class(['line-clamp-2 min-w-48 text-sm', 'text-slate-700 dark:text-slate-200' => $unseen, 'text-slate-500 dark:text-slate-400' => ! $unseen])
                         >
-                            <x-icons.url class="h-3 w-3 shrink-0" />
-                            {{ $enquiry->source }}
-                        </span>
-                    </td>
+                            {{ \Illuminate\Support\Str::limit($message, 140) }}
+                        </p>
+                    @else
+                        <span class="text-slate-400">—</span>
+                    @endif
+                </td>
 
-                    {{-- Status --}}
-                    <td class="px-6 py-4">
-                        <span
-                            @class([
-                                "inline-flex items-center rounded-sm px-2 py-0.5 text-xs font-semibold",
-                                "bg-slate-900 text-white dark:bg-white dark:text-slate-900" =>
-                                    $color === "blue",
-                                "bg-green-50 text-green-700 dark:bg-green-900/30 dark:text-green-300" =>
-                                    $color === "green",
-                                "bg-amber-50 text-amber-700 dark:bg-amber-900/30 dark:text-amber-300" =>
-                                    $color === "yellow",
-                                "bg-slate-100 text-slate-600 dark:bg-slate-700 dark:text-slate-300" =>
-                                    $color === "slate",
-                            ])
-                        >
-                            {{ ucfirst($enquiry->status) }}
-                        </span>
-                    </td>
+                {{-- Source --}}
+                <td>
+                    <span
+                        class="inline-flex items-center gap-1 rounded-md border border-slate-200 bg-white px-1.5 py-0.5 text-xs font-medium whitespace-nowrap text-slate-600 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-300"
+                    >
+                        <x-admin.icon name="globe" class="h-3 w-3 text-slate-400" />
+                        {{ \Illuminate\Support\Str::headline((string) $enquiry->source) }}
+                    </span>
+                </td>
 
-                    {{-- Received --}}
-                    <td class="px-6 py-4">
-                        <time
-                            class="text-xs whitespace-nowrap text-slate-500 dark:text-slate-400"
-                            datetime="{{ $enquiry->created_at->toIso8601String() }}"
-                            title="{{ $enquiry->created_at->format("d M Y, H:i") }}"
-                        >
-                            {{ $enquiry->created_at->diffForHumans() }}
-                        </time>
-                    </td>
+                {{-- Status --}}
+                <td>
+                    <x-admin.status-badge :status="$enquiry->status" />
+                </td>
 
-                    {{-- Actions --}}
-                    <td class="px-6 py-4">
-                        <div class="flex items-center justify-end gap-2">
+                {{-- Received --}}
+                <td class="whitespace-nowrap">
+                    <time datetime="{{ $enquiry->created_at->toIso8601String() }}" title="{{ $enquiry->created_at->format('d M Y, H:i') }}">
+                        <span class="block text-slate-700 dark:text-slate-200">{{ $enquiry->created_at->format('d M Y') }}</span>
+                        <span class="text-xs text-slate-400">{{ $enquiry->created_at->diffForHumans() }}</span>
+                    </time>
+                </td>
+
+                {{-- Actions --}}
+                @if ($canView || $canDelete)
+                    <td>
+                        <div class="flex items-center justify-end gap-0.5">
                             @if ($canView)
                                 <x-admin.tooltip text="View details">
                                     <button
                                         type="button"
-                                        x-on:click="
-                                            $dispatch('open-modal', 'enquiry-{{ $enquiry->id }}')
-                                            @if ($enquiry->is_unseen)
-                                                axios.patch('{{ route("admin.enquiries.seen", $enquiry) }}').catch(()
-                                                =>
-                                                {})
-                                            @endif
-                                        "
-                                        class="inline-flex h-9 w-9 cursor-pointer items-center justify-center rounded-md border border-slate-200 bg-white text-slate-600 shadow-xs transition-all hover:border-slate-300 hover:bg-slate-50 hover:text-slate-900 active:scale-90 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-400 dark:hover:bg-slate-700 dark:hover:text-white"
+                                        {!! $openAttrs !!}
+                                        aria-label="View details"
+                                        class="inline-flex h-7.5 w-7.5 cursor-pointer items-center justify-center rounded-lg text-slate-400 transition-colors hover:bg-slate-100 hover:text-slate-900 focus:outline-none focus-visible:ring-3 focus-visible:ring-blue-500/30 dark:hover:bg-slate-800 dark:hover:text-white"
                                     >
-                                        <x-icons.visibility class="h-4.5 w-4.5" />
+                                        <x-admin.icon name="eye" class="h-4 w-4" />
                                     </button>
                                 </x-admin.tooltip>
                             @endif
@@ -119,13 +174,13 @@
                             @endif
                         </div>
                     </td>
-                </tr>
-            @endforeach
-        </x-admin.table>
-    </x-admin.card>
+                @endif
+            </tr>
+        @endforeach
+    </x-admin.table>
 
     {{-- Detail modals (rendered outside the table so the markup stays valid) --}}
     @foreach ($enquiries as $enquiry)
-        @include("admin.enquiries.partials.details-modal", ["enquiry" => $enquiry])
+        @include('admin.enquiries.partials.details-modal', ['enquiry' => $enquiry])
     @endforeach
 </x-admin>

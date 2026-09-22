@@ -2,34 +2,24 @@
     ['label' => 'Users', 'url' => route('admin.users.index')],
     ['label' => 'Edit User']
 ]">
-    <x-admin.card title="Edit User" text="Update user account details, roles, and permissions">
+    <x-admin.form-page
+        :action="route('admin.users.update', $user)"
+        method="PUT"
+        upload
+        title="Edit user"
+        :description="$user->name . ' · ' . $user->email"
+        :back="route('admin.users.index')"
+        submit="Save changes"
+        submitting="Saving…"
+    >
         @can('admin.users.delete')
-            <x-slot name="actions">
-                @if ($user->id !== auth()->id())
-                    <x-admin.delete-button :route="route('admin.users.destroy', $user)" />
-                @endif
-            </x-slot>
+            @if ($user->id !== auth()->id())
+                <x-slot:actions>
+                    <x-admin.delete-button :route="route('admin.users.destroy', $user)" title="Delete this user?" />
+                </x-slot>
+            @endif
         @endcan
 
-        <form
-            action="{{ route('admin.users.update', $user) }}"
-            method="POST"
-            enctype="multipart/form-data"
-            x-data="{ submitting: false }"
-            x-on:submit="submitting = true"
-        >
-            @csrf
-            @method('PUT')
-
-            @include('admin.users.partials.form')
-
-            <div
-                class="sticky bottom-0 z-10 -mx-4 mt-8 flex items-center justify-end border-t border-slate-100 bg-white/80 p-4 backdrop-blur-md sm:mx-0 dark:border-slate-800 dark:bg-slate-900/80"
-            >
-                <x-admin.button>
-                    <span x-cloak x-text="submitting ? 'Updating User...' : 'Update User'">Update User</span>
-                </x-admin.button>
-            </div>
-        </form>
-    </x-admin.card>
+        @include('admin.users.partials.form')
+    </x-admin.form-page>
 </x-admin>

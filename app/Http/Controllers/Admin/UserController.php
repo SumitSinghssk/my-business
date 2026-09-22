@@ -11,6 +11,7 @@ use App\Services\ImageProcessor;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\Facades\Storage;
+use Illuminate\Support\Str;
 use Spatie\Permission\Models\Permission;
 use Spatie\Permission\Models\Role;
 
@@ -25,7 +26,7 @@ class UserController extends Controller
     {
         Gate::authorize('admin.users.view');
 
-        $query = User::query();
+        $query = User::with('roles');
 
         // Filter by Search (Name or Email)
         if ($request->filled('search')) {
@@ -175,6 +176,11 @@ class UserController extends Controller
 
         $user->update($data);
 
+        if ($request->filled('password')) {
+            // Remember-me cookies stop working; open sessions end through the auth.session middleware.
+            $user->forceFill(['remember_token' => Str::random(60)])->save();
+        }
+
         if (! $editingSelf) {
             $user->syncRoles($this->resolveRoles((array) ($request->roles ?? []), $user));
             $user->syncPermissions($this->resolvePermissions((array) ($request->permissions ?? []), $user));
@@ -212,7 +218,7 @@ class UserController extends Controller
             ], 422);
         }
 
-        if ($user->hasRole(self::PROTECTED_ROLES) && ! $this->actorIsSuperAdmin()) {
+        if (! $this->canManage($user)) {
             return response()->json([
                 'message' => 'You are not allowed to change this account\'s status.',
             ], 403);
@@ -289,10 +295,26 @@ class UserController extends Controller
     }
 
     /**
-     * Only a super admin may view, edit or delete a super admin account.
+     * Only a super admin may manage a super admin account, and nobody may manage an account
+     * holding permissions they lack themselves (resetting its password would hand them that access).
      */
+    private function canManage(User $user): bool
+    {
+        if ($this->actorIsSuperAdmin()) {
+            return true;
+        }
+
+        if ($user->hasRole(self::PROTECTED_ROLES)) {
+            return false;
+        }
+
+        return $user->getAllPermissions()->pluck('name')
+            ->diff(auth()->user()->getAllPermissions()->pluck('name'))
+            ->isEmpty();
+    }
+
     private function ensureCanManage(User $user): void
     {
-        abort_if($user->hasRole(self::PROTECTED_ROLES) && ! $this->actorIsSuperAdmin(), 403, 'You are not allowed to manage this account.');
+        abort_unless($this->canManage($user), 403, 'You are not allowed to manage this account.');
     }
 }

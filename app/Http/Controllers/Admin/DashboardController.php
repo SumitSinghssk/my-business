@@ -35,7 +35,8 @@ class DashboardController extends Controller
             'chart' => $canEnquiries ? $this->enquiryChart() : null,
             'recentEnquiries' => $canEnquiries ? Enquiry::latest()->take(5)->get(['id', 'data', 'status', 'seen_at', 'source', 'created_at']) : collect(),
             'recentPosts' => $canBlogs ? Blog::with('categories:id,name')->latest('updated_at')->take(5)->get(['id', 'title', 'slug', 'status', 'published_at', 'featured_image', 'updated_at', 'created_at']) : collect(),
-            'activity' => $canActivity ? ActivityLog::with('user:id,name,avatar')->latest()->take(6)->get(['id', 'user_id', 'action', 'description', 'model_name', 'page_title', 'created_at']) : collect(),
+            // Page views would flood this list; they stay on the Activity Logs page.
+            'activity' => $canActivity ? ActivityLog::with('user:id,name,avatar')->where('action', '!=', 'viewed')->latest()->take(6)->get(['id', 'user_id', 'action', 'description', 'model_name', 'page_title', 'created_at']) : collect(),
             'health' => $canBlogs ? $this->contentHealth() : [],
         ]);
     }
@@ -64,7 +65,7 @@ class DashboardController extends Controller
                 'value' => $thisWeek,
                 'delta' => $this->delta($thisWeek, $lastWeek),
                 'hint' => 'vs previous 7 days',
-                'icon' => 'mail',
+                'icon' => 'inbox',
                 'tone' => 'blue',
                 'url' => route('admin.enquiries.index'),
             ];
@@ -75,7 +76,7 @@ class DashboardController extends Controller
                 'value' => $unread,
                 'delta' => null,
                 'hint' => $unread ? 'Waiting for a reply' : 'All caught up',
-                'icon' => 'notification',
+                'icon' => 'mail-open',
                 'tone' => $unread ? 'amber' : 'emerald',
                 'url' => route('admin.enquiries.index', ['seen' => 'unseen']),
             ];
@@ -88,7 +89,7 @@ class DashboardController extends Controller
                 'value' => $published,
                 'delta' => null,
                 'hint' => Blog::count() - $published.' draft or scheduled',
-                'icon' => 'blog',
+                'icon' => 'newspaper',
                 'tone' => 'violet',
                 'url' => route('admin.blogs.index'),
             ];
@@ -100,7 +101,7 @@ class DashboardController extends Controller
                 'value' => Page::published()->count(),
                 'delta' => null,
                 'hint' => Page::count().' pages in total',
-                'icon' => 'pages',
+                'icon' => 'file-text',
                 'tone' => 'emerald',
                 'url' => route('admin.pages.index'),
             ];

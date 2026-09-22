@@ -1,54 +1,37 @@
-@php
-    $appName = \App\Helpers\Settings::appName();
-@endphp
-
 <x-website
     :title="'Software Development Services | ' . $appName"
     description="Website development, web applications, mobile apps, custom software, UI/UX design, cloud & DevOps and architecture consulting from one senior team."
     :image="asset('images/website/about/team-workspace.jpg')"
 >
-    <section class="w-full border-b border-[#E1E5EA] pt-8 pb-10 md:pt-12 md:pb-14 lg:pt-16 lg:pb-20">
-        <div class="site-container">
-            <div class="gap-section grid grid-cols-1 items-stretch lg:grid-cols-[1.2fr_1fr] xl:gap-12">
-                <div class="lg:pr-space-lg xl:pr-space-xl flex flex-col justify-center pr-0">
-                    <h1
-                        class="sm:mb-space-lg font-display mb-5 text-[36px] leading-[1.05] font-semibold tracking-[-0.04em] text-[#0A0A0A] sm:text-[54px] lg:text-[48px] xl:text-[58px] 2xl:text-[64px]"
-                    >
-                        Software development services built around real business goals.
-                    </h1>
+    <x-website.page-hero title-class="text-[36px] sm:text-[54px] lg:text-[48px] xl:text-[58px] 2xl:text-[64px]">
+        <x-slot:title>Software development services built around real business goals.</x-slot>
 
-                    <p class="font-body-lg text-body-lg text-secondary lg:mb-space-xl mb-7 max-w-xl">
-                        Strategy, design and engineering under one roof. Pick a single service or bring us in end to end, from first idea to a product
-                        running reliably in production.
-                    </p>
+        <x-slot:text>
+            Strategy, design and engineering under one roof. Pick a single service or bring us in end to end, from first idea to a product running
+            reliably in production.
+        </x-slot>
 
-                    <div class="sm:gap-space-md flex flex-col gap-3 sm:flex-row sm:flex-wrap sm:items-center">
-                        <a
-                            href="{{ route('contact') }}"
-                            class="px-space-xl font-label-md text-label-md hover:bg-primary-container inline-flex w-full items-center justify-center bg-[#0A0A0A] py-4 tracking-wider text-white uppercase transition-colors sm:w-auto"
-                        >
-                            Start a Project →
-                        </a>
-                    </div>
-                </div>
+        <x-slot:actions>
+            <x-website.button :href="route('contact')">Start a Project →</x-website.button>
+        </x-slot>
 
-                <div class="relative aspect-1376/768 w-full overflow-hidden rounded-lg lg:aspect-auto lg:min-h-full">
-                    <img
-                        src="{{ asset('images/website/about/team-workspace.webp') }}"
-                        width="1376"
-                        height="768"
-                        alt="Product team planning software development services together"
-                        class="absolute inset-0 h-full w-full object-cover object-top-left"
-                        fetchpriority="high"
-                    />
-                </div>
+        <x-slot:media>
+            <div class="relative aspect-1376/768 w-full overflow-hidden rounded-lg lg:aspect-auto lg:min-h-full">
+                <img
+                    src="{{ asset('images/website/about/team-workspace.webp') }}"
+                    width="1376"
+                    height="768"
+                    alt="Product team planning software development services together"
+                    class="absolute inset-0 h-full w-full object-cover object-top-left"
+                    fetchpriority="high"
+                />
             </div>
-        </div>
-    </section>
+        </x-slot>
+    </x-website.page-hero>
 
     <section class="w-full overflow-hidden">
         @foreach ($services as $service)
-            <div id="{{ $service->slug }}" class="group {{ $loop->even ? 'bg-[#F7F8FA]' : 'bg-white' }} scroll-mt-20 border-b border-[#E1E5EA]">
+            <div id="{{ $service->slug }}" class="group {{ $loop->even ? 'bg-canvas' : 'bg-white' }} border-line scroll-mt-20 border-b">
                 <div class="grid grid-cols-1 lg:grid-cols-2">
                     <div
                         class="bg-surface-container-low {{ $loop->even ? 'lg:order-2' : '' }} relative aspect-16/10 w-full overflow-hidden lg:aspect-auto lg:min-h-120"
@@ -72,7 +55,7 @@
                                     [ {{ str_pad($loop->iteration, 2, '0', STR_PAD_LEFT) }} ]
                                 </span>
 
-                                <h2 class="font-headline-lg text-2xl font-semibold tracking-[-0.035em] text-[#0A0A0A] md:text-3xl lg:text-4xl">
+                                <h2 class="font-headline-lg text-ink text-2xl font-semibold tracking-[-0.035em] md:text-3xl lg:text-4xl">
                                     <a href="{{ route('services.show', $service->slug) }}" class="hover:text-primary-container transition-colors">
                                         {{ $service->title }}
                                     </a>
@@ -96,11 +79,11 @@
                                 @endforeach
                             </ul>
 
-                            <div class="flex flex-col gap-4 border-t border-[#E1E5EA] pt-5 sm:flex-row sm:items-center sm:justify-between">
+                            <div class="border-line flex flex-col gap-4 border-t pt-5 sm:flex-row sm:items-center sm:justify-between">
                                 <div class="flex flex-wrap gap-1.5">
                                     @foreach ($service->tags ?? [] as $tag)
                                         <span
-                                            class="font-label-sm rounded border border-[#E1E5EA] bg-white px-2 py-0.5 text-xs tracking-wider text-[#434655] uppercase"
+                                            class="font-label-sm border-line text-on-surface-variant rounded border bg-white px-2 py-0.5 text-xs tracking-wider uppercase"
                                         >
                                             {{ $tag }}
                                         </span>
@@ -109,7 +92,7 @@
 
                                 <a
                                     href="{{ route('services.show', $service->slug) }}"
-                                    class="font-label-md hover:text-primary inline-flex shrink-0 items-center gap-1 self-start border-b border-[#0A0A0A] pb-1 text-sm font-semibold tracking-wider text-[#0A0A0A] uppercase transition-colors sm:self-auto"
+                                    class="font-label-md hover:text-primary border-ink text-ink inline-flex shrink-0 items-center gap-1 self-start border-b pb-1 text-sm font-semibold tracking-wider uppercase transition-colors sm:self-auto"
                                 >
                                     View Details →
                                 </a>

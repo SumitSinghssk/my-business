@@ -1,35 +1,9 @@
 @php
-    $testimonials = [
-        [
-            'quote' => "Brought enterprise-level discipline to our product engineering. They didn't just write code; they transformed our product velocity, uptime, and systemic reliability.",
-            'name' => 'Marcus Vance',
-            'role' => 'Chief Technology Officer',
-            'company' => 'Vectra Dynamics',
-        ],
-        [
-            'quote' => 'From the first sprint, the team treated our platform like their own. Release cycles dropped from weeks to days, and our compliance audits stopped being a fire drill.',
-            'name' => 'Elena Rossi',
-            'role' => 'VP of Engineering',
-            'company' => 'Northbridge Health',
-        ],
-        [
-            'quote' => 'We came in with a rough idea and left with a production-ready product. Clear communication, honest timelines, and architecture that scales without rewrites.',
-            'name' => 'Daniel Okafor',
-            'role' => 'Founder & CEO',
-            'company' => 'Stackline Logistics',
-        ],
-        [
-            'quote' => 'Their engineers slotted into our workflow seamlessly. Uptime is up, incident load is down, and our own team finally has room to focus on roadmap work.',
-            'name' => 'Priya Nair',
-            'role' => 'Head of Product',
-            'company' => 'Finlytic',
-        ],
-    ];
-
+    $testimonials = \App\Support\WebsiteContent::testimonials();
     $total = count($testimonials);
 @endphp
 
-<section class="section-y w-full border-b border-[#E1E5EA] bg-[#F7F8FA]">
+<section class="section-y border-line bg-canvas w-full border-b">
     <div class="site-container">
         <div class="mx-auto max-w-4xl" data-testimonials>
             <div class="mb-space-lg gap-space-md flex items-center justify-between">
@@ -38,7 +12,7 @@
                 @if ($total > 1)
                     <div class="gap-space-md flex items-center">
                         <span class="text-label-sm text-secondary font-mono font-semibold tracking-wider" aria-hidden="true">
-                            <span data-testimonials-current class="text-[#0A0A0A]">01</span>
+                            <span data-testimonials-current class="text-ink">01</span>
                             / {{ str_pad($total, 2, '0', STR_PAD_LEFT) }}
                         </span>
 
@@ -47,7 +21,7 @@
                                 type="button"
                                 data-testimonials-prev
                                 aria-label="Previous testimonial"
-                                class="flex h-11 w-11 cursor-pointer items-center justify-center border border-[#E1E5EA] bg-white text-[#0A0A0A] transition-colors hover:border-[#0A0A0A] hover:bg-[#0A0A0A] hover:text-white focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#0A0A0A]"
+                                class="border-line text-ink hover:border-ink hover:bg-ink focus-visible:outline-ink flex h-11 w-11 cursor-pointer items-center justify-center border bg-white transition-colors hover:text-white focus-visible:outline-2 focus-visible:outline-offset-2"
                             >
                                 <x-icons.arrow-prev class="h-5 w-5" aria-hidden="true" />
                             </button>
@@ -55,7 +29,7 @@
                                 type="button"
                                 data-testimonials-next
                                 aria-label="Next testimonial"
-                                class="flex h-11 w-11 cursor-pointer items-center justify-center border border-[#E1E5EA] bg-white text-[#0A0A0A] transition-colors hover:border-[#0A0A0A] hover:bg-[#0A0A0A] hover:text-white focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#0A0A0A]"
+                                class="border-line text-ink hover:border-ink hover:bg-ink focus-visible:outline-ink flex h-11 w-11 cursor-pointer items-center justify-center border bg-white transition-colors hover:text-white focus-visible:outline-2 focus-visible:outline-offset-2"
                             >
                                 <x-icons.arrow-next class="h-5 w-5" aria-hidden="true" />
                             </button>
@@ -78,19 +52,19 @@
                         <div class="swiper-slide" style="height: auto">
                             <figure class="flex h-full flex-col justify-between">
                                 <blockquote
-                                    class="mb-space-xl font-headline-lg text-headline-lg leading-tight font-medium tracking-[-0.03em] text-[#0A0A0A]"
+                                    class="mb-space-xl font-headline-lg text-headline-lg text-ink leading-tight font-medium tracking-[-0.03em]"
                                 >
                                     “{{ $testimonial['quote'] }}”
                                 </blockquote>
 
-                                <figcaption class="gap-space-md pt-space-md flex w-full items-center border-t border-[#E1E5EA]">
+                                <figcaption class="gap-space-md pt-space-md border-line flex w-full items-center border-t">
                                     <div
-                                        class="font-label-md text-label-md flex h-12 w-12 shrink-0 items-center justify-center bg-[#0A0A0A] font-semibold text-white"
+                                        class="font-label-md text-label-md bg-ink flex h-12 w-12 shrink-0 items-center justify-center font-semibold text-white"
                                     >
                                         {{ $initials }}
                                     </div>
                                     <div>
-                                        <span class="font-headline-sm text-headline-sm block font-semibold text-[#0A0A0A]">
+                                        <span class="font-headline-sm text-headline-sm text-ink block font-semibold">
                                             {{ $testimonial['name'] }}
                                         </span>
                                         <span class="font-label-sm text-label-sm text-secondary tracking-wider uppercase">

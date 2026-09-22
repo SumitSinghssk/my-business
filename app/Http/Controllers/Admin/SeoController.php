@@ -13,6 +13,7 @@ use App\Models\Seo;
 use App\Models\Service;
 use App\Services\ImageProcessor;
 use Illuminate\Http\Request;
+use Illuminate\Support\Arr;
 use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Validation\ValidationException;
@@ -118,7 +119,7 @@ class SeoController extends Controller
     {
         Gate::authorize('admin.seo.create');
 
-        $data = $request->validated();
+        $data = $this->withoutScriptsUnlessAllowed($request->validated());
 
         if ($request->hasFile('og_image')) {
             $data['og_image'] = app(ImageProcessor::class)->store($request->file('og_image'), 'og', $request->input('og_image_crop'));
@@ -163,7 +164,7 @@ class SeoController extends Controller
     {
         Gate::authorize('admin.seo.edit');
 
-        $data = $request->validated();
+        $data = $this->withoutScriptsUnlessAllowed($request->validated());
 
         if ($request->hasFile('og_image')) {
             // The old file is only removed once the new one has been saved.
@@ -211,5 +212,18 @@ class SeoController extends Controller
         $seo->delete();
 
         return to_route('admin.seo.index')->with('success', 'SEO deleted');
+    }
+
+    /**
+     * Page scripts and CSS run on the public site (same origin as the admin), so only users trusted
+     * with the site-wide scripts may change them; everyone else keeps the stored values.
+     */
+    private function withoutScriptsUnlessAllowed(array $data): array
+    {
+        if (Gate::allows('admin.settings.scripts.update')) {
+            return $data;
+        }
+
+        return Arr::except($data, ['header_scripts', 'footer_scripts', 'custom_css']);
     }
 }

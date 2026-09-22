@@ -3,6 +3,7 @@ import './bootstrap';
 import Alpine from 'alpinejs';
 import Cropper from 'cropperjs';
 import 'cropperjs/dist/cropper.css';
+import registerAdminForms from './admin/forms';
 
 window.Alpine = Alpine;
 
@@ -198,5 +199,7 @@ Alpine.store('theme', {
         this.isDark = applyTheme(this.theme);
     },
 });
+
+registerAdminForms(Alpine);
 
 Alpine.start();

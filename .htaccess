@@ -1,0 +1,15 @@
+Options -Indexes
+
+<IfModule mod_rewrite.c>
+    RewriteEngine On
+
+    # The bare project URL goes to the site.
+    RewriteRule ^$ %{REQUEST_URI}public/ [R=302,L]
+
+    # Everything outside public/ is forbidden.
+    RewriteRule ^(?!public(?:/|$)) - [F,L]
+</IfModule>
+
+<IfModule !mod_rewrite.c>
+    Require all denied
+</IfModule>

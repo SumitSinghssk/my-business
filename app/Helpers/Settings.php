@@ -51,24 +51,49 @@ class Settings
         return self::get('basic_settings.app_name', config('app.name'));
     }
 
+    /** Addresses that have text, each ["label" => …, "text" => …, "map_iframe" => …]. */
     public static function addresses(): array
     {
-        return (array) self::get('basic_settings.addresses', []);
+        return array_values(array_filter((array) self::get('basic_settings.addresses', []), fn ($a) => filled($a['text'] ?? null)));
     }
 
+    /**
+     * Addresses ready for display: label, trimmed text, a safe map iframe (or null) and a Google Maps directions link.
+     *
+     * @return array<int, array{label: string, text: string, map: ?string, directions: string}>
+     */
+    public static function offices(): array
+    {
+        return array_map(fn ($a) => [
+            'label' => ($a['label'] ?? null) ?: 'Our office',
+            'text' => trim($a['text']),
+            'map' => self::mapEmbed($a['map_iframe'] ?? null),
+            'directions' => 'https://www.google.com/maps/search/?api=1&query='.urlencode(preg_replace('/\s+/', ' ', trim($a['text']))),
+        ], self::addresses());
+    }
+
+    /** Non-empty phone numbers. */
     public static function phones(): array
     {
-        return (array) self::get('basic_settings.phones', []);
+        return array_values(array_filter((array) self::get('basic_settings.phones', [])));
     }
 
+    /** Non-empty email addresses. */
     public static function emails(): array
     {
-        return (array) self::get('basic_settings.emails', []);
+        return array_values(array_filter((array) self::get('basic_settings.emails', [])));
     }
 
+    /** Social links that have a URL, each ["platform" => …, "url" => …]. */
     public static function socialLinks(): array
     {
-        return (array) self::get('basic_settings.social_links', []);
+        return array_values(array_filter((array) self::get('basic_settings.social_links', []), fn ($s) => filled($s['url'] ?? null)));
+    }
+
+    /** "tel:" link target for a phone number as typed in the settings. */
+    public static function telHref(string $phone): string
+    {
+        return 'tel:'.preg_replace('/[^0-9+]/', '', $phone);
     }
 
     public static function logoLight(): ?string
