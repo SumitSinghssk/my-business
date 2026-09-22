@@ -3,9 +3,8 @@
 @endphp
 
 <header
-    class="sticky top-0 z-40 flex h-14 shrink-0 items-center justify-between gap-3 border-b border-slate-200/70 bg-slate-50/85 px-4 backdrop-blur-md sm:px-6 lg:rounded-t-2xl lg:px-8 dark:border-slate-800/70 dark:bg-slate-950/85"
+    class="sticky top-0 z-40 flex shrink-0 items-center justify-between gap-3 border-b border-slate-200/70 bg-slate-50/85 p-4 backdrop-blur-md lg:rounded-t-2xl dark:border-slate-800/70 dark:bg-slate-950/85"
 >
-    {{-- Left: menu + breadcrumb --}}
     <div class="flex min-w-0 items-center gap-2">
         <button
             type="button"

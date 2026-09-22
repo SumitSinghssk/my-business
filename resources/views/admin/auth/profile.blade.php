@@ -29,8 +29,7 @@
     <x-admin.page-header title="Account settings" description="Manage your profile, public links and sign-in password." icon="user-circle" />
 
     <div class="grid grid-cols-1 items-start gap-6 lg:grid-cols-[16rem_minmax(0,1fr)]">
-        {{-- Summary + section nav --}}
-        <aside class="space-y-4 lg:sticky lg:top-20">
+        <aside class="space-y-4 lg:sticky lg:top-0">
             <div class="rounded-xl border border-slate-200/80 bg-white p-4 shadow-xs dark:border-slate-800 dark:bg-slate-900">
                 <div class="flex items-center gap-3">
                     <span

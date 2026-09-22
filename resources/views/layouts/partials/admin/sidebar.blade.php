@@ -5,10 +5,6 @@
     $role = $user->getRoleNames()->first();
 @endphp
 
-{{--
-    Off-canvas below lg (links inert while closed, so Tab can't reach them off-screen).
-    On desktop it can be folded to icons (the `collapsed:` variant, state on <html data-sidebar>).
---}}
 <aside
     :class="sidebarOpen ? 'translate-x-0' : '-translate-x-full'"
     x-effect="
@@ -17,7 +13,6 @@
     "
     class="lg:collapsed:w-15 fixed inset-y-0 left-0 z-50 flex h-dvh w-64 -translate-x-full transform flex-col bg-white shadow-xl transition-[transform,width] duration-200 ease-out lg:w-60 lg:translate-x-0 lg:bg-transparent lg:shadow-none dark:bg-slate-950 lg:dark:bg-transparent"
 >
-    {{-- Brand + fold button --}}
     <div class="lg:collapsed:justify-center lg:collapsed:px-0 flex h-15 shrink-0 items-center gap-2 px-3.5">
         <a href="{{ route('admin.dashboard') }}" class="lg:collapsed:flex-none flex min-w-0 flex-1 items-center gap-2.5" title="{{ $appName }}">
             @if ($logo)
@@ -56,7 +51,6 @@
         </button>
     </div>
 
-    {{-- Jump-to search (opens the command palette) --}}
     <div class="lg:collapsed:px-2.5 shrink-0 px-3 pb-2">
         <button
             type="button"
@@ -75,7 +69,6 @@
         </button>
     </div>
 
-    {{-- Navigation --}}
     <nav class="custom-scrollbar lg:collapsed:px-2.5 flex-1 space-y-5 overflow-y-auto px-3 py-3" aria-label="Admin navigation">
         @foreach ($links as $section)
             @php
@@ -126,7 +119,6 @@
         @endforeach
     </nav>
 
-    {{-- Footer: expand button (folded), website link, account menu --}}
     <div class="lg:collapsed:px-2.5 shrink-0 space-y-1 p-3">
         <button
             type="button"

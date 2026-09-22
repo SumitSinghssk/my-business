@@ -49,7 +49,7 @@
         {{ $slot }}
 
         <div
-            class="sticky bottom-0 z-30 -mx-4 mt-6 flex items-center justify-between gap-3 border-t border-slate-200/80 bg-slate-50/90 px-4 py-3 backdrop-blur-md sm:-mx-6 sm:px-6 lg:-mx-8 lg:px-8 dark:border-slate-800 dark:bg-slate-950/90"
+            class="sticky -bottom-4.5 z-30 mt-6 flex items-center justify-between gap-3 border-t border-slate-200/80 bg-slate-50/90 px-4 py-3 backdrop-blur-md sm:-mx-6 sm:px-6 lg:px-8 dark:border-slate-800 dark:bg-slate-950/90"
         >
             <p class="hidden items-center gap-1.5 text-xs text-slate-500 sm:flex dark:text-slate-400">
                 <x-admin.icon name="info" class="h-3.5 w-3.5" />

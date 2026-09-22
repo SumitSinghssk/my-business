@@ -77,7 +77,7 @@
                     sidebarOpen && ! desktop,
                 )
             "
-            class="admin-theme relative min-h-screen bg-slate-100/80 text-slate-700 dark:bg-black dark:text-slate-300"
+            class="admin-theme relative min-h-screen overflow-hidden bg-slate-100/80 text-slate-700 dark:bg-black dark:text-slate-300"
         >
             <div
                 x-show="sidebarOpen"
@@ -89,19 +89,20 @@
 
             @include('layouts.partials.admin.sidebar')
 
-            {{-- Content canvas: an inset, rounded panel beside the sidebar on desktop. --}}
-            <div class="lg:collapsed:pl-17 flex min-h-screen flex-col transition-[padding] duration-200 lg:pl-62">
+            <div class="lg:collapsed:pl-17 flex h-screen flex-col transition-[padding] duration-200 lg:pl-62">
                 <div
-                    class="flex min-h-screen flex-1 flex-col bg-slate-50 lg:my-2 lg:mr-2 lg:min-h-[calc(100vh-1rem)] lg:rounded-2xl lg:border lg:border-slate-200/80 lg:shadow-xs dark:bg-slate-950 dark:lg:border-slate-800/80"
+                    class="flex h-screen flex-1 flex-col overflow-hidden bg-slate-50 lg:my-2 lg:h-[calc(100vh-1rem)] lg:rounded-2xl lg:border lg:border-slate-200/80 lg:shadow-xs dark:bg-slate-950 dark:lg:border-slate-800/80"
                 >
-                    @include('layouts.partials.admin.header', ['breadcrumb' => $breadcrumb ?? []])
+                    <div class="shrink-0">
+                        @include('layouts.partials.admin.header', ['breadcrumb' => $breadcrumb ?? []])
+                    </div>
 
-                    <main class="mx-auto w-full max-w-[1480px] flex-1 px-4 py-5 sm:px-6 lg:px-8 lg:py-7">
+                    <main class="flex-1 overflow-x-hidden overflow-y-auto p-4">
                         {{ $slot }}
                     </main>
 
                     <footer
-                        class="flex flex-wrap items-center justify-between gap-2 border-t border-slate-200/70 px-4 py-3 text-xs text-slate-400 sm:px-6 lg:px-8 dark:border-slate-800/70 dark:text-slate-500"
+                        class="flex shrink-0 flex-wrap items-center justify-between gap-2 border-t border-slate-200/70 p-2 text-xs text-slate-400 dark:border-slate-800/70 dark:text-slate-500"
                     >
                         <span>© {{ date('Y') }} {{ \App\Helpers\Settings::appName() }}</span>
                         <span class="hidden items-center gap-1.5 sm:inline-flex">
@@ -119,8 +120,7 @@
 
             @include('layouts.partials.admin.command-palette')
 
-            {{-- Dropdown menus of admin form controls open here (inside .admin-theme, above everything). --}}
-            <div id="admin-portal" class="relative z-[120]"></div>
+            <div id="admin-portal" class="relative z-120"></div>
         </div>
 
         @push('scripts')

@@ -294,11 +294,13 @@
                                     <h4 class="truncate text-sm font-medium text-slate-800 dark:text-slate-200">{{ $group }}</h4>
                                 </div>
                                 <span class="tabular shrink-0 text-xs text-slate-500 dark:text-slate-400">
-                                    <span x-text="
-                                        {{ Js::from($groupPerms->pluck('name')->values()) }}.filter((p) =>
-                                            isPermChecked(p),
-                                        ).length
-                                    ">
+                                    <span
+                                        x-text="
+                                            {{ Js::from($groupPerms->pluck('name')->values()) }}.filter((p) =>
+                                                isPermChecked(p),
+                                            ).length
+                                        "
+                                    >
                                         0
                                     </span>
                                     / {{ $groupPerms->count() }}
